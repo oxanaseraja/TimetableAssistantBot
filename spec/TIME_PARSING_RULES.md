@@ -48,21 +48,34 @@ Patterns are applied in order. First match wins.
 
 ### 1.3 TIME_BARE_HOUR — Hour only with trigger word
 
-**Regex:** `(trigger_word)\s+([1-9]|1[0-2])\b`
-
-**Trigger words:**
+**Trigger words (case-insensitive):**
 - English: `at`, `by`, `around`, `about`, `until`, `till`
 - Russian: `в`, `к`, `около`, `до`
+
+**Full Regex:**
+
+```python
+TRIGGER_WORDS = r'(?:at|by|around|about|until|till|в|к|около|до)'
+TIME_BARE_HOUR_REGEX = re.compile(
+    rf'(?i)\b({TRIGGER_WORDS})\s+([1-9]|1[0-2])\b',
+    re.UNICODE
+)
+```
+
+**Examples:**
 
 | Example | hour | minute | ambiguous |
 |---------|------|--------|-----------|
 | `at 8` | 8 | null | **true** |
+| `At 8` | 8 | null | **true** |
 | `в 10` | 10 | null | **true** |
 | `by 3` | 3 | null | **true** |
 
 **Ambiguity:** Always ambiguous (no AM/PM, could be 08:00 or 20:00).
 
 **Behavior:** Core returns `ambiguity: HIGH` → adapter sends no reply.
+
+**Note:** Trigger word is captured in group(1), hour in group(2).
 
 ---
 
@@ -87,6 +100,25 @@ Rationale: ambiguity with decimal numbers and version strings.
 
 ## 3. Parsing Algorithm
 
+### 3.1 Overlap Detection
+
+Positions are **half-open intervals** `[start, end)` on the original string.
+
+```python
+def overlaps(match, existing_results: List[DetectedTime]) -> bool:
+    """
+    Check if match overlaps with any existing result.
+    Positions are character indices in the original string.
+    """
+    for r in existing_results:
+        # Overlap if intervals intersect
+        if not (match.end() <= r.position_start or match.start() >= r.position_end):
+            return True
+    return False
+```
+
+### 3.2 Main Algorithm
+
 ```python
 def parse_times(text: str) -> List[DetectedTime]:
     results = []
@@ -103,15 +135,34 @@ def parse_times(text: str) -> List[DetectedTime]:
             ambiguous=False
         ))
     
-    # Priority 2: TIME_12H_AMPM (skip if overlaps with TIME_24H)
+    # Priority 2: TIME_12H_AMPM (skip if overlaps with existing)
     for match in TIME_12H_AMPM_REGEX.finditer(text):
         if not overlaps(match, results):
-            results.append(...)
+            hour = int(match.group(1))
+            minute = int(match.group(2)) if match.group(2) else None
+            am_pm = match.group(3).upper().replace('.', '')  # Normalize
+            results.append(DetectedTime(
+                raw_text=match.group(),
+                hour=hour,
+                minute=minute,
+                am_pm=am_pm,
+                position_start=match.start(),
+                position_end=match.end(),
+                ambiguous=False
+            ))
     
     # Priority 3: TIME_BARE_HOUR (skip if overlaps)
     for match in TIME_BARE_HOUR_REGEX.finditer(text):
         if not overlaps(match, results):
-            results.append(DetectedTime(..., ambiguous=True))
+            results.append(DetectedTime(
+                raw_text=match.group(),
+                hour=int(match.group(2)),  # group(1) is trigger word
+                minute=None,
+                am_pm=None,
+                position_start=match.start(),
+                position_end=match.end(),
+                ambiguous=True  # Always ambiguous
+            ))
     
     # Sort by position, cap to 3
     return sorted(results, key=lambda x: x.position_start)[:3]

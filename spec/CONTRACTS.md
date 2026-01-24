@@ -10,14 +10,17 @@ MVP platform: Telegram.
 
 ```
 CoreMessageEvent {
-    internal_message_id: string,
-    internal_user_id: string,
-    internal_channel_id: string,
-    text: string,
-    is_edit: boolean,
-    timestamp_utc: datetime
+    internal_message_id: string,   // SHA256 hash, hex encoded
+    internal_user_id: string,      // SHA256 hash, hex encoded
+    internal_channel_id: string,   // SHA256 hash, hex encoded
+    text: string,                  // original message text
+    is_edit: boolean,              // true if this is an edit event
+    timestamp_utc: datetime        // timezone-aware, UTC (used for DST)
 }
 ```
+
+**Note:** `timestamp_utc` must be a timezone-aware datetime object in UTC.
+Used as reference date for DST calculations.
 
 ---
 
@@ -80,14 +83,25 @@ ConvertedTime {
 ```
 DisplayBlock {
     entries: List<{
-        timezone: string,
-        local_time: string,
-        cities: List<string> // populated from local city list in adapter
+        timezone: string,       // IANA timezone ID
+        local_time: string,     // HH:MM format (24-hour, zero-padded)
+        cities: List<string>    // populated by adapter from cities.json
     }>,
-    ordering: string,
-    flags: {
-        ambiguous: boolean,
-        partial: boolean
-    }
+    ordering: Ordering,
+    flags: DisplayFlags
+}
+
+Ordering = "SOURCE_FIRST" | "OFFSET_ASC"
+// SOURCE_FIRST: source timezone first, then channel default, then by offset
+// OFFSET_ASC: sorted by UTC offset ascending, then alphabetically
+
+DisplayFlags {
+    ambiguous: boolean,   // true if any input time was ambiguous
+    partial: boolean      // true if some timezones were omitted due to max limit (5)
 }
 ```
+
+**Notes:**
+- `partial = true` only when `len(active_timezones) > max_display_limit`
+- `ambiguous` is informational; if truly ambiguous, core returns None instead
+- Adapter uses `ordering` to verify output order matches expectation

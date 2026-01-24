@@ -30,7 +30,7 @@ Authoritative references:
    - Receive `DisplayBlock` from core.
    - Render one line per timezone.
    - Cap to 5 lines.
-   - Ignore `cities` in MVP (`cities = []`).
+   - Cities loaded from local `cities.json`, grouped by timezone, sorted alphabetically.
 
 5. **Duplicate Suppression**
    - Deterministic rule by `internal_message_id` (see `POLICIES.md`).

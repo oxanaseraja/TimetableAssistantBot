@@ -8,8 +8,9 @@ All documents are in this `spec/` folder.
 ## Reading Order for LLM
 
 0. `LLM_EXECUTION_PROTOCOL.md` — **execution rules (read first)**
-1. `ARCHITECTURAL_INVARIANTS.md` — system invariants
-2. `ARCHMINI.md` — system overview
+1. `IMPLEMENTATION_CONSTRAINTS.md` — **hard rules (must follow)**
+2. `ARCHITECTURAL_INVARIANTS.md` — system invariants
+3. `ARCHMINI.md` — system overview
 3. `TIME_PARSING_RULES.md` — input contract (time)
 4. `TIMEZONE_EXTRACTION_RULES.md` — input contract (timezone)
 5. `POLICIES.md` — behavioral rules
@@ -60,6 +61,7 @@ All documents are in this `spec/` folder.
 
 ### Execution Protocol
 - `LLM_EXECUTION_PROTOCOL.md` — rules for LLM code generation
+- `IMPLEMENTATION_CONSTRAINTS.md` — hard constraints for implementation
 
 ### Meta
 - `DOC_INDEX.md` — this file

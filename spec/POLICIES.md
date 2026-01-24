@@ -81,6 +81,22 @@ Ambiguity behavior (MVP):
 
 ---
 
+## 4.1 DST Policy
+
+**Core does not infer calendar dates from text.**
+
+All time mentions are interpreted relative to message timestamp date.
+
+Rules:
+- Use `timestamp_utc.date()` as reference date for DST calculation
+- Cross-day inference is explicitly unsupported
+- "Tomorrow at 10" is not parsed (relative time)
+- DST transitions are handled by `zoneinfo` automatically
+
+This makes the system predictable and formally bounded.
+
+---
+
 ## 5. Active Timezones Policy
 
 **Source of truth:** `UserProfile.timezone`.

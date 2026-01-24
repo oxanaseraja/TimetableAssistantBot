@@ -115,7 +115,42 @@ In MVP, channel context is also loaded from `users.json`:
 }
 ```
 
-**active_timezones** = timezones of all members listed in channel.
+---
+
+## 6.1 Computing active_timezones
+
+**Definition:** `active_timezones` = unique non-null timezones of all channel members.
+
+**Algorithm:**
+
+```python
+def compute_active_timezones(
+    channel_config: dict,
+    user_configs: Dict[str, dict]
+) -> List[str]:
+    """
+    Active timezones = unique non-null timezones of all channel members
+    known at message time.
+    
+    Computed on every message. Not cached globally.
+    """
+    timezones = set()
+    
+    for member_key in channel_config.get("members", []):
+        user = user_configs.get(member_key)
+        if user and user.get("timezone"):
+            timezones.add(user["timezone"])
+    
+    # Sorted for determinism
+    return sorted(list(timezones))
+```
+
+**Rules:**
+- Recomputed on every message (not cached)
+- Source of truth: ChannelContext.members + UserProfile.timezone
+- Unknown members are ignored (not an error)
+- Null timezones are excluded
+- Result is sorted alphabetically for determinism
 
 ---
 

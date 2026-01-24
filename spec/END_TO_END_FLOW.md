@@ -24,7 +24,7 @@ Telegram message:
 
 ```
 CoreMessageEvent {
-  internal_message_id: SHA256("‑1001:555"),
+  internal_message_id: SHA256("-1001:555"),
   internal_user_id: SHA256("telegram:123"),
   internal_channel_id: SHA256("telegram:-1001"),
   text: "See you at 10:30 Amsterdam",
