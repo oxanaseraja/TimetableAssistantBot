@@ -1,0 +1,86 @@
+[
+  {
+    "city": "Vancouver",
+    "country": "CA",
+    "timezone": "America/Vancouver",
+    "aliases": []
+  },
+  {
+    "city": "Miami",
+    "country": "US",
+    "timezone": "America/New_York",
+    "aliases": []
+  },
+  {
+    "city": "New York",
+    "country": "US",
+    "timezone": "America/New_York",
+    "aliases": ["NYC", "NY"]
+  },
+  {
+    "city": "Lisbon",
+    "country": "PT",
+    "timezone": "Europe/Lisbon",
+    "aliases": []
+  },
+  {
+    "city": "Amsterdam",
+    "country": "NL",
+    "timezone": "Europe/Amsterdam",
+    "aliases": ["AMS"]
+  },
+  {
+    "city": "Rotterdam",
+    "country": "NL",
+    "timezone": "Europe/Amsterdam",
+    "aliases": []
+  },
+  {
+    "city": "The Hague",
+    "country": "NL",
+    "timezone": "Europe/Amsterdam",
+    "aliases": ["Den Haag"]
+  },
+  {
+    "city": "Milan",
+    "country": "IT",
+    "timezone": "Europe/Rome",
+    "aliases": ["Milano"]
+  },
+  {
+    "city": "Rome",
+    "country": "IT",
+    "timezone": "Europe/Rome",
+    "aliases": ["Roma"]
+  },
+  {
+    "city": "Belgrade",
+    "country": "RS",
+    "timezone": "Europe/Belgrade",
+    "aliases": ["Beograd"]
+  },
+  {
+    "city": "Nicosia",
+    "country": "CY",
+    "timezone": "Europe/Nicosia",
+    "aliases": []
+  },
+  {
+    "city": "Limassol",
+    "country": "CY",
+    "timezone": "Europe/Nicosia",
+    "aliases": []
+  },
+  {
+    "city": "Tbilisi",
+    "country": "GE",
+    "timezone": "Asia/Tbilisi",
+    "aliases": []
+  },
+  {
+    "city": "Yerevan",
+    "country": "AM",
+    "timezone": "Asia/Yerevan",
+    "aliases": []
+  }
+]

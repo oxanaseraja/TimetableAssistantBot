@@ -1,0 +1,11 @@
+# TimetableAssistantBot - MVP Dependencies
+# Python >= 3.10 required
+
+# Telegram Bot API
+python-telegram-bot>=20.0,<21.0
+
+# Configuration parsing
+pyyaml>=6.0
+
+# Windows timezone support (optional, auto-installed on Windows)
+tzdata; sys_platform == "win32"

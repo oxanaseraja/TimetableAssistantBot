@@ -1,0 +1,55 @@
+# configuration.yaml — MVP Runtime Configuration
+# Schema: see inline comments for validation rules
+#
+# IMPORTANT: Do not store secrets here. Use environment variables.
+# Token should be set via TELEGRAM_TOKEN environment variable.
+
+# =============================================================================
+# CORE SETTINGS (platform-agnostic)
+# =============================================================================
+
+core:
+  default_timezone: "UTC"      # string, IANA timezone ID, optional, default="UTC"
+  max_time_mentions: 3         # int, range=[1, 10], optional, default=3
+
+output:
+  max_timezones: 5             # int, range=[1, 10], optional, default=5
+  ordering: "SOURCE_THEN_OFFSET_ASC"  # enum, optional
+
+logging:
+  level: "INFO"                # enum: DEBUG|INFO|WARNING|ERROR, optional, default="INFO"
+
+# =============================================================================
+# TELEGRAM ADAPTER SETTINGS
+# =============================================================================
+
+telegram:
+  # REQUIRED fields (adapter will not start without these)
+  token: "${TELEGRAM_TOKEN}"   # string, required, non-empty, from environment
+  chat_id: "-1001234567890"    # string, required, can be negative for groups
+
+  # OPTIONAL fields (have defaults)
+  max_lines: 5                 # int, range=[1, 10], optional, default=5
+  retry_attempts: 3            # int, range=[1, 10], optional, default=3
+  persistence_path: null       # string|null, optional, default=null
+
+# =============================================================================
+# DATA FILES
+# =============================================================================
+
+data:
+  cities_path: "data/cities.json"    # string, required, path to cities whitelist
+  users_path: "data/users.json"      # string, required, path to user profiles
+
+# =============================================================================
+# VALIDATION RULES
+# =============================================================================
+#
+# On startup, adapter validates:
+# 1. telegram.token is non-empty (from env or direct value)
+# 2. telegram.chat_id is non-empty
+# 3. data.cities_path file exists and is valid JSON
+# 4. data.users_path file exists and is valid JSON (or empty object {})
+#
+# If validation fails → adapter does not start, logs error.
+# No partial startup. No fallback to defaults for required fields.
