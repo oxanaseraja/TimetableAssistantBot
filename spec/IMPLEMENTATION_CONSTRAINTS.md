@@ -36,8 +36,17 @@ These constraints are **absolute**. Violation = incorrect implementation.
 
 14. **Adapter owns all IO** — file loading, network, logging
 15. **Adapter constructs all context** — UserProfile, ChannelContext
-16. **Adapter catches all exceptions** — core errors → log + silence
+16. **Adapter catches all exceptions** — wrap `process()` in try/except (REQUIRED)
 17. **Adapter never modifies core logic** — only transforms data
+
+**Exception handling is mandatory:**
+```python
+try:
+    display = process(...)
+except Exception as exc:
+    logging.error("Core error", exc_info=exc)
+    display = None
+```
 
 ---
 

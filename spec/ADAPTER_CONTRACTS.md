@@ -139,9 +139,8 @@ on_edit(message):
 
 ```yaml
 telegram:
-  token: string              # required (or from env)
+  token: string              # required (or from env TELEGRAM_TOKEN)
   chat_id: string            # required
-  max_lines: int = 5         # optional, default 5
   persistence_path: string | null = null
   retry_attempts: int = 3
 
@@ -150,16 +149,24 @@ data:
   users_path: string         # required (path to users.json)
 
 core:
-  max_time_mentions: int = 3
-  max_timezones: int = 5
+  max_time_mentions: int = 3 # max times to parse per message
+
+output:
+  max_timezones: int = 5     # max timezones in DisplayBlock
+  max_lines: int = 5         # max lines in adapter output
   ordering: string = "SOURCE_FIRST"
-  default_timezone: string | null = null
 ```
 
 **Structure notes:**
-- `data:` section contains paths to data files (platform-agnostic)
-- `core:` section maps to `CoreConfig` DTO
-- This structure scales better for multi-platform support
+- `telegram:` — platform-specific settings
+- `data:` — paths to data files (platform-agnostic)
+- `core:` — core processing settings (maps to CoreConfig.max_time_mentions)
+- `output:` — output formatting settings (maps to CoreConfig.max_timezones, ordering)
+
+**Rationale for core/output split:**
+- `core:` = things that affect parsing/processing
+- `output:` = things that affect display/formatting
+- Clearer separation of concerns
 
 Rules:
 - Missing required → adapter does not start.

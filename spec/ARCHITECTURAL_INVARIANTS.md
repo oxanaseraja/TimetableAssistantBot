@@ -80,6 +80,21 @@ No caching, no counters, no debug flags at module level.
 All failure conditions are represented by returning `None`.
 No `raise` statements that can propagate to adapter.
 
+**Implementation pattern:**
+```python
+def process(...) -> DisplayBlock | None:
+    try:
+        # ... processing logic ...
+        return display_block
+    except Exception:
+        return None  # Any error → silence
+```
+
+**Common exception sources to guard:**
+- `zoneinfo.ZoneInfo()` → `ZoneInfoNotFoundError`
+- `int()` parsing → `ValueError`
+- Dict access → `KeyError`
+
 ---
 
 ## Adapter Invariants
@@ -109,6 +124,26 @@ Core functions are called synchronously from async handlers.
 **Adapter must catch and suppress all exceptions from core.**
 No user-visible error messages in MVP.
 Errors are logged, but user sees nothing.
+
+**Implementation pattern (REQUIRED):**
+```python
+async def on_message(update: Update):
+    # ... prepare inputs ...
+    
+    try:
+        display = process(event, user_profile, channel_context, city_index, config)
+    except Exception as exc:
+        logging.error("Core error: %s", exc, exc_info=True)
+        display = None  # Suppress error, treat as no output
+    
+    if display is None:
+        return  # No reply
+    
+    # ... send reply ...
+```
+
+**This is not optional.** Even if Invariant #8 guarantees core won't raise,
+adapter must still wrap the call defensively (defense in depth).
 
 ---
 

@@ -28,7 +28,9 @@ Patterns are applied in order. First match wins.
 
 ### 1.2 TIME_12H_AMPM — 12-hour format with AM/PM
 
-**Regex:** `\b(1[0-2]|0?[1-9])(:[0-5]\d)?\s*(am|pm|AM|PM|a\.m\.|p\.m\.)\b`
+**Regex:** `\b(1[0-2]|0?[1-9])(?::([0-5]\d))?\s*(am|pm|AM|PM|a\.m\.|p\.m\.)\b`
+
+**Note:** Non-capturing group `(?:...)` for colon ensures group(2) captures only digits.
 
 | Example | hour | minute | am_pm | ambiguous |
 |---------|------|--------|-------|-----------|
@@ -120,7 +122,17 @@ def overlaps(match, existing_results: List[DetectedTime]) -> bool:
 ### 3.2 Main Algorithm
 
 ```python
-def parse_times(text: str) -> List[DetectedTime]:
+def parse_times(text: str, max_results: int = 3) -> List[DetectedTime]:
+    """
+    Parse time mentions from text.
+    
+    Args:
+        text: Message text to parse
+        max_results: Maximum times to return (default: 3, from CoreConfig)
+    
+    Returns:
+        List of DetectedTime, sorted by position, capped to max_results
+    """
     results = []
     
     # Priority 1: TIME_24H
@@ -136,11 +148,13 @@ def parse_times(text: str) -> List[DetectedTime]:
         ))
     
     # Priority 2: TIME_12H_AMPM (skip if overlaps with existing)
+    # Regex: \b(1[0-2]|0?[1-9])(?::([0-5]\d))?\s*(am|pm|...)\b
+    # Groups: (1)=hour, (2)=minute (digits only, no colon), (3)=am/pm
     for match in TIME_12H_AMPM_REGEX.finditer(text):
         if not overlaps(match, results):
             hour = int(match.group(1))
-            minute = int(match.group(2)) if match.group(2) else None
-            am_pm = match.group(3).upper().replace('.', '')  # Normalize
+            minute = int(match.group(2)) if match.group(2) else None  # group(2) is digits only
+            am_pm = match.group(3).upper().replace('.', '')  # Normalize "a.m." → "AM"
             results.append(DetectedTime(
                 raw_text=match.group(),
                 hour=hour,
@@ -164,8 +178,8 @@ def parse_times(text: str) -> List[DetectedTime]:
                 ambiguous=True  # Always ambiguous
             ))
     
-    # Sort by position, cap to 3
-    return sorted(results, key=lambda x: x.position_start)[:3]
+    # Sort by position, cap to max_results
+    return sorted(results, key=lambda x: x.position_start)[:max_results]
 ```
 
 ---

@@ -184,17 +184,25 @@ def normalize_offset(raw: str) -> str:
 ### 3.3 Main Extraction Algorithm
 
 ```python
-def extract_timezone_hint(text: str, time_position: int, window: int = 30) -> Optional[str]:
+def extract_timezone_hint(
+    text: str,
+    time_position: int,
+    city_index: Mapping[str, str],
+    window: int = 30
+) -> Optional[str]:
     """
     Extract timezone hint from context around time mention.
     
     Args:
         text: Full message text
         time_position: Character position of time mention
+        city_index: Pre-built city→timezone lookup (passed from adapter)
         window: Characters to look before/after (default 30)
     
     Returns:
         IANA timezone ID, normalized offset, or None
+    
+    Note: city_index is passed explicitly to maintain core purity (Invariant #7).
     """
     start = max(0, time_position - window)
     end = min(len(text), time_position + window)
@@ -212,7 +220,7 @@ def extract_timezone_hint(text: str, time_position: int, window: int = 30) -> Op
     if match and match.group() in zoneinfo.available_timezones():
         return match.group()
     
-    # Priority 3: City lookup (uses pre-built index)
+    # Priority 3: City lookup (uses passed index)
     for word in tokenize(context):
         if word.lower() in city_index:
             return city_index[word.lower()]

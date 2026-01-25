@@ -106,17 +106,20 @@ Edit handling:
 
 ## 5. Adapter Configuration (MVP)
 
-Defined in root `configuration.yaml`:
+Defined in root `configuration.yaml`.
 
+See `ADAPTER_CONTRACTS.md §5` for full schema.
+
+**Telegram-specific settings:**
 ```yaml
 telegram:
-  token: "<TOKEN>"
+  token: "<TOKEN>"           # or env TELEGRAM_TOKEN
   chat_id: "<MVP_CHAT_ID>"
-  max_lines: 5
   persistence_path: "adapter_mapping.json"
   retry_attempts: 3
-  cities_path: "cities.json"
 ```
+
+**Note:** `cities_path` and `users_path` are in `data:` section (platform-agnostic).
 
 ---
 

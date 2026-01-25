@@ -100,9 +100,10 @@ DisplayBlock {
     flags: DisplayFlags
 }
 
-Ordering = "SOURCE_FIRST" | "OFFSET_ASC"
+Ordering = "SOURCE_FIRST" | "OFFSET_ASC" | "ALPHABETICAL"
 // SOURCE_FIRST: source timezone first, then channel default, then by offset
-// OFFSET_ASC: sorted by UTC offset ascending, then alphabetically
+// OFFSET_ASC: sorted by UTC offset ascending, then alphabetically by ID
+// ALPHABETICAL: sorted alphabetically by timezone ID
 
 DisplayFlags {
     ambiguous: boolean,   // true if any input time was ambiguous
@@ -135,6 +136,12 @@ CoreConfig {
 - `max_timezones = 5` (from POLICIES.md §2)
 - `ordering = "SOURCE_FIRST"` (from POLICIES.md §6)
 - `default_timezone = null` (null means UTC)
+
+**Mapping from configuration.yaml:**
+- `core.max_time_mentions` → `CoreConfig.max_time_mentions`
+- `output.max_timezones` → `CoreConfig.max_timezones`
+- `output.ordering` → `CoreConfig.ordering`
+- (no config key) → `CoreConfig.default_timezone` (hardcoded or absent)
 
 ---
 
