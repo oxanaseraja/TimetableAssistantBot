@@ -46,11 +46,16 @@ Authoritative references:
 
 ```
 adapters/telegram/
-├─ adapter.py           # bridge to Telegram API
+├─ adapter.py           # main adapter: startup, event handling, Telegram API
 ├─ event_mapping.py     # Telegram update → CoreMessageEvent
-├─ dispatcher.py        # DisplayBlock → Telegram message
-├─ README.md            # adapter overview
+├─ formatter.py         # DisplayBlock → formatted text for Telegram
+├─ user_loader.py       # users.json → UserProfile, ChannelContext
+├─ README.md            # adapter overview (optional)
 ```
+
+**Notes:**
+- `formatter.py` preferred over `dispatcher.py` (more accurate naming)
+- `user_loader.py` separates data loading from adapter logic
 
 ---
 

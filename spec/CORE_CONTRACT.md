@@ -10,7 +10,9 @@ This document defines how adapters invoke the core.
 def process(
     event: CoreMessageEvent,
     user_profile: UserProfile,
-    channel_context: ChannelContext
+    channel_context: ChannelContext,
+    city_index: Mapping[str, str],
+    config: CoreConfig
 ) -> DisplayBlock | None
 ```
 
@@ -18,10 +20,17 @@ def process(
 - `event` — the message to process
 - `user_profile` — timezone info for message author (may have null timezone)
 - `channel_context` — channel default and active timezones
+- `city_index` — pre-built city→timezone lookup table (from cities.json)
+- `config` — processing configuration (limits, ordering, defaults)
 
 **Returns:**
 - `DisplayBlock` — formatted output for adapter to render
 - `None` — no output (no time detected, ambiguity, suppression)
+
+**Why 5 arguments:**
+- Core cannot access files (Invariant #2) → city_index passed in
+- Core cannot have global config (Invariant #7) → config passed in
+- All data explicitly passed = pure function = testable in isolation
 
 ---
 
@@ -37,13 +46,17 @@ def process(
 ## Data Flow
 
 ```
-Adapter constructs:
+Adapter loads at startup:
+  - city_index (from cities.json)
+  - config (from configuration.yaml)
+
+Adapter constructs per message:
   - CoreMessageEvent (from platform event)
   - UserProfile (from users.json lookup)
   - ChannelContext (from users.json lookup)
 
 Adapter calls:
-  result = process(event, user_profile, channel_context)
+  result = process(event, user_profile, channel_context, city_index, config)
 
 Adapter handles result:
   - if result is None → send nothing
@@ -56,8 +69,9 @@ Adapter handles result:
 
 - **Core does not know where data comes from**
 - **Core has no access to storage or files**
-- **Core is deterministic from these three arguments only**
+- **Core is deterministic from all five arguments only**
 - **Adapter is responsible for constructing all inputs**
+- **city_index and config are loaded once at startup, reused for all messages**
 
 This ensures core is testable in complete isolation.
 

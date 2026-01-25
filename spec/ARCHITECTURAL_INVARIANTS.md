@@ -56,11 +56,23 @@ No "best guess" behavior in MVP.
 All inputs are treated as immutable.
 If transformation is needed, create new objects.
 
-### 7. Core has no global state
+### 7. Core has no mutable global state
 
-**Core must not use global or module-level state.**
-All state must be passed explicitly as arguments.
+**Core must not use mutable global or module-level state.**
+All runtime data must be passed explicitly as arguments.
 No caching, no counters, no debug flags at module level.
+
+**Allowed (immutable):**
+- Compiled regex patterns (`re.compile(...)`)
+- Frozen sets (`frozenset(...)`)
+- Constants (`MAX_TIMES = 3`)
+- Type definitions
+
+**Forbidden (mutable):**
+- Module-level dicts or lists that could be modified
+- Singleton instances
+- Global configuration objects
+- Any state that changes between calls
 
 ### 8. Core never raises uncaught exceptions
 
@@ -122,10 +134,23 @@ Only IANA timezone IDs are recognized.
 Only UTC/GMT offsets are recognized.
 No fuzzy matching. No inference.
 
-### 16. Multiple timezone candidates = ambiguity
+### 16. Timezone resolution follows priority order
 
-**If more than one valid timezone candidate is extracted → ambiguity → `None`.**
-No priority rules apply unless explicitly defined in `TIMEZONE_EXTRACTION_RULES.md`.
+Timezone extraction uses **priority order** defined in `TIMEZONE_EXTRACTION_RULES.md`:
+1. UTC/GMT offset (highest)
+2. IANA timezone ID
+3. City name (lowest)
+
+**Rules:**
+- Higher priority signal always wins over lower priority
+- Within same priority level: closest to time mention wins
+- This is NOT ambiguity — it's deterministic resolution
+
+**Ambiguity occurs only when:**
+- No timezone signal found AND multiple active_timezones exist
+- Time format is genuinely ambiguous (e.g., bare hour without AM/PM)
+
+See `TIMEZONE_EXTRACTION_RULES.md` §4 for full disambiguation rules.
 
 ---
 
@@ -200,7 +225,7 @@ No flaky tests from timing or randomness.
 | 4 | Core never infers missing information | Core |
 | 5 | All ambiguity leads to no reply | Core |
 | 6 | Core inputs are immutable | Core |
-| 7 | Core has no global state | Core |
+| 7 | Core has no mutable global state | Core |
 | 8 | Core never raises uncaught exceptions | Core |
 | 9 | Adapters are the only source of side effects | Adapter |
 | 10 | Adapters never modify core logic | Adapter |
@@ -209,7 +234,7 @@ No flaky tests from timing or randomness.
 | 13 | Time parsing is regex-based only | Parsing |
 | 14 | Parser never normalizes input | Parsing |
 | 15 | Timezone extraction is whitelist-based only | Parsing |
-| 16 | Multiple timezone candidates = ambiguity | Parsing |
+| 16 | Timezone resolution follows priority order | Parsing |
 | 17 | Core never sees platform identifiers | Data |
 | 18 | Configuration is immutable at runtime | Data |
 | 19 | Spec directory is immutable | Spec |

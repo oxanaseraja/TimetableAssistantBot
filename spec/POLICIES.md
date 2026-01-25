@@ -52,14 +52,18 @@ No fuzzy matching, no inference, no guessing.
 ## 3. Timezone Resolution Precedence
 
 Priority order:
-1. Explicit offset in text (UTC+2, +0300)
-2. Explicit timezone name or city (from text)
-3. User profile timezone
-4. Channel default timezone
-5. If exactly one active timezone → use it
-6. Otherwise → ambiguity (no reply)
+1. `EXPLICIT_HINT` — Explicit offset in text (UTC+2, +0300)
+2. `EXPLICIT_HINT` — Explicit timezone name or city (from text)
+3. `USER_PROFILE` — User profile timezone
+4. `CHANNEL_DEFAULT` — Channel default timezone
+5. `ACTIVE_TZ_SINGLE` — If exactly one active timezone → use it
+6. `SYSTEM_DEFAULT` — Fallback to UTC (if configured) or ambiguity
 
-System default UTC is used only if channel has no active timezones and no defaults.
+**SYSTEM_DEFAULT behavior:**
+- Used only when all other sources exhausted
+- If `config.default_timezone` is set → use it
+- If `config.default_timezone` is null → use UTC
+- ResolutionSource is set to `SYSTEM_DEFAULT` in this case
 
 ---
 
@@ -130,6 +134,32 @@ Activity tracking and decay are out of scope for MVP.
 - Ignore messages with > 3 time mentions
 
 **Output format:** See `ADAPTER_CONTRACTS.md` §6.
+
+---
+
+## 6.1 Multiple Times in One Message (MVP)
+
+**MVP simplification:** Process only the **first** detected time mention.
+
+Rationale:
+- Simplifies DisplayBlock structure (one time = one conversion)
+- Reduces complexity of ambiguity resolution
+- Avoids mixing timezones from different contexts
+
+**Behavior:**
+```
+Input: "call at 10am NYC or 2pm London"
+Detected: [10am, 2pm]
+Processed: 10am only (first by position)
+Output: DisplayBlock for 10:00 NYC → other timezones
+```
+
+**Future extension (post-MVP):**
+- Process all detected times (up to 3)
+- Return `List[DisplayBlock]` instead of single block
+- Each DisplayBlock represents one time mention
+
+**Note:** Parser still returns up to 3 times (for future use), but processor uses only `detected_times[0]` in MVP.
 
 ---
 

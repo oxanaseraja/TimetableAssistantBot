@@ -9,14 +9,23 @@ It is independent of any specific platform implementation.
 
 Interface:
 
+```python
+def process(
+    event: CoreMessageEvent,
+    user_profile: UserProfile,
+    channel_context: ChannelContext,
+    city_index: Mapping[str, str],
+    config: CoreConfig
+) -> DisplayBlock | None
 ```
-process(event: CoreMessageEvent) -> DisplayBlock | None
-```
+
+See `CORE_CONTRACT.md` for full specification.
 
 Rules:
 - Call is synchronous.
 - Core must not raise exceptions to the adapter.
 - If core returns `None`, adapter sends nothing.
+- `city_index` and `config` are loaded once at startup, reused for all messages.
 
 ---
 
@@ -128,15 +137,29 @@ on_edit(message):
 
 ## 5. Config Contract
 
-```
+```yaml
 telegram:
-  token: string            # required
-  chat_id: string          # required
-  max_lines: int = 5       # optional, default 5
+  token: string              # required (or from env)
+  chat_id: string            # required
+  max_lines: int = 5         # optional, default 5
   persistence_path: string | null = null
   retry_attempts: int = 3
-  cities_path: string      # required (local city list)
+
+data:
+  cities_path: string        # required (path to cities.json)
+  users_path: string         # required (path to users.json)
+
+core:
+  max_time_mentions: int = 3
+  max_timezones: int = 5
+  ordering: string = "SOURCE_FIRST"
+  default_timezone: string | null = null
 ```
+
+**Structure notes:**
+- `data:` section contains paths to data files (platform-agnostic)
+- `core:` section maps to `CoreConfig` DTO
+- This structure scales better for multi-platform support
 
 Rules:
 - Missing required → adapter does not start.
