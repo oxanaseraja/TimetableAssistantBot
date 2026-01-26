@@ -197,8 +197,57 @@ def parse_times(text: str, max_results: int = 3) -> List[DetectedTime]:
 
 ---
 
-## 5. References
+## 5. Error Handling
+
+**Requirement:** Parser must never raise uncaught exceptions (per `ARCHITECTURAL_INVARIANTS.md` #8).
+
+**Partial Failure Handling:**
+- If parsing fails for a specific match (e.g., `int()` conversion error, invalid group access):
+  - Skip that match
+  - Continue processing remaining matches
+  - Log warning for debugging (optional, implementation detail)
+- If all matches fail → return empty list `[]`
+- Parser must handle gracefully:
+  - Invalid regex group access (`IndexError`)
+  - String-to-int conversion errors (`ValueError`)
+  - Any other unexpected parsing errors
+
+**Implementation Pattern:**
+```python
+def parse_times(text: str, max_results: int = 3) -> List[DetectedTime]:
+    results = []
+    
+    # Priority 1: TIME_24H
+    for match in TIME_24H_REGEX.finditer(text):
+        try:
+            hour = int(match.group(1))
+            minute = int(match.group(2))
+            results.append(DetectedTime(...))
+        except (ValueError, IndexError):
+            continue  # Skip invalid match, continue with others
+    
+    # ... similar for other priorities ...
+    
+    return sorted(results, key=lambda x: x.position_start)[:max_results]
+```
+
+**Behavior:**
+- Same input → same output (deterministic)
+- Errors in one match don't affect other matches
+- Empty result list is valid (no times detected)
+- Core processor handles empty list by returning `None` (no reply)
+
+**Rationale:**
+- Ensures parser never crashes on malformed input
+- Graceful degradation: partial results better than no results
+- Maintains determinism: errors don't introduce randomness
+- Aligns with architectural invariant #8 (core never raises exceptions)
+
+---
+
+## 6. References
 
 - `POLICIES.md` §1 — Time Detection Policy (behavioral rules)
 - `POLICIES.md` §4 — Ambiguity Policy (what happens when ambiguous)
 - `CONTRACTS.md` — `DetectedTime` DTO structure
+- `ARCHITECTURAL_INVARIANTS.md` #8 — Core never raises uncaught exceptions

@@ -22,6 +22,20 @@ UserProfile {
 }
 ```
 
+**Critical constraint:**
+- **Only IANA timezone IDs are allowed** in `timezone` field
+- **Offset strings (`±HH:MM`) are NOT allowed** in user profiles
+- **Offset strings (`±HH:MM`) are NOT allowed** in `users.json` file
+- Offset strings may appear **only** as explicit hints extracted from message text
+- Invalid timezone IDs are treated as `null` (missing timezone)
+
+**Why offset strings are not allowed:**
+- Profiles represent stable, persistent user data
+- Offset strings are situational hints from message text
+- Offset strings don't carry DST information
+- Offset strings cannot be validated via `zoneinfo.available_timezones()`
+- This separation ensures data integrity and predictable behavior
+
 Only `timezone` field is used in MVP.
 Additional fields (name, language, etc.) are out of scope.
 
@@ -61,6 +75,25 @@ In MVP, user profiles are loaded from a **static JSON file**.
 1. Load `users.json` if exists
 2. Build in-memory map: `platform_user_id → timezone`
 3. If file missing or invalid → start with empty map
+
+### Empty users.json behavior:
+
+An empty `users.json` (`{}`) is a **valid state**.
+
+In this case:
+- All users have `timezone = None`
+- All channels have `default_timezone = None`
+- `active_timezones` may be empty
+
+System behavior:
+- Resolution relies on explicit timezone hints in text (see `TIMEZONE_EXTRACTION_RULES.md`)
+- Or `SYSTEM_DEFAULT` if configured
+- If no timezone can be resolved → no reply is sent (ambiguity)
+
+**Rationale:**
+- Bot is voluntary helper, not all users fill profiles
+- System gracefully degrades to explicit hints
+- Matches MVP product model: "bot learns timezones" (not "must know")
 
 ### On message:
 1. Lookup sender's timezone from in-memory map
@@ -178,7 +211,53 @@ These are explicitly **not part of MVP**.
 
 ---
 
-## 9. Layer Isolation
+## 9. Timezone ID Validation
+
+**Requirement:** All timezone IDs in `users.json` must be valid IANA timezone identifiers.
+
+**Critical constraint:**
+- **Only IANA timezone IDs are allowed** in `users.json` and channel profiles
+- **Offset strings (`±HH:MM`) are NOT allowed** in:
+  - User profiles (`timezone` field)
+  - Channel `default_timezone`
+  - `active_timezones` list
+
+**Offset strings:**
+- May appear **only** as explicit hints extracted from message text
+- Are handled by extractor (see `TIMEZONE_EXTRACTION_RULES.md` §1.1)
+- Bypass user/channel timezone resolution (highest priority)
+
+**Rationale:**
+- Profiles = stable, persistent data
+- Offset = situational hint from text
+- Offset doesn't carry DST information
+- Offset cannot be validated via `zoneinfo.available_timezones()`
+- This separation ensures data integrity and predictable behavior
+
+**Validation rules:**
+- Timezone IDs are validated against `zoneinfo.available_timezones()`
+- Validation occurs at configuration load time (adapter startup)
+- Validation occurs when processing user profiles and channel contexts
+
+**Behavior for invalid timezone IDs:**
+- Invalid `default_timezone` in config → treated as `None` (UTC fallback)
+- Invalid `timezone` in user profile → treated as `None` (missing timezone)
+- Invalid `default_timezone` in channel context → treated as `None`
+- Invalid timezone in `active_timezones` → excluded from list
+
+**Error handling:**
+- Validation errors are logged
+- Invalid timezones are silently ignored (treated as missing)
+- Adapter continues operation with valid timezones only
+
+**Rationale:**
+- Ensures only valid IANA timezones are used
+- Prevents runtime errors from invalid configuration
+- Graceful degradation: invalid entries don't break entire system
+
+---
+
+## 10. Layer Isolation
 
 **Critical constraint:**
 
@@ -195,7 +274,7 @@ This ensures:
 
 ---
 
-## 10. References
+## 11. References
 
 - `POLICIES.md` §3 — Timezone Resolution Precedence
 - `POLICIES.md` §5 — Active Timezones Policy

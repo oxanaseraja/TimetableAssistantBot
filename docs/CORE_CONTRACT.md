@@ -85,8 +85,71 @@ This ensures core is testable in complete isolation.
 
 ---
 
+## Resolver Responsibilities
+
+**Timezone resolution layer boundaries:**
+
+The resolver (`resolve_timezone`) is responsible for:
+- Selecting timezone source according to priority rules (see `POLICIES.md` §3)
+- Determining resolution source (`EXPLICIT_HINT`, `USER_PROFILE`, etc.)
+- Detecting ambiguity when multiple sources conflict
+- Interpreting `config.default_timezone = null` as `"UTC"` (single source of truth for fallback timezone resolution)
+
+The resolver is **NOT responsible for**:
+- Validating timezone format (IANA vs offset)
+- Checking if timezone ID exists in `zoneinfo.available_timezones()`
+- Normalizing timezone strings
+
+**Why:**
+- Resolver works with "signals" (abstract timezone identifiers)
+- Format validation is responsibility of converter
+- This separation maintains clean pipeline: extractor → resolver → converter
+- Prevents duplicate validation logic
+- Simplifies testing (each layer tested independently)
+
+**Behavior:**
+- Resolver passes `explicit_timezone` to converter as-is (no format checks)
+- Converter validates format and handles both IANA IDs and offset strings
+- If converter receives invalid format → conversion fails gracefully (see Partial Failure Handling)
+
+**Offset strings as base_timezone:**
+- Offset strings (e.g., `"+03:00"`) can be resolved as `base_timezone` when extracted from message text
+- When offset string is resolved as `base_timezone`:
+  - It is included in `target_timezones` for conversion (same as IANA IDs)
+  - Converter handles it as fixed-offset timezone (no DST)
+  - It appears in DisplayBlock with offset string as `timezone_id` (not converted to IANA ID)
+- This maintains consistency: explicit hints (including offsets) bypass user/channel timezone resolution
+
+---
+
+## Partial Failure Handling in Converter
+
+**Scenario:** Conversion fails for one or more timezones in the target list.
+
+**Behavior:**
+- Failed timezone conversions are skipped
+- Successful conversions are still returned
+- Partial `DisplayBlock` is created if at least one conversion succeeds
+- If all conversions fail → converter returns empty list → core returns `None`
+
+**Examples:**
+- Target: `["Europe/Amsterdam", "Invalid/TZ", "America/New_York"]`
+- Result: `[ConvertedTime(Europe/Amsterdam), ConvertedTime(America/New_York)]`
+- Invalid timezone is silently skipped
+
+- Target: `["Invalid1/TZ", "Invalid2/TZ"]`
+- Result: `[]` → core returns `None` → no reply
+
+**Rationale:**
+- Graceful degradation: show available timezones even if some fail
+- Better UX than failing completely
+- Invalid timezones may be configuration errors, shouldn't break entire response
+
+---
+
 ## References
 
 - `CONTRACTS.md` — DTO definitions
 - `USER_PROFILE_MODEL.md` — how adapter constructs UserProfile
 - `ARCHITECTURAL_INVARIANTS.md` — purity constraints
+- `TIMEZONE_EXTRACTION_RULES.md` — converter support for offset strings

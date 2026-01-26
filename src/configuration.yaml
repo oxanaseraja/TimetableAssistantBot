@@ -9,12 +9,12 @@
 # =============================================================================
 
 core:
-  default_timezone: "UTC"      # string, IANA timezone ID, optional, default="UTC"
+  default_timezone: null       # string|null, IANA timezone ID, optional, default=null (null means UTC per CONTRACTS.md)
   max_time_mentions: 3         # int, range=[1, 10], optional, default=3
 
 output:
   max_timezones: 5             # int, range=[1, 10], optional, default=5
-  ordering: "SOURCE_THEN_OFFSET_ASC"  # enum, optional
+  ordering: "SOURCE_FIRST"     # enum: "SOURCE_FIRST" | "OFFSET_ASC" | "ALPHABETICAL", optional, default="SOURCE_FIRST"
 
 logging:
   level: "INFO"                # enum: DEBUG|INFO|WARNING|ERROR, optional, default="INFO"

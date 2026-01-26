@@ -62,6 +62,12 @@ ResolvedTimeContext {
     resolution_source?: ResolutionSource,
     reason?: string
 }
+```
+
+**Note:**
+- `base_timezone` is always a string (IANA ID or offset string) when present, never null
+- When `config.default_timezone = null`, resolver interprets it as `"UTC"` and returns `base_timezone = "UTC"`
+- `base_timezone` may be `None` only when ambiguity is `"HIGH"` (multiple conflicting sources)
 
 ResolutionSource = "EXPLICIT_HINT" | "USER_PROFILE" | "CHANNEL_DEFAULT" | "ACTIVE_TZ_SINGLE" | "SYSTEM_DEFAULT"
 ```
@@ -91,17 +97,53 @@ ConvertedTime {
 
 ```
 DisplayBlock {
-    entries: List<{
-        timezone: string,       // IANA timezone ID
-        local_time: string,     // HH:MM format (24-hour, zero-padded)
-        cities: List<string>    // populated by adapter from cities.json
-    }>,
+    entries: List<Entry>,
     ordering: Ordering,
     flags: DisplayFlags
 }
 
+Entry {
+    timezone: string,       // IANA timezone ID or offset string (±HH:MM)
+    local_time: string,     // "HH:MM", 24-hour format, zero-padded (e.g., "10:30", "09:05")
+    cities: List<string>    // List of city names (may be empty, adapter populates)
+}
+```
+
+**Entry structure specification:**
+
+Entry is a dictionary/object with exactly these three fields:
+
+- `timezone`: 
+  - Type: `string`
+  - Always a string (IANA ID or offset string)
+  - IANA timezone ID (e.g., `"Europe/Amsterdam"`) OR
+  - Offset string in normalized format (e.g., `"+03:00"`, `"-05:00"`)
+  - Offset strings may appear when extracted from message text (see `TIMEZONE_EXTRACTION_RULES.md`)
+
+- `local_time`: 
+  - Type: `string`
+  - Always formatted as `"HH:MM"` (24-hour format, zero-padded, no seconds, no AM/PM)
+  - Examples: `"10:30"`, `"09:05"`, `"23:59"`
+  - Format: exactly 5 characters (`HH:MM`)
+
+- `cities`: 
+  - Type: `List[string]`
+  - Always a list (may be empty `[]`)
+  - List of city names matching this timezone
+  - Adapter populates from `cities.json` during formatting
+  - Cities are sorted alphabetically
+  - Empty list `[]` if no cities match or if timezone is an offset string
+
 Ordering = "SOURCE_FIRST" | "OFFSET_ASC" | "ALPHABETICAL"
 // SOURCE_FIRST: source timezone first, then channel default, then by offset
+//   - Source timezone (where original time was expressed) is always first
+//   - Channel default timezone is second (if exists and different from source)
+//   - Remaining active timezones are sorted by UTC offset ascending, then alphabetically
+//   Edge cases:
+//   - If channel_default_timezone is None → skip channel default priority, 
+//     remaining timezones sorted by offset
+//   - If channel_default_timezone == source_timezone → don't duplicate,
+//     skip channel default priority, remaining timezones sorted by offset
 // OFFSET_ASC: sorted by UTC offset ascending, then alphabetically by ID
 // ALPHABETICAL: sorted alphabetically by timezone ID
 
@@ -111,10 +153,43 @@ DisplayFlags {
 }
 ```
 
+**Entry format specification:**
+
+- `timezone`: 
+  - IANA timezone ID (e.g., `"Europe/Amsterdam"`) OR
+  - Offset string in normalized format (e.g., `"+03:00"`, `"-05:00"`)
+  - Offset strings may appear when extracted from message text (see `TIMEZONE_EXTRACTION_RULES.md`)
+
+- `local_time`: 
+  - Always formatted as `"HH:MM"` (24-hour format, zero-padded)
+  - Examples: `"10:30"`, `"09:05"`, `"23:59"`
+
+- `cities`: 
+  - List of city names matching this timezone
+  - May be empty list `[]`
+  - Adapter populates from `cities.json` during formatting
+  - Cities are sorted alphabetically
+
+**Ordering rules:**
+- `entries` must be ordered according to `ordering` strategy
+- Order is determined by core processor
+- Adapter must preserve order when formatting
+
 **Notes:**
-- `partial = true` only when `len(active_timezones) > max_display_limit`
 - `ambiguous` is informational; if truly ambiguous, core returns None instead
 - Adapter uses `ordering` to verify output order matches expectation
+
+**partial flag semantics:**
+
+`partial = true` iff:
+- total number of candidate timezones
+  (base + channel default + active_timezones)
+  > max_timezones
+AND
+- displayed entries == max_timezones
+
+Meaning:
+Some valid conversions were omitted due to display limit.
 
 ---
 

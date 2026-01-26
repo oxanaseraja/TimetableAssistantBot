@@ -43,6 +43,26 @@ Core errors:
 
 ---
 
+## 2.3 Message Timestamp Requirement
+
+**Requirement:** All platform messages must have a valid timestamp.
+
+**Behavior if timestamp is missing:**
+- Adapter must discard the event
+- Core is not called
+- No reply is sent
+- Event may be logged as invalid (optional)
+
+**Rationale:**
+- Core requires deterministic timestamp for DST calculations
+- Using system clock (`datetime.now()`) violates Core Invariant #1 (no system clock)
+- Ensures reproducible behavior and testability
+- This behavior takes precedence over any other specification that might suggest using current time
+
+**Note:** This requirement ensures that core processing is deterministic and testable. Any platform adapter implementation must reject messages without timestamps rather than substituting system time.
+
+---
+
 ## 2.1 Security (MVP)
 
 - Token is supplied via config/env only.
@@ -80,8 +100,8 @@ If adapter receives unsupported event → ignore silently.
 
 ```
 RuntimeState {
-    processed_message_ids: Set<string>,                    // in-memory
-    reply_mapping: Dict<internal_message_id, platform_reply_id>,  // in-memory
+    processed_message_ids: OrderedDict<string, None>,       // in-memory, FIFO-ordered
+    reply_mapping: OrderedDict<internal_message_id, platform_reply_id>,  // in-memory, FIFO-ordered
     id_mapping: Dict<platform_id, internal_id>             // optional, persisted
 }
 ```
@@ -93,12 +113,14 @@ Rules:
 - TTL = process lifetime
 - cleared on restart
 - max size = 10_000, drop oldest FIFO
+- **MUST be implemented using an insertion-ordered structure (`OrderedDict` or equivalent) to guarantee FIFO eviction independently of language implementation details**
 
 **reply_mapping:**
 - in-memory only
 - maps original message → bot's reply message ID
 - used for edit/delete handling
 - max size = 10_000, drop oldest FIFO
+- **MUST be implemented using an insertion-ordered structure (`OrderedDict` or equivalent) to guarantee FIFO eviction independently of language implementation details**
 
 **id_mapping:**
 - optional persistence
@@ -133,6 +155,11 @@ on_edit(message):
         reply_mapping.pop(internal_id, None)
 ```
 
+**Cleanup Error Handling:**
+- Errors during cleanup operations (delete old reply) must not affect message processing
+- Errors may be logged (implementation detail)
+- Processing continues regardless of cleanup success/failure
+
 ---
 
 ## 5. Config Contract
@@ -140,13 +167,29 @@ on_edit(message):
 ```yaml
 telegram:
   token: string              # required (or from env TELEGRAM_TOKEN)
-  chat_id: string            # required
+  chat_id: string            # required, numeric string (converted to int by adapter)
   persistence_path: string | null = null
   retry_attempts: int = 3
 
 data:
   cities_path: string        # required (path to cities.json)
   users_path: string         # required (path to users.json)
+
+**Empty cities.json behavior:**
+
+An empty `cities.json` (`[]`) is a **valid state**.
+
+In this case:
+- City name extraction will not find any matches
+- System relies on IANA timezone IDs and offset strings only
+- No cities will be displayed in output (empty cities list)
+- Adapter starts normally with empty city index
+
+System behavior:
+- Extraction still works for offsets and IANA IDs
+- Resolution falls back to user/channel/system defaults
+- This is a valid system state and does not cause errors
+- Adapter may log info message: "Loaded empty cities.json, city extraction disabled"
 
 core:
   max_time_mentions: int = 3 # max times to parse per message
@@ -172,6 +215,37 @@ Rules:
 - Missing required → adapter does not start.
 - Defaults applied deterministically.
 - No dynamic reload in MVP.
+
+**Empty or Invalid Configuration:**
+- If configuration file is empty or contains only comments → treat as empty config dictionary `{}`
+- All values use defaults as specified in `CONTRACTS.md`
+- Adapter starts normally with default configuration
+- If YAML syntax is invalid → `yaml.YAMLError` is raised → adapter does not start
+
+**Configuration Validation Rules:**
+
+All configuration values must be validated according to these rules:
+
+**Type Validation:**
+- `max_time_mentions`: Must be integer. If string, attempt conversion. If conversion fails → use default 3, log warning.
+- `max_timezones`: Must be integer. If string, attempt conversion. If conversion fails → use default 5, log warning.
+- `ordering`: Must be string. If not string → use default "SOURCE_FIRST", log warning.
+- `default_timezone`: Must be string or null. If not → treat as null (UTC), log warning.
+- `max_lines`: Must be integer. If string, attempt conversion. If conversion fails → use default 5, log warning.
+- `retry_attempts`: Must be integer. If string, attempt conversion. If conversion fails → use default 3, log warning.
+
+**Range Validation:**
+- `max_time_mentions`: Must be integer in range [1, 100]. Invalid values → use default 3, log warning.
+- `max_timezones`: Must be integer in range [1, 100]. Invalid values → use default 5, log warning.
+- `ordering`: Must be one of "SOURCE_FIRST", "OFFSET_ASC", "ALPHABETICAL". Invalid values → use default "SOURCE_FIRST", log warning.
+- `default_timezone`: Must be valid IANA timezone ID or null. Invalid values → treat as null (UTC), log warning.
+- `max_lines`: Must be integer in range [1, 100]. Invalid values → use default 5, log warning.
+- `retry_attempts`: Must be integer in range [1, 10]. Invalid values → use default 3, log warning.
+
+**Behavior:**
+- All validation errors are logged as warnings
+- Adapter continues with defaults for invalid values
+- No partial startup: adapter starts normally with validated/default values
 
 ---
 

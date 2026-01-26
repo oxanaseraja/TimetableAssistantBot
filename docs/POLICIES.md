@@ -65,6 +65,12 @@ Priority order:
 - If `config.default_timezone` is null → use UTC
 - ResolutionSource is set to `SYSTEM_DEFAULT` in this case
 
+**System Default Timezone Resolution:**
+- `config.default_timezone = null` means system UTC (per `CONTRACTS.md`)
+- Resolver MUST interpret `null` as `"UTC"` when producing `ResolvedTimeContext.base_timezone`
+- Internal representation (`CoreConfig.default_timezone`) MAY use `null`, but resolved context (`ResolvedTimeContext.base_timezone`) MUST always contain a concrete timezone string (IANA ID or offset)
+- The interpretation of `null → "UTC"` happens in the resolver layer, which is the single source of truth for fallback timezone resolution
+
 ---
 
 ## 4. Ambiguity Policy (Safe-Only)
@@ -113,6 +119,14 @@ Activity tracking and decay are out of scope for MVP.
 - `UserProfile.timezone` is pre-populated by adapter from `users.json`
 - User-facing timezone setup is out of scope
 - See `USER_PROFILE_MODEL.md` for details
+
+**Empty active_timezones behavior:**
+- If `active_timezones = []` (empty list):
+  - No active timezones are included in `target_timezones`
+  - Only `source_timezone` and `channel_default_timezone` (if different) are included
+  - If no explicit hint, user timezone, or channel default → resolver falls back to `SYSTEM_DEFAULT` (UTC)
+  - This is a valid system state and does not cause ambiguity
+  - System gracefully handles channels with no known member timezones
 
 ---
 
