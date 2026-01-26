@@ -134,12 +134,38 @@ The resolver is **NOT responsible for**:
 - If all conversions fail → converter returns empty list → core returns `None`
 
 **Examples:**
-- Target: `["Europe/Amsterdam", "Invalid/TZ", "America/New_York"]`
-- Result: `[ConvertedTime(Europe/Amsterdam), ConvertedTime(America/New_York)]`
-- Invalid timezone is silently skipped
 
-- Target: `["Invalid1/TZ", "Invalid2/TZ"]`
-- Result: `[]` → core returns `None` → no reply
+Example 1: Partial failure - some timezones invalid
+```
+Target: ["Europe/Amsterdam", "Invalid/TZ", "America/New_York"]
+Result: [ConvertedTime(Europe/Amsterdam), ConvertedTime(America/New_York)]
+Behavior: Invalid timezone "Invalid/TZ" is silently skipped
+DisplayBlock: Created with 2 entries, partial flag depends on total_candidates
+```
+
+Example 2: All timezones invalid
+```
+Target: ["Invalid1/TZ", "Invalid2/TZ"]
+Result: []
+Behavior: All conversions failed
+DisplayBlock: None (core returns None, no reply sent)
+```
+
+Example 3: Mixed valid/invalid with offset strings
+```
+Target: ["+03:00", "Invalid/TZ", "Europe/London", "Invalid2/TZ"]
+Result: [ConvertedTime(+03:00), ConvertedTime(Europe/London)]
+Behavior: Invalid IANA IDs skipped, valid offset and IANA ID converted
+DisplayBlock: Created with 2 entries
+```
+
+Example 4: Invalid offset string
+```
+Target: ["+15:00", "Europe/Amsterdam"]  # +15:00 is out of range [0, 14]
+Result: [ConvertedTime(Europe/Amsterdam)]
+Behavior: Invalid offset "+15:00" skipped (out of range), valid IANA ID converted
+DisplayBlock: Created with 1 entry
+```
 
 **Rationale:**
 - Graceful degradation: show available timezones even if some fail

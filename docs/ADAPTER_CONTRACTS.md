@@ -61,6 +61,27 @@ Core errors:
 
 **Note:** This requirement ensures that core processing is deterministic and testable. Any platform adapter implementation must reject messages without timestamps rather than substituting system time.
 
+**Example implementation:**
+```python
+def map_telegram_update(update: Update) -> Optional[CoreMessageEvent]:
+    message = update.message or update.edited_message
+    if not message or not message.text:
+        return None
+    
+    # Check for timestamp (required for deterministic DST calculations)
+    if not message.date:
+        logger.debug("Message discarded: missing timestamp")
+        return None
+    
+    timestamp_utc = message.date.replace(tzinfo=timezone.utc)
+    # ... rest of mapping ...
+```
+
+**Edge cases:**
+- If `message.date` is `None` → return `None`, discard event
+- If `message.date` exists but is naive (no timezone) → add UTC timezone explicitly
+- Never use `datetime.now()` as fallback (violates determinism)
+
 ---
 
 ## 2.1 Security (MVP)
@@ -235,11 +256,12 @@ All configuration values must be validated according to these rules:
 - `retry_attempts`: Must be integer. If string, attempt conversion. If conversion fails → use default 3, log warning.
 
 **Range Validation:**
-- `max_time_mentions`: Must be integer in range [1, 100]. Invalid values → use default 3, log warning.
-- `max_timezones`: Must be integer in range [1, 100]. Invalid values → use default 5, log warning.
+- `max_time_mentions`: Must be integer in range [1, 10]. Invalid values → use default 3, log warning.
+- `max_timezones`: Must be integer in range [1, 10]. Invalid values → use default 5, log warning.
 - `ordering`: Must be one of "SOURCE_FIRST", "OFFSET_ASC", "ALPHABETICAL". Invalid values → use default "SOURCE_FIRST", log warning.
-- `default_timezone`: Must be valid IANA timezone ID or null. Invalid values → treat as null (UTC), log warning.
-- `max_lines`: Must be integer in range [1, 100]. Invalid values → use default 5, log warning.
+- `default_timezone`: Must be valid IANA timezone ID, null, or the string "UTC". Invalid values → treat as null (UTC), log warning.
+  - Both `null` and `"UTC"` are treated as system UTC fallback (see CONTRACTS.md §CoreConfig)
+- `max_lines`: Must be integer in range [1, 10]. Invalid values → use default 5, log warning.
 - `retry_attempts`: Must be integer in range [1, 10]. Invalid values → use default 3, log warning.
 
 **Behavior:**

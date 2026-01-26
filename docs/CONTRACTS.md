@@ -69,6 +69,53 @@ ResolvedTimeContext {
 - When `config.default_timezone = null`, resolver interprets it as `"UTC"` and returns `base_timezone = "UTC"`
 - `base_timezone` may be `None` only when ambiguity is `"HIGH"` (multiple conflicting sources)
 
+**Examples:**
+
+Example 1: Explicit hint in text
+```
+Input: "Meeting at 10:30 UTC+3"
+ResolvedTimeContext:
+  base_timezone: "+03:00"
+  ambiguity: "NONE"
+  resolution_source: "EXPLICIT_HINT"
+  reason: "explicit hint in text"
+```
+
+Example 2: User profile timezone
+```
+Input: "Call at 14:00"
+UserProfile.timezone: "Europe/Amsterdam"
+ResolvedTimeContext:
+  base_timezone: "Europe/Amsterdam"
+  ambiguity: "NONE"
+  resolution_source: "USER_PROFILE"
+  reason: "from user profile"
+```
+
+Example 3: System default (null → UTC)
+```
+Input: "Meeting at 10:00"
+config.default_timezone: null
+No explicit hint, no user/channel timezone
+ResolvedTimeContext:
+  base_timezone: "UTC"
+  ambiguity: "NONE"
+  resolution_source: "SYSTEM_DEFAULT"
+  reason: "no timezone information, using system default"
+```
+
+Example 4: High ambiguity
+```
+Input: "Call at 10:00"
+active_timezones: ["Europe/Amsterdam", "America/New_York", "Asia/Tokyo"]
+No explicit hint, no user/channel default
+ResolvedTimeContext:
+  base_timezone: None
+  ambiguity: "HIGH"
+  resolution_source: None
+  reason: "multiple active timezones, no explicit hint"
+```
+
 ResolutionSource = "EXPLICIT_HINT" | "USER_PROFILE" | "CHANNEL_DEFAULT" | "ACTIVE_TZ_SINGLE" | "SYSTEM_DEFAULT"
 ```
 
@@ -203,9 +250,42 @@ If some timezones fail to convert (e.g., invalid IANA ID, conversion errors):
   - This indicates that not all slots were filled, so no timezones were omitted due to limit
 
 **Examples:**
-- `total_candidates = 6`, `max_timezones = 5`, `displayed_entries = 5` → `partial = true` (1 omitted due to limit)
-- `total_candidates = 6`, `max_timezones = 5`, `displayed_entries = 3` (3 failed) → `partial = false` (slots not filled, failures not due to limit)
-- `total_candidates = 3`, `max_timezones = 5`, `displayed_entries = 3` → `partial = false` (no limit reached)
+
+Example 1: All slots filled, some candidates omitted
+```
+total_candidates = 6 (source + 5 active_timezones)
+max_timezones = 5
+All 6 candidates convert successfully
+displayed_entries = 5 (first 5 by priority)
+partial = true (1 timezone omitted due to limit)
+```
+
+Example 2: Conversion failures prevent filling all slots
+```
+total_candidates = 6 (source + 5 active_timezones)
+max_timezones = 5
+3 candidates fail conversion (invalid IANA IDs)
+displayed_entries = 3 (only successful conversions)
+partial = false (slots not filled, failures not due to limit)
+```
+
+Example 3: No limit reached
+```
+total_candidates = 3 (source + 2 active_timezones)
+max_timezones = 5
+All 3 candidates convert successfully
+displayed_entries = 3
+partial = false (no limit reached, all candidates displayed)
+```
+
+Example 4: Edge case - exactly max_timezones candidates, all succeed
+```
+total_candidates = 5 (source + 4 active_timezones)
+max_timezones = 5
+All 5 candidates convert successfully
+displayed_entries = 5
+partial = false (no candidates omitted, limit not exceeded)
+```
 
 ---
 
@@ -227,6 +307,12 @@ CoreConfig {
 - `max_timezones = 5` (from POLICIES.md §2)
 - `ordering = "SOURCE_FIRST"` (from POLICIES.md §6)
 - `default_timezone = null` (null means UTC)
+
+**Note on `default_timezone`:**
+- Both `null` and the string `"UTC"` are treated as system UTC fallback
+- When `default_timezone = null` or `default_timezone = "UTC"`, resolver interprets it as `"UTC"` (see POLICIES.md §68-72)
+- This provides flexibility: users can specify either `null` or `"UTC"` in configuration, both result in UTC fallback behavior
+- Example: `default_timezone: null` and `default_timezone: "UTC"` are equivalent
 
 **Mapping from configuration.yaml:**
 - `core.max_time_mentions` → `CoreConfig.max_time_mentions`

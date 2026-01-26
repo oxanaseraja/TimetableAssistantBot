@@ -9,7 +9,7 @@
 # =============================================================================
 
 core:
-  default_timezone: null       # string|null, IANA timezone ID, optional, default=null (null means UTC per CONTRACTS.md)
+  default_timezone: null       # string|null|"UTC", IANA timezone ID, optional, default=null (null or "UTC" means UTC per CONTRACTS.md)
   max_time_mentions: 3         # int, range=[1, 10], optional, default=3
 
 output:

@@ -71,6 +71,31 @@ Priority order:
 - Internal representation (`CoreConfig.default_timezone`) MAY use `null`, but resolved context (`ResolvedTimeContext.base_timezone`) MUST always contain a concrete timezone string (IANA ID or offset)
 - The interpretation of `null → "UTC"` happens in the resolver layer, which is the single source of truth for fallback timezone resolution
 
+**Note:** Both `null` and the string `"UTC"` in configuration are treated equivalently as system UTC fallback (see `CONTRACTS.md` §CoreConfig for details).
+
+**Examples:**
+
+Example 1: default_timezone = null
+```
+config.default_timezone = null
+No explicit hint, no user/channel timezone
+Resolver returns: base_timezone = "UTC", resolution_source = "SYSTEM_DEFAULT"
+```
+
+Example 2: default_timezone = "UTC" (equivalent to null)
+```
+config.default_timezone = "UTC"  # Treated as null during config loading
+No explicit hint, no user/channel timezone
+Resolver returns: base_timezone = "UTC", resolution_source = "SYSTEM_DEFAULT"
+```
+
+Example 3: default_timezone = explicit IANA ID
+```
+config.default_timezone = "Europe/Amsterdam"
+No explicit hint, no user/channel timezone
+Resolver returns: base_timezone = "Europe/Amsterdam", resolution_source = "SYSTEM_DEFAULT"
+```
+
 ---
 
 ## 4. Ambiguity Policy (Safe-Only)

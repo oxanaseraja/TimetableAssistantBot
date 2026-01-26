@@ -97,13 +97,15 @@ def build_core_config(config_dict: Dict[str, Any]) -> CoreConfig:
     core_section = config_dict.get("core", {})
     output_section = config_dict.get("output", {})
     
-    # Validate max_time_mentions: int, range [1, 100]
+    # Validate max_time_mentions: int, range [1, 10]
+    # Specification: ADAPTER_CONTRACTS.md §5, configuration.yaml
     max_time_mentions_raw = core_section.get("max_time_mentions", 3)
-    max_time_mentions = _validate_int_config(max_time_mentions_raw, "max_time_mentions", 3, 1, 100)
+    max_time_mentions = _validate_int_config(max_time_mentions_raw, "max_time_mentions", 3, 1, 10)
     
-    # Validate max_timezones: int, range [1, 100]
+    # Validate max_timezones: int, range [1, 10]
+    # Specification: ADAPTER_CONTRACTS.md §5, configuration.yaml
     max_timezones_raw = output_section.get("max_timezones", 5)
-    max_timezones = _validate_int_config(max_timezones_raw, "max_timezones", 5, 1, 100)
+    max_timezones = _validate_int_config(max_timezones_raw, "max_timezones", 5, 1, 10)
     
     # Validate ordering: string, must be one of valid values
     ordering_str = output_section.get("ordering", "SOURCE_FIRST")
@@ -121,8 +123,11 @@ def build_core_config(config_dict: Dict[str, Any]) -> CoreConfig:
         ordering = "SOURCE_FIRST"
     
     # Validate default_timezone: string or null
+    # Specification: CONTRACTS.md §CoreConfig
+    # Both null and "UTC" are treated as system UTC fallback
     default_timezone = core_section.get("default_timezone", None)
-    # None means UTC in contract (CONTRACTS.md §128)
+    # None means UTC in contract (CONTRACTS.md §229)
+    # String "UTC" is also accepted and treated as null for consistency
     if default_timezone is None or default_timezone == "UTC":
         default_timezone = None
     elif not isinstance(default_timezone, str):
@@ -161,9 +166,10 @@ def validate_telegram_config(config_dict: Dict[str, Any]) -> Dict[str, Any]:
     telegram_section = config_dict.get("telegram", {})
     validated = {}
     
-    # Validate max_lines: int, range [1, 100]
+    # Validate max_lines: int, range [1, 10]
+    # Specification: ADAPTER_CONTRACTS.md §5, configuration.yaml
     max_lines_raw = telegram_section.get("max_lines", 5)
-    validated["max_lines"] = _validate_int_config(max_lines_raw, "max_lines", 5, 1, 100)
+    validated["max_lines"] = _validate_int_config(max_lines_raw, "max_lines", 5, 1, 10)
     
     # Validate retry_attempts: int, range [1, 10]
     retry_attempts_raw = telegram_section.get("retry_attempts", 3)

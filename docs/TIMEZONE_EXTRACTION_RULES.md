@@ -113,6 +113,32 @@ System behavior:
 - Resolution falls back to user/channel/system defaults
 - This is a valid system state and does not cause errors
 
+**Examples:**
+
+Example 1: Empty cities.json with explicit offset
+```
+Input: "Meeting at 10:30 UTC+3"
+cities.json: []
+Result: Explicit offset "+03:00" extracted, city extraction returns None
+Output: Time converted to UTC+3, no cities displayed
+```
+
+Example 2: Empty cities.json with IANA timezone
+```
+Input: "Call at 14:00 Europe/Amsterdam"
+cities.json: []
+Result: IANA timezone "Europe/Amsterdam" extracted, city extraction returns None
+Output: Time converted to Europe/Amsterdam, no cities displayed
+```
+
+Example 3: Empty cities.json with city name (no match)
+```
+Input: "Meeting at 10:30 in Amsterdam"
+cities.json: []
+Result: No city match found, city extraction returns None
+Output: Falls back to user/channel/system default timezone, no cities displayed
+```
+
 ---
 
 ## 2.1 Runtime Index
