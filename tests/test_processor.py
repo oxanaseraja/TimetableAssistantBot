@@ -235,6 +235,89 @@ class TestProcessor(unittest.TestCase):
         # Remaining timezones should be sorted by offset
         # (Yerevan +04:00 should come before New_York -05:00)
         self.assertGreater(len(result.entries), 1)
+    
+    def test_partial_flag_with_conversion_failures(self):
+        """Test partial flag edge case: conversion failures should not set partial=True.
+        
+        Specification: CONTRACTS.md §DisplayBlock - partial flag semantics.
+        If some timezones fail to convert, partial=False even if total_candidates > max_timezones.
+        """
+        event = CoreMessageEvent(
+            internal_message_id="test9",
+            internal_user_id="user1",
+            internal_channel_id="channel1",
+            text="Meeting at 10:30 Amsterdam",
+            is_edit=False,
+            timestamp_utc=datetime(2026, 1, 25, 12, 0, 0, tzinfo=timezone.utc)
+        )
+        user_profile = UserProfile(internal_user_id="user1", timezone=None)
+        channel_context = ChannelContext(
+            internal_channel_id="channel1",
+            default_timezone=None,
+            active_timezones=[
+                "Invalid/Timezone1",  # Invalid - will fail conversion
+                "Invalid/Timezone2",  # Invalid - will fail conversion
+                "Invalid/Timezone3",  # Invalid - will fail conversion
+                "Europe/London",      # Valid
+                "Asia/Tokyo"         # Valid
+            ]  # 5 active timezones + 1 source = 6 total, but 3 will fail
+        )
+        config = CoreConfig(
+            max_time_mentions=3,
+            max_timezones=5,  # Limit is 5
+            ordering="SOURCE_FIRST",
+            default_timezone=None
+        )
+        
+        result = process(event, user_profile, channel_context, self.city_index, config)
+        
+        self.assertIsNotNone(result)
+        # Should have source timezone + 2 valid active timezones = 3 entries
+        # (3 invalid timezones were excluded due to conversion failures)
+        self.assertLess(len(result.entries), config.max_timezones,
+                       "Some timezones failed conversion, so not all slots are filled")
+        # partial flag should be False because not all slots are filled
+        # (even though total_candidates = 6 > max_timezones = 5)
+        self.assertFalse(result.flags["partial"],
+                        "partial should be False when slots are not filled due to conversion failures")
+    
+    def test_partial_flag_all_slots_filled(self):
+        """Test partial flag: should be True when all slots filled and total_candidates > max_timezones."""
+        event = CoreMessageEvent(
+            internal_message_id="test10",
+            internal_user_id="user1",
+            internal_channel_id="channel1",
+            text="Meeting at 10:30 Amsterdam",
+            is_edit=False,
+            timestamp_utc=datetime(2026, 1, 25, 12, 0, 0, tzinfo=timezone.utc)
+        )
+        user_profile = UserProfile(internal_user_id="user1", timezone=None)
+        channel_context = ChannelContext(
+            internal_channel_id="channel1",
+            default_timezone="Europe/London",
+            active_timezones=[
+                "Asia/Tokyo",
+                "America/New_York",
+                "Asia/Yerevan",
+                "Europe/Paris"
+            ]  # 1 source + 1 channel default + 4 active = 6 total, max_timezones=5
+        )
+        config = CoreConfig(
+            max_time_mentions=3,
+            max_timezones=5,
+            ordering="SOURCE_FIRST",
+            default_timezone=None
+        )
+        
+        result = process(event, user_profile, channel_context, self.city_index, config)
+        
+        self.assertIsNotNone(result)
+        # Should have exactly 5 entries (max_timezones limit)
+        self.assertEqual(len(result.entries), config.max_timezones,
+                        "All slots should be filled when valid timezones exceed limit")
+        # partial flag should be True (total_candidates > max_timezones AND all slots filled)
+        self.assertTrue(result.flags["partial"],
+                       "partial should be True when total_candidates > max_timezones AND all slots filled")
 
 
 if __name__ == '__main__':

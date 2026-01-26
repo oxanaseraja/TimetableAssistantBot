@@ -7,6 +7,7 @@ These constraints are **absolute**. Violation = incorrect implementation.
 ## Core Constraints
 
 1. **Core must be pure** — no global state, no IO, no storage access
+   - **Exception:** Core modules may use Python's standard `logging` module for debug/info/warning messages. This does not affect function purity or deterministic behavior. Logging should remain only for monitoring and debugging purposes, without changing function state.
 2. **Core is a single function** — `process(event, user_profile, channel_context)`
 3. **All state is passed as arguments** — no singletons, no caches, no module-level variables
 4. **No inference beyond specified rules** — if spec doesn't define it, don't implement it

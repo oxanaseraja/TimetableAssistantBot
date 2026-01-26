@@ -76,9 +76,12 @@ In MVP, user profiles are loaded from a **static JSON file**.
 2. Build in-memory map: `platform_user_id → timezone`
 3. If file missing or invalid → start with empty map
 
-### Empty users.json behavior:
+### Empty or Missing users.json behavior:
 
-An empty `users.json` (`{}`) is a **valid state**.
+Both cases are treated identically:
+- Missing file → empty map `{}`
+- Empty file `{}` → empty map `{}`
+- System starts normally with no user/channel data
 
 In this case:
 - All users have `timezone = None`
@@ -238,16 +241,20 @@ These are explicitly **not part of MVP**.
 - Timezone IDs are validated against `zoneinfo.available_timezones()`
 - Validation occurs at configuration load time (adapter startup)
 - Validation occurs when processing user profiles and channel contexts
+- **Offset strings (`±HH:MM`) are explicitly rejected** before IANA validation
+- Offset strings are detected using regex pattern `^[+-]\d{2}:\d{2}$` and rejected with warning
 
 **Behavior for invalid timezone IDs:**
 - Invalid `default_timezone` in config → treated as `None` (UTC fallback)
 - Invalid `timezone` in user profile → treated as `None` (missing timezone)
 - Invalid `default_timezone` in channel context → treated as `None`
 - Invalid timezone in `active_timezones` → excluded from list
+- **Offset strings in any field** → explicitly rejected with warning, treated as `None` or excluded
 
 **Error handling:**
 - Validation errors are logged
 - Invalid timezones are silently ignored (treated as missing)
+- Offset strings trigger explicit warning messages before rejection
 - Adapter continues operation with valid timezones only
 
 **Rationale:**

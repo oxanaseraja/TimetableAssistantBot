@@ -58,6 +58,7 @@ All documents are in this `docs/` folder.
 - `TESTING_STRATEGY.md` — test architecture
 - `ARCH_CHECKLIST.md` — completeness checklist
 - `ARCH_DIAGRAM.md` — architecture diagram
+- `DEVELOPER_GUIDE.md` — practical guidelines for developers
 
 ### Execution Protocol
 - `LLM_EXECUTION_PROTOCOL.md` — rules for LLM code generation

@@ -15,7 +15,7 @@ from telegram.error import TelegramError
 
 from core.processor import process
 from core.contracts import CoreConfig, CoreMessageEvent
-from core.config_loader import load_config, build_core_config, validate_telegram_config
+from .config_loader import load_config, build_core_config, validate_telegram_config
 from .event_mapping import map_telegram_update
 from .formatter import format_display_block_with_cities, load_cities_index, load_cities_data
 from .user_loader import load_users, get_user_profile, get_channel_context

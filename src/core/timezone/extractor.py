@@ -101,14 +101,23 @@ def extract_timezone_hint(
     context = text[start:end]
     
     # Priority 1: UTC/GMT offset
-    # If multiple matches, use closest to time_position (TIMEZONE_EXTRACTION_RULES.md §4)
-    # If distances are equal → select first by text order
+    # Specification: TIMEZONE_EXTRACTION_RULES.md §4 - Ambiguity Handling
+    # If multiple matches, use closest to time_position
+    # If distances are equal → select first by text order (left-to-right) for determinism
     TZ_OFFSET_REGEX = re.compile(r'(UTC|GMT)?[+-]\d{1,2}(:\d{2})?', re.IGNORECASE)
     offset_matches = list(TZ_OFFSET_REGEX.finditer(context))
     if offset_matches:
         # Find closest match to time_position
+        # Distance calculation: abs((start + m.start()) - time_position)
         # m.start() is position in context, start + m.start() is absolute position in original text
-        # If distances are equal, min() returns first by iteration order (left-to-right)
+        # 
+        # Edge case - Equal distances:
+        # When multiple matches have equal distance to time_position, we use tuple key
+        # (distance, text_position) to ensure deterministic selection:
+        # - First sort by distance (abs difference)
+        # - If distances are equal, sort by text_position (m.start())
+        # - min() with tuple key guarantees first match by text order (left-to-right)
+        # This ensures same input → same output (deterministic behavior)
         closest_match = min(
             offset_matches,
             key=lambda m: (abs((start + m.start()) - time_position), m.start())
@@ -132,8 +141,13 @@ def extract_timezone_hint(
         
         if valid_matches:
             # Find closest match to time_position
+            # Specification: TIMEZONE_EXTRACTION_RULES.md §4 - Ambiguity Handling
             # x[0].start() is position in context, start + x[0].start() is absolute position in original text
-            # If distances are equal → select first by text order (left-to-right)
+            # 
+            # Edge case - Equal distances:
+            # When multiple IANA timezones have equal distance to time_position, we use tuple key
+            # (distance, text_position) to ensure deterministic selection (first by text order, left-to-right)
+            # This ensures same input → same output (deterministic behavior)
             closest_match, tz_id = min(
                 valid_matches,
                 key=lambda x: (abs((start + x[0].start()) - time_position), x[0].start())
@@ -154,8 +168,13 @@ def extract_timezone_hint(
     
     if city_matches:
         # Find closest city to time_position
+        # Specification: TIMEZONE_EXTRACTION_RULES.md §4 - Ambiguity Handling
         # x[0] is position in context, start + x[0] is absolute position in original text
-        # If distances are equal → select first by text order (left-to-right)
+        # 
+        # Edge case - Equal distances:
+        # When multiple cities have equal distance to time_position, we use tuple key
+        # (distance, text_position) to ensure deterministic selection (first by text order, left-to-right)
+        # This ensures same input → same output (deterministic behavior)
         closest_pos, tz_id = min(
             city_matches,
             key=lambda x: (abs((start + x[0]) - time_position), x[0])

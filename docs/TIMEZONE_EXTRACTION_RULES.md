@@ -280,12 +280,21 @@ Deterministic selection algorithm:
    If multiple matches of the **same priority** are found:
    - Select the match **closest** to the time mention position (`time_position`)
    - Distance is calculated as absolute difference: `abs(match_position - time_position)`
-   - If distances are equal → select the **first** by text order (left-to-right)
+   - **If distances are equal → select the first by text order (left-to-right)**
    - This ensures deterministic behavior: same input → same output
+   
+   **Critical rule for equal distances:**
+   - When multiple matches have the same distance to `time_position`, the selection MUST be deterministic
+   - Selection uses text position (character index) as secondary sort key
+   - The match with the smallest text position (leftmost in text) is selected
+   - This rule applies to ALL priority levels (offset strings, IANA IDs, city names)
+   - Example: `"Meeting UTC+2 at 10:30 UTC+3"` → if both offsets are at equal distance from time position, use `UTC+2` (first by text order, left-to-right)
    
    **Implementation detail:**
    - Sorting uses tuple `(distance, text_position)` to guarantee deterministic selection
    - `min()` with tuple key ensures first match by text order when distances are equal
+   - `text_position` is the absolute character position in the original message text
+   - This guarantees that the same input always produces the same output, regardless of iteration order
    
    **Special case for offset strings:**
    - If multiple offset strings (Priority 1) are found at equal distance:

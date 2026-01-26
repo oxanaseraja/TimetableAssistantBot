@@ -5,6 +5,7 @@ Specification: USER_PROFILE_MODEL.md
 import json
 import hashlib
 import logging
+import re
 import zoneinfo
 from pathlib import Path
 from typing import Dict, Optional, List
@@ -29,14 +30,20 @@ def compute_active_timezones(
         if user and user.get("timezone"):
             tz = user["timezone"]
             # Validate timezone ID (USER_PROFILE_MODEL.md §9)
-            # Improved error handling: separate TypeError/AttributeError from other exceptions
+            # Reject offset strings explicitly - only IANA timezone IDs are allowed
             try:
-                if isinstance(tz, str) and tz in zoneinfo.available_timezones():
-                    timezones.add(tz)
-                elif not isinstance(tz, str):
-                    logger.warning(f"Invalid timezone type '{type(tz).__name__}' for member {member_key} (expected string), excluding from active_timezones")
+                if isinstance(tz, str):
+                    # Reject offset strings explicitly (USER_PROFILE_MODEL.md §9)
+                    if re.match(r'^[+-]\d{2}:\d{2}$', tz):
+                        logger.warning(f"Offset string '{tz}' not allowed in user profile for member {member_key}, excluding from active_timezones")
+                        continue
+                    # Validate IANA timezone ID
+                    if tz in zoneinfo.available_timezones():
+                        timezones.add(tz)
+                    else:
+                        logger.warning(f"Invalid timezone '{tz}' for member {member_key}, excluding from active_timezones")
                 else:
-                    logger.warning(f"Invalid timezone '{tz}' for member {member_key}, excluding from active_timezones")
+                    logger.warning(f"Invalid timezone type '{type(tz).__name__}' for member {member_key} (expected string), excluding from active_timezones")
             except (TypeError, AttributeError) as e:
                 logger.warning(f"Error validating timezone '{tz}' for member {member_key}: {e}, excluding from active_timezones")
             except Exception as e:
@@ -97,15 +104,20 @@ def get_user_profile(
     
     # Validate timezone ID (USER_PROFILE_MODEL.md §9)
     if timezone:
-        try:
-            if timezone not in zoneinfo.available_timezones():
-                # Invalid timezone, treat as None
-                logger.warning(f"Invalid timezone '{timezone}' for user {platform_user_id}, treating as None")
-                timezone = None
-        except Exception:
-            # Error checking timezones, treat as None
-            logger.warning(f"Error validating timezone '{timezone}' for user {platform_user_id}, treating as None")
+        # Reject offset strings explicitly (USER_PROFILE_MODEL.md §9)
+        if re.match(r'^[+-]\d{2}:\d{2}$', timezone):
+            logger.warning(f"Offset string '{timezone}' not allowed in user profile for {platform_user_id}, treating as None")
             timezone = None
+        else:
+            try:
+                if timezone not in zoneinfo.available_timezones():
+                    # Invalid timezone, treat as None
+                    logger.warning(f"Invalid timezone '{timezone}' for user {platform_user_id}, treating as None")
+                    timezone = None
+            except Exception:
+                # Error checking timezones, treat as None
+                logger.warning(f"Error validating timezone '{timezone}' for user {platform_user_id}, treating as None")
+                timezone = None
     
     return UserProfile(
         internal_user_id=internal_user_id,
@@ -138,13 +150,18 @@ def get_channel_context(
     
     # Validate default_timezone (USER_PROFILE_MODEL.md §9)
     if default_timezone:
-        try:
-            if default_timezone not in zoneinfo.available_timezones():
-                logger.warning(f"Invalid default_timezone '{default_timezone}' for channel {platform_chat_id}, treating as None")
-                default_timezone = None
-        except Exception:
-            logger.warning(f"Error validating default_timezone '{default_timezone}' for channel {platform_chat_id}, treating as None")
+        # Reject offset strings explicitly (USER_PROFILE_MODEL.md §9)
+        if re.match(r'^[+-]\d{2}:\d{2}$', default_timezone):
+            logger.warning(f"Offset string '{default_timezone}' not allowed in channel default_timezone for {platform_chat_id}, treating as None")
             default_timezone = None
+        else:
+            try:
+                if default_timezone not in zoneinfo.available_timezones():
+                    logger.warning(f"Invalid default_timezone '{default_timezone}' for channel {platform_chat_id}, treating as None")
+                    default_timezone = None
+            except Exception:
+                logger.warning(f"Error validating default_timezone '{default_timezone}' for channel {platform_chat_id}, treating as None")
+                default_timezone = None
     
     # Compute active timezones from members (validation happens inside compute_active_timezones)
     active_timezones = compute_active_timezones(channel_config, users_data)

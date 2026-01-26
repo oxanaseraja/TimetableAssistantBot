@@ -27,6 +27,8 @@ Core does not:
 - Access databases
 - Log to external systems
 
+**Exception:** Core modules may use Python's standard `logging` module for debug/info/warning messages. This does not affect function purity or deterministic behavior. Logging should remain only for monitoring and debugging purposes, without changing function state.
+
 All IO happens in adapters.
 
 ### 3. Core never accesses storage

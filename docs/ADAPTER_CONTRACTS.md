@@ -247,6 +247,12 @@ All configuration values must be validated according to these rules:
 - Adapter continues with defaults for invalid values
 - No partial startup: adapter starts normally with validated/default values
 
+**Error Handling:**
+- If `zoneinfo.available_timezones()` raises exception during validation → treat as invalid, use default, log warning
+- If timezone validation fails due to system errors (TypeError, AttributeError, etc.) → treat as invalid, use default, log warning
+- Adapter continues with default value
+- System errors during validation do not prevent adapter startup
+
 ---
 
 ## 6. Output Formatting Contract

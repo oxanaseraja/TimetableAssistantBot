@@ -70,6 +70,25 @@ class TestTimezoneExtractor(unittest.TestCase):
         result = extract_timezone_hint("Meeting UTC+2 at 10:30 UTC-5", 11, city_index)
         self.assertEqual(result, "+02:00")
     
+    def test_multiple_offsets_exactly_equal_distance(self):
+        """Test edge case: multiple offsets at exactly equal distance from time position.
+        
+        Specification: TIMEZONE_EXTRACTION_RULES.md §4 - when distances are equal,
+        select first by text order (left-to-right).
+        """
+        city_index = {}
+        # Create text where both offsets are at equal distance from time
+        # "UTC+2" at start, "UTC-5" at end, time in middle
+        # Time "10:30" is at position 20
+        # "UTC+2" starts at position 0 (distance 20)
+        # "UTC-5" starts at position 40 (distance 20)
+        # Both are at equal distance, should select UTC+2 (first by text order)
+        text = "UTC+2 meeting at 10:30 UTC-5"
+        time_pos = text.find("10:30")  # Find actual position of "10:30"
+        result = extract_timezone_hint(text, time_pos, city_index)
+        self.assertEqual(result, "+02:00", 
+                        "When distances are equal, first match by text order (left-to-right) should be selected")
+    
     def test_multiple_cities_equal_distance(self):
         """Test that when multiple cities are at equal distance, first by text order is selected."""
         city_index = {
@@ -81,6 +100,37 @@ class TestTimezoneExtractor(unittest.TestCase):
         # So "Amsterdam" should be selected (closer)
         result = extract_timezone_hint("Meeting Amsterdam at 10:30 Paris", 11, city_index)
         self.assertEqual(result, "Europe/Amsterdam")
+    
+    def test_multiple_cities_exactly_equal_distance(self):
+        """Test edge case: multiple cities at exactly equal distance from time position.
+        
+        Specification: TIMEZONE_EXTRACTION_RULES.md §4 - when distances are equal,
+        select first by text order (left-to-right).
+        """
+        city_index = {
+            "amsterdam": "Europe/Amsterdam",
+            "paris": "Europe/Paris"
+        }
+        # Create text where both cities are at equal distance from time
+        text = "Amsterdam meeting at 10:30 Paris"
+        time_pos = text.find("10:30")  # Find actual position of "10:30"
+        result = extract_timezone_hint(text, time_pos, city_index)
+        self.assertEqual(result, "Europe/Amsterdam",
+                        "When distances are equal, first match by text order (left-to-right) should be selected")
+    
+    def test_multiple_iana_timezones_equal_distance(self):
+        """Test edge case: multiple IANA timezones at exactly equal distance.
+        
+        Specification: TIMEZONE_EXTRACTION_RULES.md §4 - when distances are equal,
+        select first by text order (left-to-right).
+        """
+        city_index = {}
+        # Create text where both IANA timezones are at equal distance from time
+        text = "Europe/Amsterdam meeting at 10:30 Asia/Yerevan"
+        time_pos = text.find("10:30")  # Find actual position of "10:30"
+        result = extract_timezone_hint(text, time_pos, city_index)
+        self.assertEqual(result, "Europe/Amsterdam",
+                        "When distances are equal, first match by text order (left-to-right) should be selected")
 
 
 if __name__ == '__main__':

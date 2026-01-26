@@ -191,6 +191,22 @@ AND
 Meaning:
 Some valid conversions were omitted due to display limit.
 
+**Critical edge case: Partial conversion failures**
+
+If some timezones fail to convert (e.g., invalid IANA ID, conversion errors):
+- Failed conversions are excluded from `displayed entries`
+- `partial` flag is set to `true` ONLY if:
+  - `total_candidates > max_timezones` AND
+  - `len(displayed_entries) == max_timezones` (all available slots are filled with successful conversions)
+- If `len(displayed_entries) < max_timezones` due to conversion failures:
+  - `partial = false` (even if `total_candidates > max_timezones`)
+  - This indicates that not all slots were filled, so no timezones were omitted due to limit
+
+**Examples:**
+- `total_candidates = 6`, `max_timezones = 5`, `displayed_entries = 5` → `partial = true` (1 omitted due to limit)
+- `total_candidates = 6`, `max_timezones = 5`, `displayed_entries = 3` (3 failed) → `partial = false` (slots not filled, failures not due to limit)
+- `total_candidates = 3`, `max_timezones = 5`, `displayed_entries = 3` → `partial = false` (no limit reached)
+
 ---
 
 ## CoreConfig

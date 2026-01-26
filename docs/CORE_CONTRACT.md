@@ -38,6 +38,7 @@ def process(
 
 1. **Synchronous call** — no async, no callbacks
 2. **Pure function** — no side effects, no I/O, no storage access
+   - **Exception:** Core modules may use Python's standard `logging` module for debug/info/warning messages. This does not affect function purity or deterministic behavior. Logging should remain only for monitoring and debugging purposes, without changing function state.
 3. **Deterministic** — same inputs always produce same output
 4. **Never raises exceptions** — all errors result in `None`
 

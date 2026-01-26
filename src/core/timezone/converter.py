@@ -159,5 +159,3 @@ def convert_time(
         logger.info(f"Failed to convert {len(failed_timezones)} timezone(s): {failed_timezones}, successful conversions: {len(results)}")
     
     return results
-    
-    return results

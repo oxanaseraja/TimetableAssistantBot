@@ -1,6 +1,9 @@
 """
 Configuration loader - loads and validates configuration.yaml
 Specification: ADAPTER_CONTRACTS.md §5
+
+Note: This module is in adapters/telegram/ (not core/) because it performs IO operations.
+Core modules cannot perform IO per ARCHITECTURAL_INVARIANTS.md §2.
 """
 import yaml
 import os
@@ -8,7 +11,7 @@ import zoneinfo
 import logging
 from pathlib import Path
 from typing import Dict, Any
-from .contracts import CoreConfig
+from core.contracts import CoreConfig
 
 logger = logging.getLogger(__name__)
 

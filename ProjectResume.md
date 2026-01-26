@@ -385,10 +385,17 @@ Adapter must not:
 
 If timestamp is missing:
 
-* adapter supplies current UTC timestamp
-* marks event as non-authoritative time context
+* adapter must discard the event
+* core is not called
+* no reply is sent
+* event may be logged as invalid (optional)
 
-This does not block processing.
+**Rationale:**
+* Core requires deterministic timestamp for DST calculations
+* Using system clock (`datetime.now()`) violates Core Invariant #1 (no system clock)
+* Ensures reproducible behavior and testability
+
+**Note:** This requirement ensures that core processing is deterministic and testable. Any platform adapter implementation must reject messages without timestamps rather than substituting system time.
 
 ---
 
