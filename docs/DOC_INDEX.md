@@ -1,7 +1,7 @@
 # DOC_INDEX.md — Specification Document Index
 
 This is the entry point for the specification.
-All documents are in this `spec/` folder.
+All documents are in this `docs/` folder.
 
 ---
 

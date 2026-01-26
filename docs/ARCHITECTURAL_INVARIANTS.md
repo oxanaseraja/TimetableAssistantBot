@@ -207,8 +207,8 @@ Changes require restart.
 
 ### 19. Spec directory is immutable during implementation
 
-`spec/` is read-only during code generation.
-Implementation must not modify any file in `spec/`.
+`docs/` is read-only during code generation.
+Implementation must not modify any file in `docs/`.
 All changes to spec are architectural decisions, not implementation fixes.
 If spec is incomplete → stop and report missing contract.
 

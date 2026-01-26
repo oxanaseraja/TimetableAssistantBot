@@ -1,2 +1,2 @@
 # Adapters module - platform-specific integrations
-# Specification: see spec/ADAPTER_CONTRACTS.md
+# Specification: see docs/ADAPTER_CONTRACTS.md

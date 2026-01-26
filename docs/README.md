@@ -2,7 +2,7 @@
 
 This folder contains the complete specification for the TimetableAssistantBot.
 
-**Purpose:** LLM reads these documents to generate implementation code in `../bot/`.
+**Purpose:** LLM reads these documents to generate implementation code in `../src/`.
 
 ---
 
@@ -10,7 +10,7 @@ This folder contains the complete specification for the TimetableAssistantBot.
 
 **Spec directory is immutable during implementation.**
 
-- Implementation must not modify any file in `spec/`
+- Implementation must not modify any file in `docs/`
 - All changes to spec are architectural decisions, not implementation fixes
 - If spec is incomplete → stop and report missing contract
 - See `LLM_EXECUTION_PROTOCOL.md` for execution rules
@@ -67,4 +67,4 @@ The `data/` folder contains example data files:
 - `cities.json` — city-to-timezone whitelist
 - `users.example.json` — example user/channel configuration
 
-These should be copied to `../bot/data/` and customized for runtime.
+These should be copied to `../src/data/` and customized for runtime.

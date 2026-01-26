@@ -2,7 +2,7 @@
 
 This document tracks which specification documents are implemented and where.
 
-**Update this file when implementing a spec document.**
+**Update this file when implementing a docs document.**
 
 ---
 
@@ -49,6 +49,6 @@ This document tracks which specification documents are implemented and where.
 
 ## Notes
 
-- Each module docstring should reference its source spec
-- Tests should reference `END_TO_END_FLOW.md` for golden cases
-- If a spec document is missing implementation → flag as TODO
+- Each module docstring should reference its source docs
+- Tests should reference `docs/END_TO_END_FLOW.md` for golden cases
+- If a docs document is missing implementation → flag as TODO

@@ -14,11 +14,11 @@ This document defines the execution rules for LLM code generation.
 
 ## During Implementation
 
-4. Do not implement features not specified in `spec/`
+4. Do not implement features not specified in `docs/`
 5. Do not infer missing behavior — if unclear, stop
 6. If specification is incomplete → **stop and report missing contract**
-7. Write code only in `bot/` directory
-8. Never modify any file in `spec/`
+7. Write code only in `src/` directory
+8. Never modify any file in `docs/`
 
 ---
 
@@ -41,7 +41,7 @@ This document defines the execution rules for LLM code generation.
 
 ## Traceability
 
-16. Update `bot/SPEC_COVERAGE.md` when implementing a spec document
+16. Update `src/SPEC_COVERAGE.md` when implementing a spec document
 17. Each module should reference its source spec in docstring
 
 ---
