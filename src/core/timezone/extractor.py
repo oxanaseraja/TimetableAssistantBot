@@ -114,7 +114,12 @@ def extract_timezone_hint(
     # Specification: TIMEZONE_EXTRACTION_RULES.md §4 - Ambiguity Handling
     # If multiple matches, use closest to time_position
     # If distances are equal → select first by text order (left-to-right) for determinism
-    TZ_OFFSET_REGEX = re.compile(r'(UTC|GMT)?[+-]\d{1,2}(:\d{2})?', re.IGNORECASE)
+    # Prevent partial matches inside compact offsets like "+0300" (Decision D-001).
+    # (?!\d) forbids a match if the next character is a digit, so "+03" in "+0300" won't match.
+    TZ_OFFSET_REGEX = re.compile(
+        r'(UTC|GMT)?[+-]\d{1,2}(:\d{2})?(?!\d)',
+        re.IGNORECASE
+    )
     offset_matches = list(TZ_OFFSET_REGEX.finditer(context))
     if offset_matches:
         # Find closest valid match to time_position
