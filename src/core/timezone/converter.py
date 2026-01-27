@@ -6,10 +6,69 @@ import zoneinfo
 import re
 import logging
 from datetime import datetime, time, timedelta, timezone as dt_timezone
-from typing import List, Optional
+from typing import List, Optional, Tuple, Union
 from ..contracts import DetectedTime, ResolvedTimeContext, ConvertedTime, CoreMessageEvent
 
 logger = logging.getLogger(__name__)
+
+
+def parse_offset_to_timezone(offset_str: str) -> Tuple[Optional[dt_timezone], Optional[str]]:
+    """
+    Parse offset string (±HH:MM) to a fixed-offset timezone object.
+    
+    Args:
+        offset_str: Offset string in format ±HH:MM (e.g., "+03:00", "-05:30")
+    
+    Returns:
+        Tuple of (timezone object, error message)
+        - On success: (timezone, None)
+        - On failure: (None, error_message)
+    
+    Validates:
+        - Hours: [0, 14]
+        - Minutes: [0, 59]
+    """
+    if not re.match(r'^[+-]\d{2}:\d{2}$', offset_str):
+        return None, f"Invalid offset format '{offset_str}'"
+    
+    sign = 1 if offset_str[0] == '+' else -1
+    try:
+        hours = int(offset_str[1:3])
+        minutes = int(offset_str[4:6])
+        
+        # Validate range per TIMEZONE_EXTRACTION_RULES.md
+        if not (0 <= hours <= 14) or not (0 <= minutes <= 59):
+            return None, f"Invalid offset range '{offset_str}' (hours must be 0-14, minutes 0-59)"
+        
+        offset_delta = timedelta(hours=hours, minutes=minutes) * sign
+        return dt_timezone(offset_delta), None
+    except (ValueError, IndexError) as e:
+        return None, f"Failed to parse offset string '{offset_str}': {e}"
+
+
+def resolve_timezone_object(tz_id: str) -> Tuple[Optional[Union[dt_timezone, zoneinfo.ZoneInfo]], Optional[str]]:
+    """
+    Resolve a timezone string to a timezone object.
+    
+    Supports both IANA timezone IDs and offset strings (±HH:MM).
+    
+    Args:
+        tz_id: IANA timezone ID (e.g., "Europe/Amsterdam") or offset string (e.g., "+03:00")
+    
+    Returns:
+        Tuple of (timezone object, error message)
+        - On success: (timezone, None)
+        - On failure: (None, error_message)
+    """
+    # Check if it's an offset string
+    if re.match(r'^[+-]\d{2}:\d{2}$', tz_id):
+        return parse_offset_to_timezone(tz_id)
+    
+    # Try as IANA timezone ID
+    try:
+        return zoneinfo.ZoneInfo(tz_id), None
+    except zoneinfo.ZoneInfoNotFoundError:
+        return None, f"Invalid IANA timezone ID '{tz_id}'"
 
 
 def convert_time(
@@ -58,35 +117,11 @@ def convert_time(
     
     # Make it timezone-aware in base timezone
     # Handle both IANA timezone IDs and offset strings (e.g., "+03:00")
-    base_tz = None
     base_timezone_str = resolved_context.base_timezone
-    
-    # Check if it's an offset string (e.g., "+03:00", "-05:00")
-    if re.match(r'^[+-]\d{2}:\d{2}$', base_timezone_str):
-        # Parse offset and create fixed offset timezone
-        # Validate range: hours [0, 14], minutes [0, 59]
-        sign = 1 if base_timezone_str[0] == '+' else -1
-        try:
-            hours = int(base_timezone_str[1:3])
-            minutes = int(base_timezone_str[4:6])
-            
-            # Validate range per TIMEZONE_EXTRACTION_RULES.md
-            if not (0 <= hours <= 14) or not (0 <= minutes <= 59):
-                logger.warning(f"Invalid offset range in base_timezone '{base_timezone_str}' (hours must be 0-14, minutes 0-59), returning empty")
-                return []
-            
-            offset_delta = timedelta(hours=hours, minutes=minutes) * sign
-            base_tz = dt_timezone(offset_delta)
-        except (ValueError, IndexError):
-            logger.warning(f"Failed to parse offset string '{base_timezone_str}', returning empty")
-            return []
-    else:
-        # Try as IANA timezone ID
-        try:
-            base_tz = zoneinfo.ZoneInfo(base_timezone_str)
-        except zoneinfo.ZoneInfoNotFoundError:
-            # Invalid timezone - return empty
-            return []
+    base_tz, error = resolve_timezone_object(base_timezone_str)
+    if base_tz is None:
+        logger.warning(f"Invalid base_timezone: {error}, returning empty")
+        return []
     
     base_aware = base_naive.replace(tzinfo=base_tz)
     
@@ -101,35 +136,12 @@ def convert_time(
     
     for tz_id in target_timezones:
         try:
-            # Handle offset strings
-            if re.match(r'^[+-]\d{2}:\d{2}$', tz_id):
-                # Parse offset and create fixed offset timezone
-                # Validate range: hours [0, 14], minutes [0, 59]
-                sign = 1 if tz_id[0] == '+' else -1
-                try:
-                    hours = int(tz_id[1:3])
-                    minutes = int(tz_id[4:6])
-                    
-                    # Validate range per TIMEZONE_EXTRACTION_RULES.md
-                    if not (0 <= hours <= 14) or not (0 <= minutes <= 59):
-                        failed_timezones.append(tz_id)
-                        logger.warning(f"Invalid offset range '{tz_id}' (hours must be 0-14, minutes 0-59), skipping")
-                        continue
-                    
-                    offset_delta = timedelta(hours=hours, minutes=minutes) * sign
-                    target_tz = dt_timezone(offset_delta)
-                except (ValueError, IndexError) as e:
-                    failed_timezones.append(tz_id)
-                    logger.warning(f"Failed to parse offset string '{tz_id}': {e}, skipping")
-                    continue
-            else:
-                # Try as IANA timezone ID
-                try:
-                    target_tz = zoneinfo.ZoneInfo(tz_id)
-                except zoneinfo.ZoneInfoNotFoundError:
-                    failed_timezones.append(tz_id)
-                    logger.warning(f"Invalid IANA timezone ID '{tz_id}', skipping")
-                    continue
+            # Resolve timezone (supports both IANA IDs and offset strings)
+            target_tz, error = resolve_timezone_object(tz_id)
+            if target_tz is None:
+                failed_timezones.append(tz_id)
+                logger.warning(f"{error}, skipping")
+                continue
             
             target_time = utc_time.astimezone(target_tz)
             

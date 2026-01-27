@@ -3,8 +3,11 @@ Time parser - regex-based time detection.
 Specification: TIME_PARSING_RULES.md
 """
 import re
+import logging
 from typing import List
 from ..contracts import DetectedTime
+
+logger = logging.getLogger(__name__)
 
 
 # Compiled regex patterns (immutable, allowed by Invariant #7)
@@ -64,8 +67,9 @@ def parse_times(text: str, max_results: int = 3) -> List[DetectedTime]:
                 position_end=match.end(),
                 ambiguous=False
             ))
-        except (ValueError, IndexError):
+        except (ValueError, IndexError) as e:
             # Skip invalid match, continue with others (per TIME_PARSING_RULES.md §5)
+            logger.debug(f"Skipped invalid TIME_24H match '{match.group()}': {e}")
             continue
     
     # Priority 2: TIME_12H_AMPM (skip if overlaps with existing)
@@ -91,8 +95,9 @@ def parse_times(text: str, max_results: int = 3) -> List[DetectedTime]:
                     position_end=match.end(),
                     ambiguous=False
                 ))
-            except (ValueError, IndexError):
+            except (ValueError, IndexError) as e:
                 # Skip invalid match, continue with others (per TIME_PARSING_RULES.md §5)
+                logger.debug(f"Skipped invalid TIME_12H_AMPM match '{match.group()}': {e}")
                 continue
     
     # Priority 3: TIME_BARE_HOUR (skip if overlaps)
@@ -110,8 +115,9 @@ def parse_times(text: str, max_results: int = 3) -> List[DetectedTime]:
                     position_end=match.end(),
                     ambiguous=True  # Always ambiguous
                 ))
-            except (ValueError, IndexError):
+            except (ValueError, IndexError) as e:
                 # Skip invalid match, continue with others (per TIME_PARSING_RULES.md §5)
+                logger.debug(f"Skipped invalid TIME_BARE_HOUR match '{match.group()}': {e}")
                 continue
     
     # Sort by position, cap to max_results

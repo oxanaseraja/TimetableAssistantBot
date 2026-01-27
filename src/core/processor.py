@@ -192,10 +192,14 @@ def process(
                     if conv:
                         offset_str = conv.utc_offset
                         # Parse ±HH:MM to integer minutes for sorting
-                        sign = 1 if offset_str[0] == '+' else -1
-                        hours = int(offset_str[1:3])
-                        minutes = int(offset_str[4:6])
-                        offset_minutes = sign * (hours * 60 + minutes)
+                        # Protected by try/except per ARCHITECTURAL_INVARIANTS.md #8
+                        try:
+                            sign = 1 if offset_str[0] == '+' else -1
+                            hours = int(offset_str[1:3])
+                            minutes = int(offset_str[4:6])
+                            offset_minutes = sign * (hours * 60 + minutes)
+                        except (ValueError, IndexError):
+                            offset_minutes = 0  # Fallback for malformed offset
                         return (2, offset_minutes, tz)
                     return (2, 0, tz)
             
@@ -207,10 +211,14 @@ def process(
                 conv = next((c for c in converted_times if c.timezone_id == tz), None)
                 if conv:
                     offset_str = conv.utc_offset
-                    sign = 1 if offset_str[0] == '+' else -1
-                    hours = int(offset_str[1:3])
-                    minutes = int(offset_str[4:6])
-                    offset_minutes = sign * (hours * 60 + minutes)
+                    # Protected by try/except per ARCHITECTURAL_INVARIANTS.md #8
+                    try:
+                        sign = 1 if offset_str[0] == '+' else -1
+                        hours = int(offset_str[1:3])
+                        minutes = int(offset_str[4:6])
+                        offset_minutes = sign * (hours * 60 + minutes)
+                    except (ValueError, IndexError):
+                        offset_minutes = 0  # Fallback for malformed offset
                     return (offset_minutes, tz)
                 return (0, tz)
             

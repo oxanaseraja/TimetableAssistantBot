@@ -211,7 +211,9 @@ class TelegramAdapter:
                 formatted_text = "\n".join(lines)
             
             # Send reply with retry logic (ADAPTER_CONTRACTS.md §2)
+            # Runtime validation: ensure retry_attempts is within valid range [1, 10]
             retry_attempts = self.telegram_config.get("retry_attempts", 3)
+            retry_attempts = max(1, min(10, retry_attempts))
             reply_message = None
             
             for attempt in range(retry_attempts):
@@ -284,20 +286,20 @@ class TelegramAdapter:
                 
                 # Always log at INFO level for visibility
                 logger.info(
-                    f"📨 Incoming message: chat_id={chat_id} "
+                    f"[INCOMING] Message: chat_id={chat_id} "
                     f"(expected {chat_id_int}), is_text={is_text}, is_command={is_command}, "
                     f"text='{text_preview}...'"
                 )
                 
                 # Check why it might be filtered
                 if chat_id != chat_id_int:
-                    logger.warning(f"⚠️  Message from wrong chat_id! Expected {chat_id_int}, got {chat_id}")
+                    logger.warning(f"[FILTER] Message from wrong chat_id! Expected {chat_id_int}, got {chat_id}")
                 if not is_text:
-                    logger.warning(f"⚠️  Message is not text (might be photo, sticker, etc.)")
+                    logger.warning(f"[FILTER] Message is not text (might be photo, sticker, etc.)")
                 if is_command:
-                    logger.info(f"ℹ️  Message is a command (filtered out)")
+                    logger.info(f"[FILTER] Message is a command (filtered out)")
             elif update.edited_message:
-                logger.info(f"📝 Edited message received: chat_id={update.edited_message.chat.id}")
+                logger.info(f"[EDIT] Edited message received: chat_id={update.edited_message.chat.id}")
         
         # Add handler FIRST to catch ALL messages (for debugging)
         # This runs before other handlers, so we see everything
@@ -306,7 +308,7 @@ class TelegramAdapter:
             group=0
         )
         
-        # Add message handler (handles both new messages and edits)
+        # Add message handler for new messages
         # Filter: text messages (not commands) in the configured chat
         self.application.add_handler(
             MessageHandler(
@@ -314,6 +316,16 @@ class TelegramAdapter:
                 self.on_message
             ),
             group=1  # Higher priority group
+        )
+        
+        # Add handler for edited messages (POLICIES.md §7: Edit/Lifecycle Policy)
+        # Edited messages require separate filter as filters.TEXT alone doesn't capture them
+        self.application.add_handler(
+            MessageHandler(
+                filters.UpdateType.EDITED_MESSAGE & filters.TEXT & ~filters.COMMAND & chat_filter,
+                self.on_message
+            ),
+            group=1
         )
     
     async def start(self):

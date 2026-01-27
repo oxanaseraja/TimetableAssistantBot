@@ -104,6 +104,11 @@ def get_cities_for_timezone(timezone_id: str, cities_data: List[dict]) -> List[s
     Returns:
         List of city names (sorted alphabetically)
         Empty list if timezone_id is an offset string (cities.json only contains IANA IDs)
+    
+    Note:
+        Only primary city names are returned, not aliases.
+        This avoids redundancy in output (e.g., "New York, NYC, NY" would be confusing).
+        Aliases are used for extraction/lookup, not for display.
     """
     import re
     
@@ -118,10 +123,8 @@ def get_cities_for_timezone(timezone_id: str, cities_data: List[dict]) -> List[s
             city_name = entry.get("city")
             if city_name:
                 cities.append(city_name)
-            # Also add aliases
-            for alias in entry.get("aliases", []):
-                if alias:
-                    cities.append(alias)
+            # Note: Aliases are NOT included in display output to avoid redundancy
+            # Aliases are used for extraction/lookup only (see TIMEZONE_EXTRACTION_RULES.md)
     
     return sorted(cities)
 
