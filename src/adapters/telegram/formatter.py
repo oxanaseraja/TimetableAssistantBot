@@ -86,7 +86,7 @@ def load_cities_index(cities_path: str) -> Dict[str, str]:
         city_lower = city.lower()
         city_normalized = normalize_city_key(city)
         # Store exact match (preserves original capitalization info)
-        if city_lower in index and index[city_lower] != timezone:
+        if city_lower in index:
             duplicate_count += 1
             logger.warning(
                 f"cities.json duplicate city key '{city_lower}': "
@@ -95,7 +95,7 @@ def load_cities_index(cities_path: str) -> Dict[str, str]:
         index[city_lower] = timezone
         # Store normalized match (for abbreviations like "St." -> "st")
         if city_normalized != city_lower:
-            if city_normalized in index and index[city_normalized] != timezone:
+            if city_normalized in index:
                 duplicate_count += 1
                 logger.warning(
                     f"cities.json duplicate city key '{city_normalized}': "
@@ -109,7 +109,7 @@ def load_cities_index(cities_path: str) -> Dict[str, str]:
                 alias_lower = alias.lower()
                 alias_normalized = normalize_city_key(alias)
                 # Store exact match
-                if alias_lower in index and index[alias_lower] != timezone:
+                if alias_lower in index:
                     duplicate_count += 1
                     logger.warning(
                         f"cities.json duplicate alias key '{alias_lower}': "
@@ -118,7 +118,7 @@ def load_cities_index(cities_path: str) -> Dict[str, str]:
                 index[alias_lower] = timezone
                 # Store normalized match
                 if alias_normalized != alias_lower:
-                    if alias_normalized in index and index[alias_normalized] != timezone:
+                    if alias_normalized in index:
                         duplicate_count += 1
                         logger.warning(
                             f"cities.json duplicate alias key '{alias_normalized}': "

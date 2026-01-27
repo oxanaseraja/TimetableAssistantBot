@@ -207,7 +207,7 @@ for entry in cities_json:
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `city` | string | yes | Primary city name |
-| `country` | string | yes | ISO 3166-1 alpha-2 country code |
+| `country` | string | no | ISO 3166-1 alpha-2 country code (metadata only) |
 | `timezone` | string | yes | IANA timezone ID |
 | `aliases` | string[] | no | Alternative names (may be empty) |
 

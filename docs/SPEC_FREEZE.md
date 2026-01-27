@@ -62,7 +62,8 @@ The following invariants are considered fundamental and must not be violated by 
 - All core DTOs are frozen dataclasses  
 - `DisplayBlock.entries` is `Tuple[Entry, ...]` (not mutable list)  
 - `DisplayFlags` is a frozen dataclass  
-- Collection fields use immutable types (`Tuple`, not `List`) to ensure full immutability  
+- Collection fields in **core inputs and resolution state** use immutable types (`Tuple`, not `List`) to ensure full immutability  
+- Presentation-layer fields populated by adapters (e.g., `Entry.cities`) may use mutable collections  
 
 ### 2.2 Parsing Invariants
 
@@ -303,10 +304,11 @@ The following unresolved aspects are consciously accepted in MVP:
 
 1. Very long messages are truncated by upstream platform  
 2. cities.json: invalid entries are skipped with warning (structural validation), but semantic correctness (correct timezone for city) is operator's responsibility  
-3. Ambiguous city names are resolved by last match in dataset  
-4. No disambiguation UI is provided  
-5. No retroactive cleanup of bot replies when original message is deleted  
-6. Orphaned replies from deleted messages remain in chat until manual cleanup  
+3. cities.json: `country` is optional metadata and does not participate in extraction or resolution  
+4. Ambiguous city names are resolved by last match in dataset  
+5. No disambiguation UI is provided  
+6. No retroactive cleanup of bot replies when original message is deleted  
+7. Orphaned replies from deleted messages remain in chat until manual cleanup  
 
 These are documented limitations, not bugs.
 
