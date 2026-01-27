@@ -110,25 +110,33 @@ def extract_timezone_hint(
     # Specification: TIMEZONE_EXTRACTION_RULES.md §4 - Ambiguity Handling
     # If multiple matches, use closest to time_position
     # If distances are equal → select first by text order (left-to-right) for determinism
-    TZ_OFFSET_REGEX = re.compile(r'(UTC|GMT)?[+-]\d{1,2}(:\d{2})?', re.IGNORECASE)
+    TZ_OFFSET_REGEX = re.compile(r'(UTC|GMT)?[+-]\d{1,2}(:?\d{2})?', re.IGNORECASE)
     offset_matches = list(TZ_OFFSET_REGEX.finditer(context))
     if offset_matches:
-        # Find closest match to time_position
-        # Distance calculation: abs((start + m.start()) - time_position)
-        # m.start() is position in context, start + m.start() is absolute position in original text
-        # 
-        # Edge case - Equal distances:
-        # When multiple matches have equal distance to time_position, we use tuple key
-        # (distance, text_position) to ensure deterministic selection:
-        # - First sort by distance (abs difference)
-        # - If distances are equal, sort by text_position (m.start())
-        # - min() with tuple key guarantees first match by text order (left-to-right)
-        # This ensures same input → same output (deterministic behavior)
-        closest_match = min(
-            offset_matches,
-            key=lambda m: (abs((start + m.start()) - time_position), m.start())
-        )
-        return normalize_offset(closest_match.group())
+        # Find closest valid match to time_position
+        # Skip invalid offsets and continue searching
+        valid_offsets = []
+        for match in offset_matches:
+            normalized = normalize_offset(match.group())
+            if normalized:
+                valid_offsets.append((match, normalized))
+        
+        if valid_offsets:
+            # Distance calculation: abs((start + m.start()) - time_position)
+            # m.start() is position in context, start + m.start() is absolute position in original text
+            # 
+            # Edge case - Equal distances:
+            # When multiple matches have equal distance to time_position, we use tuple key
+            # (distance, text_position) to ensure deterministic selection:
+            # - First sort by distance (abs difference)
+            # - If distances are equal, sort by text_position (m.start())
+            # - min() with tuple key guarantees first match by text order (left-to-right)
+            # This ensures same input → same output (deterministic behavior)
+            closest_match, normalized = min(
+                valid_offsets,
+                key=lambda item: (abs((start + item[0].start()) - time_position), item[0].start())
+            )
+            return normalized
     
     # Priority 2: IANA timezone ID
     # If multiple matches, use closest to time_position

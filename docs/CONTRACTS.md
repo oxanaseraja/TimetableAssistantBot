@@ -238,6 +238,8 @@ Ordering = "SOURCE_FIRST" | "OFFSET_ASC" | "ALPHABETICAL"
 //   - If channel_default_timezone == source_timezone → don't duplicate,
 //     skip channel default priority, remaining timezones sorted by offset
 //   Deduplication: Comparison uses exact string identity (see Timezone Identity Model)
+//     - Deduplication MAY be applied during target list construction
+//     - Final list must contain unique timezone identifiers and respect max_timezones
 //     - "+02:00" != "Europe/Amsterdam" (different strings, both included)
 //     - "Europe/Amsterdam" == "Europe/Amsterdam" (same string, duplicate removed)
 // OFFSET_ASC: sorted by UTC offset ascending, then alphabetically by ID

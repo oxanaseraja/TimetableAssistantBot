@@ -191,6 +191,7 @@ telegram:
   chat_id: string            # required, numeric string (converted to int by adapter)
   persistence_path: string | null = null
   retry_attempts: int = 3
+  max_lines: int = 5         # max lines in adapter output
 
 data:
   cities_path: string        # required (path to cities.json)
@@ -217,7 +218,6 @@ core:
 
 output:
   max_timezones: int = 5     # max timezones in DisplayBlock
-  max_lines: int = 5         # max lines in adapter output
   ordering: string = "SOURCE_FIRST"
 ```
 

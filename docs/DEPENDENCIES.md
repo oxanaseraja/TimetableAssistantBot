@@ -77,6 +77,18 @@ pyyaml >= 6.0
 
 ---
 
+### Environment Variables
+
+```
+python-dotenv >= 1.0.0
+```
+
+**Why python-dotenv:**
+- Load `.env` files for local development
+- Keeps secrets out of repo while supporting easy setup
+
+---
+
 ## 4. Forbidden Dependencies (MVP)
 
 These are explicitly **NOT allowed**:
