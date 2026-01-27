@@ -1,11 +1,20 @@
 # Specification Freeze — Timetable Assistant Bot (MVP)
 
 Status: Frozen  
-Version: v1.0  
-Date: 2026-01-27  
+Version: v1.0.1  
+Date: 2026-01-28  
 Scope: MVP core + Telegram adapter  
 
 This document fixes the behavioral and architectural specification of the MVP.
+
+---
+
+## Revision History
+
+| Date | Version | Change | Author |
+|------|---------|--------|--------|
+| 2026-01-27 | v1.0 | Initial freeze | — |
+| 2026-01-28 | v1.0.1 | Clarified §9.3 "last match" for duplicate cities; added distance tie-breaker to §2.4; clarified §9.2 cities.json validation | — |
 After this point, behavior-changing modifications are considered out of scope unless explicitly approved as v2.
 
 **Canonical source documents:** This freeze captures behavioral contracts only. For structural definitions and detailed algorithms, refer to:
@@ -94,6 +103,7 @@ The following invariants are considered fundamental and must not be violated by 
   7. System default ("UTC")  
 
 - Priority wins over distance when equal  
+- **Distance tie-breaker:** if multiple signals of the same priority have equal distance to time mention, the first by text position (left-to-right) is selected  
 
 ### 2.5 Conversion Invariants
 
@@ -204,6 +214,8 @@ Missing required parameters → adapter does not start (fail-fast)
 | `users.json` | Missing file | Treated as empty `{}`, adapter starts |
 | `users.json` | Invalid structure (not dict) | Treated as empty `{}`, warning logged |
 
+**Note:** Adapter retry policy (retry_attempts, backoff) is frozen per `ADAPTER_CONTRACTS.md` §2.
+
 ---
 
 ### 4.2 Optional Configuration
@@ -290,7 +302,7 @@ The following require a new spec version:
 The following unresolved aspects are consciously accepted in MVP:
 
 1. Very long messages are truncated by upstream platform  
-2. cities.json correctness is assumed, not enforced strictly  
+2. cities.json: invalid entries are skipped with warning (structural validation), but semantic correctness (correct timezone for city) is operator's responsibility  
 3. Ambiguous city names are resolved by last match in dataset  
 4. No disambiguation UI is provided  
 5. No retroactive cleanup of bot replies when original message is deleted  
