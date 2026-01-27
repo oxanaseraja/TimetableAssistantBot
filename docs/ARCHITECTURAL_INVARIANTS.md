@@ -67,7 +67,7 @@ No caching, no counters, no debug flags at module level.
 **Allowed (immutable):**
 - Compiled regex patterns (`re.compile(...)`)
 - Frozen sets (`frozenset(...)`)
-- Constants (`MAX_TIMES = 3`)
+- Constants (`MAX_TEXT_LENGTH = 4096`)
 - Type definitions
 
 **Forbidden (mutable):**

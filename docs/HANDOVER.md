@@ -2,6 +2,8 @@
 
 ### Intent
 
+**Source of Truth:** The original specification documents (CONTRACTS.md, POLICIES.md, CORE_CONTRACT.md, TIME_PARSING_RULES.md, TIMEZONE_EXTRACTION_RULES.md) are the authoritative source. SPEC_FREEZE.md and HANDOVER.md were added in a second iteration and must align with the original specification.
+
 This project was implemented under an intentionally incomplete and evolving specification.
 During development, multiple layers of formal contracts were introduced (CORE_CONTRACT, TIME_PARSING_RULES, TIMEZONE_EXTRACTION_RULES, SPEC_FREEZE, etc.) and iteratively aligned with the codebase.
 
@@ -25,7 +27,17 @@ All detected mismatches were classified and either:
 * fixed in specification, or
 * explicitly accepted as MVP constraints.
 
-The resulting SPEC_FREEZE defines the **authoritative behavioral contract** of the MVP.
+SPEC_FREEZE records the final converged behavioral snapshot of the MVP.
+
+It is NOT an independent source of truth.
+
+Authoritative sources remain:
+- CONTRACTS.md — data structures and DTO contracts  
+- POLICIES.md — behavioral rules and priority logic  
+- CORE_CONTRACT.md — core interface guarantees  
+
+SPEC_FREEZE documents the resolved interpretation of these contracts
+after convergence and AI verification.
 
 ---
 
@@ -38,7 +50,7 @@ This classification governs whether an issue is fixed in code, fixed in specific
 | -------------------------- | --------------------------------------------------------- | ---------------------------------------- | ------------------------------------------- |
 | **Spec contradiction**     | Two or more specification rules are mutually inconsistent | Update specification                     | Code must follow a single coherent contract |
 | **Spec gap**               | Behavior exists in code but is undefined in specification | Update specification or remove behavior  | Prevent undocumented semantics              |
-| **Code violation**         | Code contradicts an explicit frozen rule                  | Fix code                                 | SPEC_FREEZE is authoritative                |
+| **Code violation**         | Code contradicts an explicit frozen rule                  | Fix code                                 | Code must align with authoritative sources   |
 | **MVP simplification**     | Behavior intentionally restricted vs full product intent  | Freeze behavior and document             | Prevent uncontrolled scope expansion        |
 | **UX invariant**           | Behavior required to preserve UX predictability           | Preserve behavior, update spec if needed | UX stability has priority                   |
 | **Out-of-scope extension** | Behavior beyond frozen MVP                                | Remove or document as future work        | Prevent scope creep                         |
@@ -82,7 +94,8 @@ The bot must remain silent unless:
 * a base timezone can be resolved
 * at least one conversion result is produced
 
-Invalid, ambiguous, or excessive input must not generate partial or misleading output.
+Invalid or ambiguous input must not generate partial or misleading output.
+Excessive input is truncated and may produce partial output.
 
 Failure modes are **silent by design**.
 
@@ -101,7 +114,7 @@ Timezone resolution follows a strictly ordered and deterministic priority chain.
 Only explicitly documented sources may participate in resolution.
 Implicit fallbacks are forbidden.
 
-The priority order frozen in SPEC_FREEZE must be treated as **architectural contract**.
+The priority order documented in POLICIES.md and frozen in SPEC_FREEZE must be treated as **architectural contract**.
 
 Any change to resolution order is considered a **breaking behavioral change**.
 
@@ -190,9 +203,35 @@ Removing it would degrade UX in group contexts.
 
 ---
 
+## Specification Authority Hierarchy
+
+This project maintains a strict hierarchy of specification authority:
+
+1. **CONTRACTS.md**  
+   Defines all DTO structures and data contracts.
+
+2. **POLICIES.md**  
+   Defines behavioral rules, priority ordering, and decision policies.
+
+3. **CORE_CONTRACT.md**  
+   Defines the core interface and processing guarantees.
+
+4. **SPEC_FREEZE.md**  
+   Records the final converged behavioral snapshot of the MVP.
+   It documents resolved interpretations but does not override the above sources.
+
+5. **HANDOVER.md**  
+   Describes process, rationale, and engineering decisions.
+
+**Rationale:**
+SPEC_FREEZE is a convergence artifact, not a normative specification.
+The authoritative sources remain the original architectural contracts.
+
+---
+
 ## Notes for Future Development
 
-* SPEC_FREEZE defines the only authoritative behavioral contract
+* **Source of truth:** The original specification documents (CONTRACTS.md, POLICIES.md, CORE_CONTRACT.md) are the authoritative source. SPEC_FREEZE freezes the behavior derived from these documents.
 
 * Any change affecting:
 

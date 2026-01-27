@@ -87,7 +87,7 @@ These contracts define externally observable behavior.
 
 ### 3.1 Message Processing
 
-- Maximum number of processed time mentions: `max_times`  
+- Maximum number of processed time mentions: `max_time_mentions`  
 - Maximum number of resolved timezones: `max_timezones`  
 - If candidates exceed limit → `partial=True`  
 
