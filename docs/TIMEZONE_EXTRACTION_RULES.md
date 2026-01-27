@@ -52,6 +52,7 @@ Signals are checked in this order. First match wins.
 - Case-insensitive
 - Whole token match only (word boundary)
 - No substring matches
+- No morphological matching (e.g., Russian "Москва" ≠ "Москве" - different word forms)
 
 **Examples:**
 | Input | Match? |
@@ -196,6 +197,16 @@ for entry in cities_json:
 - Each city/alias appears in exactly one entry
 - No duplicates across entries
 - Adapter loads this file at startup
+
+**Error Handling for cities.json:**
+
+If `cities.json` is invalid:
+- **JSON parse error** → adapter fails to start (fatal error, logged)
+- **Missing required fields in entries** → entry skipped with warning log
+- **Invalid timezone in entry** (not in `zoneinfo.available_timezones()`) → entry skipped with warning
+- **Entire file empty `[]`** → valid state, city extraction disabled
+
+Required fields per entry: `city`, `timezone`. Optional: `country`, `aliases`.
 
 **Empty cities.json behavior:**
 

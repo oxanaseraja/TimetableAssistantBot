@@ -320,5 +320,77 @@ class TestProcessor(unittest.TestCase):
                        "partial should be True when total_candidates > max_timezones AND all slots filled")
 
 
+    def test_partial_flag_exact_boundary(self):
+        """Test partial flag boundary: total_candidates == max_timezones.
+        
+        When total candidates exactly equals max_timezones, partial should be False
+        because no timezones were omitted due to limit.
+        """
+        event = CoreMessageEvent(
+            internal_message_id="test11",
+            internal_user_id="user1",
+            internal_channel_id="channel1",
+            text="Meeting at 10:30 Amsterdam",
+            is_edit=False,
+            timestamp_utc=datetime(2026, 1, 25, 12, 0, 0, tzinfo=timezone.utc)
+        )
+        user_profile = UserProfile(internal_user_id="user1", timezone=None)
+        # Configure exactly 5 unique timezones (source + 4 active = 5 = max_timezones)
+        channel_context = ChannelContext(
+            internal_channel_id="channel1",
+            default_timezone=None,
+            active_timezones=[
+                "Asia/Tokyo",
+                "America/New_York",
+                "Asia/Yerevan",
+                "Europe/London"
+            ]  # 1 source (Amsterdam) + 4 active = 5 total = max_timezones
+        )
+        config = CoreConfig(
+            max_time_mentions=3,
+            max_timezones=5,
+            ordering="SOURCE_FIRST",
+            default_timezone=None
+        )
+        
+        result = process(event, user_profile, channel_context, self.city_index, config)
+        
+        self.assertIsNotNone(result)
+        # Should have exactly 5 entries
+        self.assertEqual(len(result.entries), 5,
+                        "All 5 timezones should be present")
+        # partial flag should be False (total_candidates == max_timezones, no omission)
+        self.assertFalse(result.flags["partial"],
+                        "partial should be False when total_candidates == max_timezones (no omission)")
+    
+    def test_text_length_limit(self):
+        """Test that very long text is handled gracefully.
+        
+        Per TIME_PARSING_RULES.md §5: Input is truncated to 4096 chars.
+        """
+        # Create a very long message with time at the beginning
+        long_text = "Meeting at 10:30 Amsterdam " + "x" * 5000
+        event = CoreMessageEvent(
+            internal_message_id="test12",
+            internal_user_id="user1",
+            internal_channel_id="channel1",
+            text=long_text,
+            is_edit=False,
+            timestamp_utc=datetime(2026, 1, 25, 12, 0, 0, tzinfo=timezone.utc)
+        )
+        user_profile = UserProfile(internal_user_id="user1", timezone=None)
+        channel_context = ChannelContext(
+            internal_channel_id="channel1",
+            default_timezone=None,
+            active_timezones=["Europe/Amsterdam"]
+        )
+        
+        result = process(event, user_profile, channel_context, self.city_index, self.config)
+        
+        # Should still process the time at the beginning (within 4096 char limit)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.entries[0]["timezone"], "Europe/Amsterdam")
+
+
 if __name__ == '__main__':
     unittest.main()

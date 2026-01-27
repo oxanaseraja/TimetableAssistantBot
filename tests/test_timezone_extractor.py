@@ -224,5 +224,62 @@ class TestTimezoneExtractor(unittest.TestCase):
         self.assertEqual(result, "Europe/Amsterdam")
 
 
+    def test_unicode_city_names(self):
+        """Test Unicode city name extraction.
+        
+        Per TIMEZONE_EXTRACTION_RULES.md §1.4: Unicode word characters are supported.
+        Note: Morphological forms (case declensions) are NOT supported - exact match only.
+        Russian "Москва" ≠ "Москве" (different word forms).
+        """
+        # Russian: use exact form that appears in text (nominative case)
+        # "Встреча 10:00 Москва" - using nominative case for exact match
+        city_index_ru = {"москва": "Europe/Moscow"}
+        text = "Встреча 10:00 Москва"
+        time_pos = text.find("10:00")
+        result = extract_timezone_hint(text, time_pos, city_index_ru)
+        self.assertEqual(result, "Europe/Moscow", "Russian city name should be extracted (exact match)")
+        
+        # Chinese: "会议 北京 10:00"
+        # Note: Chinese doesn't have case, so exact match works
+        city_index_cn = {"北京": "Asia/Shanghai"}
+        text = "会议 北京 10:00"
+        time_pos = text.find("10:00")
+        result = extract_timezone_hint(text, time_pos, city_index_cn)
+        self.assertEqual(result, "Asia/Shanghai", "Chinese city name should be extracted")
+        
+        # Japanese: "会議 東京 10:30"
+        city_index_jp = {"東京": "Asia/Tokyo"}
+        text = "会議 東京 10:30"
+        time_pos = text.find("10:30")
+        result = extract_timezone_hint(text, time_pos, city_index_jp)
+        self.assertEqual(result, "Asia/Tokyo", "Japanese city name should be extracted")
+    
+    def test_unicode_no_morphology(self):
+        """Test that morphological forms are NOT matched (exact match only).
+        
+        This is expected behavior per TIMEZONE_EXTRACTION_RULES.md §1.3:
+        'Whole token match only' - no fuzzy or morphological matching.
+        """
+        city_index = {"москва": "Europe/Moscow"}
+        
+        # "Москве" is prepositional case, "москва" is nominative - no match expected
+        text = "Встреча в 10:00 в Москве"
+        time_pos = text.find("10:00")
+        result = extract_timezone_hint(text, time_pos, city_index)
+        self.assertIsNone(result, "Morphological forms should NOT match (Москве ≠ москва)")
+    
+    def test_unicode_tokenization(self):
+        """Test tokenization with Unicode characters."""
+        # Russian
+        tokens = tokenize("Встреча в Москве в 10:00")
+        self.assertIn("Встреча", tokens)
+        self.assertIn("Москве", tokens)
+        
+        # Chinese (word boundary behavior with CJK)
+        tokens = tokenize("会议 北京 10:00")
+        self.assertIn("会议", tokens)
+        self.assertIn("北京", tokens)
+
+
 if __name__ == '__main__':
     unittest.main()

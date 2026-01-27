@@ -20,18 +20,28 @@ def load_cities_index(cities_path: str) -> Dict[str, str]:
     
     Returns:
         Dictionary mapping lowercase city/alias -> timezone ID
+    
+    Error handling (per TIMEZONE_EXTRACTION_RULES.md):
+        - JSON parse error → raises exception (adapter fails to start)
+        - Missing required fields → entry skipped with warning
+        - Invalid timezone → entry skipped with warning
     """
+    import zoneinfo
+    
     path = Path(cities_path)
     if not path.exists():
         return {}
     
+    # JSON parse error will raise exception - adapter fails to start (intentional)
     with open(path, 'r', encoding='utf-8') as f:
         cities_data = json.load(f)
     
     if not isinstance(cities_data, list):
+        logger.warning(f"cities.json is not a list, treating as empty")
         return {}
     
     index = {}
+    skipped_count = 0
     
     def normalize_city_key(text: str) -> str:
         """Normalize city name by removing dots for abbreviation matching.
@@ -40,21 +50,45 @@ def load_cities_index(cities_path: str) -> Dict[str, str]:
         """
         return text.lower().replace('.', '')
     
-    for entry in cities_data:
+    for i, entry in enumerate(cities_data):
+        # Validate required fields
+        if not isinstance(entry, dict):
+            logger.warning(f"cities.json entry {i} is not a dict, skipping")
+            skipped_count += 1
+            continue
+        
+        city = entry.get("city")
         timezone = entry.get("timezone")
+        
+        # Check required fields
+        if not city:
+            logger.warning(f"cities.json entry {i} missing required 'city' field, skipping")
+            skipped_count += 1
+            continue
         if not timezone:
+            logger.warning(f"cities.json entry {i} (city='{city}') missing required 'timezone' field, skipping")
+            skipped_count += 1
+            continue
+        
+        # Validate timezone is a valid IANA ID
+        try:
+            if timezone not in zoneinfo.available_timezones():
+                logger.warning(f"cities.json entry {i} (city='{city}') has invalid timezone '{timezone}', skipping")
+                skipped_count += 1
+                continue
+        except Exception as e:
+            logger.warning(f"cities.json entry {i} (city='{city}') timezone validation error: {e}, skipping")
+            skipped_count += 1
             continue
         
         # Add primary city name (both exact and normalized versions)
-        city = entry.get("city", "")
-        if city:
-            city_lower = city.lower()
-            city_normalized = normalize_city_key(city)
-            # Store exact match (preserves original capitalization info)
-            index[city_lower] = timezone
-            # Store normalized match (for abbreviations like "St." -> "st")
-            if city_normalized != city_lower:
-                index[city_normalized] = timezone
+        city_lower = city.lower()
+        city_normalized = normalize_city_key(city)
+        # Store exact match (preserves original capitalization info)
+        index[city_lower] = timezone
+        # Store normalized match (for abbreviations like "St." -> "st")
+        if city_normalized != city_lower:
+            index[city_normalized] = timezone
         
         # Add aliases (both exact and normalized versions)
         for alias in entry.get("aliases", []):
@@ -66,6 +100,11 @@ def load_cities_index(cities_path: str) -> Dict[str, str]:
                 # Store normalized match
                 if alias_normalized != alias_lower:
                     index[alias_normalized] = timezone
+    
+    if skipped_count > 0:
+        logger.warning(f"cities.json: skipped {skipped_count} invalid entries, loaded {len(index)} city mappings")
+    else:
+        logger.info(f"cities.json: loaded {len(index)} city mappings from {len(cities_data)} entries")
     
     return index
 
@@ -118,10 +157,12 @@ def get_cities_for_timezone(timezone_id: str, cities_data: List[dict]) -> List[s
         return []
     
     cities = []
+    seen = set()  # Deduplicate in case of data errors in cities.json
     for entry in cities_data:
         if entry.get("timezone") == timezone_id:
             city_name = entry.get("city")
-            if city_name:
+            if city_name and city_name not in seen:
+                seen.add(city_name)
                 cities.append(city_name)
             # Note: Aliases are NOT included in display output to avoid redundancy
             # Aliases are used for extraction/lookup only (see TIMEZONE_EXTRACTION_RULES.md)

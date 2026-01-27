@@ -64,13 +64,18 @@ class TestTimeParser(unittest.TestCase):
         self.assertEqual(len(result), 0)
     
     def test_overlap_detection(self):
-        """Test that overlapping matches are handled correctly."""
-        # "10:30am" should match TIME_24H first, then TIME_12H_AMPM should skip due to overlap
+        """Test that overlapping matches are handled correctly.
+        
+        Per TIME_PARSING_RULES.md §1.2: "10:30am" is a 12-hour format with AM/PM.
+        TIME_12H_AMPM has priority over TIME_24H to preserve the AM/PM marker.
+        """
         result = parse_times("Meeting at 10:30am")
-        # Should have only one match (TIME_24H wins)
+        # Should have only one match - TIME_12H_AMPM wins (more specific)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].hour, 10)
         self.assertEqual(result[0].minute, 30)
+        self.assertEqual(result[0].am_pm, "AM")  # AM/PM must be preserved
+        self.assertEqual(result[0].raw_text, "10:30am")
     
     def test_overlap_with_bare_hour(self):
         """Test that bare-hour matches are skipped when overlapping."""

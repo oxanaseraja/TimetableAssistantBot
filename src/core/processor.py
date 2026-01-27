@@ -268,4 +268,6 @@ def process(
     except Exception:
         # Invariant #8: Core never raises uncaught exceptions
         # All errors result in None
+        # Log exception for diagnostics (allowed per CORE_CONTRACT.md Rule 2)
+        logger.exception("Unexpected error in processor, returning None")
         return None

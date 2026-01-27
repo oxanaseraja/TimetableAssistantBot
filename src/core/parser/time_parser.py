@@ -49,55 +49,74 @@ def parse_times(text: str, max_results: int = 3) -> List[DetectedTime]:
     
     Returns:
         List of DetectedTime, sorted by position, capped to max_results
+    
+    Priority order (changed to ensure 12H with AM/PM wins over bare 24H):
+        1. TIME_12H_AMPM - most specific (includes AM/PM marker)
+        2. TIME_24H - less specific (no AM/PM)
+        3. TIME_BARE_HOUR - least specific (ambiguous)
+    
+    Rationale: "10:30am" must be recognized as 12-hour format per TIME_PARSING_RULES.md §1.2.
+    If TIME_24H were first, it would match "10:30" and the AM/PM would be lost.
+    
+    Input length limit: 4096 characters (aligned with Telegram message limit).
+    Protects against ReDoS and ensures bounded complexity.
     """
+    # Truncate input to prevent ReDoS on very long messages
+    # 4096 is Telegram's message limit, also a reasonable bound for complexity
+    MAX_TEXT_LENGTH = 4096
+    if len(text) > MAX_TEXT_LENGTH:
+        logger.debug(f"Input text truncated from {len(text)} to {MAX_TEXT_LENGTH} chars")
+        text = text[:MAX_TEXT_LENGTH]
+    
     results = []
     
-    # Priority 1: TIME_24H
+    # Priority 1: TIME_12H_AMPM (most specific - includes AM/PM marker)
+    # This MUST be checked first so "10:30am" is recognized as 12-hour format
     # Error Handling: Skip invalid matches, continue with others (TIME_PARSING_RULES.md §5)
-    for match in TIME_24H_REGEX.finditer(text):
+    for match in TIME_12H_AMPM_REGEX.finditer(text):
         try:
             hour = int(match.group(1))
-            minute = int(match.group(2))
+            minute = int(match.group(2)) if match.group(2) else None
+            am_pm_group = match.group(3)
+            if not am_pm_group:
+                continue  # Skip if AM/PM group is missing
+            am_pm_raw = am_pm_group.upper().replace('.', '')  # Normalize "a.m." → "AM"
+            # Regex guarantees format is "AM" or "PM" after normalization
+            am_pm = am_pm_raw if am_pm_raw in ("AM", "PM") else None
+            
             results.append(DetectedTime(
                 raw_text=match.group(),
                 hour=hour,
                 minute=minute,
-                am_pm=None,
+                am_pm=am_pm,
                 position_start=match.start(),
                 position_end=match.end(),
                 ambiguous=False
             ))
         except (ValueError, IndexError) as e:
             # Skip invalid match, continue with others (per TIME_PARSING_RULES.md §5)
-            logger.debug(f"Skipped invalid TIME_24H match '{match.group()}': {e}")
+            logger.debug(f"Skipped invalid TIME_12H_AMPM match '{match.group()}': {e}")
             continue
     
-    # Priority 2: TIME_12H_AMPM (skip if overlaps with existing)
+    # Priority 2: TIME_24H (skip if overlaps with existing 12H matches)
     # Error Handling: Skip invalid matches, continue with others
-    for match in TIME_12H_AMPM_REGEX.finditer(text):
+    for match in TIME_24H_REGEX.finditer(text):
         if not overlaps(match, results):
             try:
                 hour = int(match.group(1))
-                minute = int(match.group(2)) if match.group(2) else None
-                am_pm_group = match.group(3)
-                if not am_pm_group:
-                    continue  # Skip if AM/PM group is missing
-                am_pm_raw = am_pm_group.upper().replace('.', '')  # Normalize "a.m." → "AM"
-                # Regex guarantees format is "AM" or "PM" after normalization
-                am_pm = am_pm_raw if am_pm_raw in ("AM", "PM") else None
-                
+                minute = int(match.group(2))
                 results.append(DetectedTime(
                     raw_text=match.group(),
                     hour=hour,
                     minute=minute,
-                    am_pm=am_pm,
+                    am_pm=None,
                     position_start=match.start(),
                     position_end=match.end(),
                     ambiguous=False
                 ))
             except (ValueError, IndexError) as e:
                 # Skip invalid match, continue with others (per TIME_PARSING_RULES.md §5)
-                logger.debug(f"Skipped invalid TIME_12H_AMPM match '{match.group()}': {e}")
+                logger.debug(f"Skipped invalid TIME_24H match '{match.group()}': {e}")
                 continue
     
     # Priority 3: TIME_BARE_HOUR (skip if overlaps)

@@ -212,6 +212,7 @@ Entry is a dictionary/object with exactly these three fields:
   - IANA timezone ID (e.g., `"Europe/Amsterdam"`) OR
   - Offset string in normalized format (e.g., `"+03:00"`, `"-05:00"`)
   - Offset strings may appear when extracted from message text (see `TIMEZONE_EXTRACTION_RULES.md`)
+  - **UTC format rule:** UTC must be displayed as IANA ID `"UTC"`, not as offset `"+00:00"`
 
 - `local_time`: 
   - Type: `string`
@@ -407,9 +408,9 @@ CoreConfig {
 
 **Mapping from configuration.yaml:**
 - `core.max_time_mentions` → `CoreConfig.max_time_mentions`
+- `core.default_timezone` → `CoreConfig.default_timezone` (optional, defaults to null = UTC)
 - `output.max_timezones` → `CoreConfig.max_timezones`
 - `output.ordering` → `CoreConfig.ordering`
-- (no config key) → `CoreConfig.default_timezone` (hardcoded or absent)
 
 ---
 

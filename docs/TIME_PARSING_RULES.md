@@ -197,7 +197,25 @@ def parse_times(text: str, max_results: int = 3) -> List[DetectedTime]:
 
 ---
 
-## 5. Error Handling
+## 5. Input Length Limit
+
+**Requirement:** Input text is truncated to first 4096 characters before parsing.
+
+**Rules:**
+- Maximum input length: 4096 characters (aligned with Telegram message limit)
+- Longer input is truncated, not rejected
+- Truncation happens before pattern matching
+- Debug log emitted when truncation occurs
+
+**Rationale:**
+- Protects against ReDoS (catastrophic backtracking)
+- Guarantees bounded complexity O(n) where n ≤ 4096
+- Aligns with Telegram platform message limit
+- Truncation is graceful degradation, not error
+
+---
+
+## 6. Error Handling
 
 **Requirement:** Parser must never raise uncaught exceptions (per `ARCHITECTURAL_INVARIANTS.md` #8).
 
@@ -245,7 +263,7 @@ def parse_times(text: str, max_results: int = 3) -> List[DetectedTime]:
 
 ---
 
-## 6. References
+## 7. References
 
 - `POLICIES.md` §1 — Time Detection Policy (behavioral rules)
 - `POLICIES.md` §4 — Ambiguity Policy (what happens when ambiguous)
