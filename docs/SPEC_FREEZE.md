@@ -8,6 +8,13 @@ Scope: MVP core + Telegram adapter
 This document fixes the behavioral and architectural specification of the MVP.
 After this point, behavior-changing modifications are considered out of scope unless explicitly approved as v2.
 
+**Canonical source documents:** This freeze captures behavioral contracts only. For structural definitions and detailed algorithms, refer to:
+- `CONTRACTS.md` — DTO definitions and data structures
+- `POLICIES.md` — deterministic core rules
+- `CORE_CONTRACT.md` — core invocation interface
+- `TIMEZONE_EXTRACTION_RULES.md` — extraction algorithms
+- `TIME_PARSING_RULES.md` — parsing grammar
+
 ---
 
 ## 1. Purpose of Spec Freeze
@@ -42,6 +49,12 @@ The following invariants are considered fundamental and must not be violated by 
 - Any internal error results in `None` output  
 - Core is deterministic for identical input  
 
+**Immutability requirement:**
+- All core DTOs are frozen dataclasses  
+- `DisplayBlock.entries` is `Tuple[Entry, ...]` (not mutable list)  
+- `DisplayFlags` is a frozen dataclass  
+- Collection fields use immutable types (`Tuple`, not `List`) to ensure full immutability  
+
 ### 2.2 Parsing Invariants
 
 - Time mentions are detected using explicit regex rules  
@@ -58,6 +71,15 @@ The following invariants are considered fundamental and must not be violated by 
 
 - No implicit geo inference  
 - No user location inference  
+
+**Context window:**
+- Timezone hints are searched within ±30 characters from time mention  
+- Window is measured from the **start position** of the time mention (not center or end)  
+- Formula: `start = max(0, time_position - 30)`, `end = min(len(text), time_position + 30)`  
+
+**City extraction priority:**
+- Multi-word phrases (2-3 words) are preferred over single-word matches when overlapping at the same start position  
+- Longer phrase match takes precedence (e.g., "New York" wins over "New")  
 
 ### 2.4 Resolution Invariants
 
@@ -89,17 +111,25 @@ These contracts define externally observable behavior.
 
 - Maximum number of processed time mentions: `max_time_mentions`  
 - Maximum number of resolved timezones: `max_timezones`  
-- If candidates exceed limit → `partial=True`  
+- If timezone candidates exceed `max_timezones` → `partial=True`  
 
 MVP processes only the first detected time mention in a message.  
 Additional time mentions are ignored in v1.  
 Multi-time support is explicitly deferred to v2+.  
 
-partial flag semantics:
+**partial flag semantics:**
 
-- partial=True indicates that candidates exceeded configured limits  
-- partial does not reflect conversion failures  
-- partial depends only on truncation, not on successful conversions  
+- `partial=True` indicates that **timezone candidates** exceeded `max_timezones` limit  
+- `partial` is determined **only** by `max_timezones`, **not** by `max_time_mentions`  
+- `partial` does not reflect conversion failures  
+- `partial` depends only on timezone truncation, not on successful conversions  
+
+**time_mentions_truncated (diagnostic only):**
+
+- If detected time mentions exceed `max_time_mentions`, this is logged for diagnostics  
+- This does **not** affect `partial` flag — `partial` is exclusively for timezone truncation  
+- Implementation may log: `"mentions_truncated={time_mentions_truncated}"`  
+- This is an internal diagnostic, not exposed in `DisplayBlock`  
 
 Messages exceeding these limits are partially processed, never rejected.
 
@@ -115,12 +145,19 @@ Messages exceeding these limits are partially processed, never rejected.
   3. Remaining timezones sorted by UTC offset (ascending)  
   4. Stable ordering inside equal offsets (deterministic by timezone ID)  
 
+**Deduplication rule:**
+- After UTC normalization (e.g., `"+00:00"` → `"UTC"`), timezone IDs are deduplicated  
+- First occurrence per priority order is retained  
+- Deduplication uses exact string identity (no semantic equivalence by offset)  
+
 ---
 
 ### 3.3 UTC Representation
 
 - UTC is represented as IANA ID `"UTC"`  
 - Offset `+00:00` is not used for display  
+- Offset string `"+00:00"` is normalized to `"UTC"` before deduplication  
+- IANA IDs with effective offset +00:00 (e.g., `"Europe/London"` in winter) retain their original ID  
 
 ---
 
@@ -131,6 +168,12 @@ Messages exceeding these limits are partially processed, never rejected.
 - Invalid cities.json entry → skipped  
 - No user-visible error messages  
 - Bot remains silent on malformed input  
+
+**Message deletion behavior:**
+- No retroactive cleanup of bot replies if original message is deleted  
+- Telegram API does not notify bots about message deletions in group chats  
+- Orphaned bot replies remain in chat (acceptable in MVP)  
+- `reply_mapping` entry remains until FIFO eviction  
 
 ---
 
@@ -147,6 +190,20 @@ The following parameters are mandatory for adapter startup:
 
 Missing required parameters → adapter does not start (fail-fast)
 
+**Data file error handling:**
+
+| File | Condition | Behavior |
+|------|-----------|----------|
+| `configuration.yaml` | Invalid YAML syntax | Adapter does not start (fatal) |
+| `cities.json` | Invalid JSON syntax | Adapter does not start (fatal) |
+| `cities.json` | Missing file | Adapter does not start (fatal) |
+| `cities.json` | Empty `[]` | Valid state, city extraction disabled |
+| `cities.json` | Duplicate city/alias keys | Last entry wins, warning logged |
+| `cities.json` | Invalid timezone in entry | Entry skipped, warning logged |
+| `users.json` | Invalid JSON syntax | Adapter does not start (fatal) |
+| `users.json` | Missing file | Treated as empty `{}`, adapter starts |
+| `users.json` | Invalid structure (not dict) | Treated as empty `{}`, warning logged |
+
 ---
 
 ### 4.2 Optional Configuration
@@ -155,6 +212,11 @@ Missing required parameters → adapter does not start (fail-fast)
 - It does not participate in normal resolution unless no other signals are available  
 
 Any future configurability beyond fallback requires spec version bump.
+
+**Configuration validation:**
+- Invalid integer values → use default, log warning  
+- Invalid ordering value → use `"SOURCE_FIRST"`, log warning  
+- Invalid IANA timezone ID → treat as `null` (UTC), log warning
 
 ---
 
@@ -229,8 +291,10 @@ The following unresolved aspects are consciously accepted in MVP:
 
 1. Very long messages are truncated by upstream platform  
 2. cities.json correctness is assumed, not enforced strictly  
-3. Ambiguous city names are resolved by first match in dataset  
+3. Ambiguous city names are resolved by last match in dataset  
 4. No disambiguation UI is provided  
+5. No retroactive cleanup of bot replies when original message is deleted  
+6. Orphaned replies from deleted messages remain in chat until manual cleanup  
 
 These are documented limitations, not bugs.
 
@@ -254,6 +318,23 @@ Remaining open points are either:
 At this point, the MVP is considered:
 
 **Architecturally closed, behaviorally stable, and ready for handover.**
+
+---
+
+## 11. References
+
+This freeze document captures behavioral contracts. For detailed specifications, consult:
+
+| Document | Purpose |
+|----------|---------|
+| `CONTRACTS.md` | DTO definitions, data structures, type contracts |
+| `POLICIES.md` | Deterministic core rules, resolution precedence |
+| `CORE_CONTRACT.md` | Core invocation interface, partial failure handling |
+| `TIMEZONE_EXTRACTION_RULES.md` | Extraction algorithms, normalization rules |
+| `TIME_PARSING_RULES.md` | Parsing grammar, regex patterns |
+| `ARCHITECTURAL_INVARIANTS.md` | System invariants (23 total) |
+| `ADAPTER_CONTRACTS.md` | Adapter runtime contract, error handling |
+| `USER_PROFILE_MODEL.md` | User/channel data model |
 
 ---
 

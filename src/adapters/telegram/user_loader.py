@@ -71,6 +71,7 @@ def load_users(users_path: str) -> Dict[str, dict]:
         data = json.load(f)
     
     if not isinstance(data, dict):
+        logger.warning("users.json root is not a dict, treating as empty {}")
         return {}
     
     # Remove _comment if present
