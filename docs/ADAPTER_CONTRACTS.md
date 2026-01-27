@@ -117,6 +117,24 @@ Unsupported (MVP):
 Rule:
 If adapter receives unsupported event → ignore silently.
 
+### DELETE_MESSAGE Behavior (MVP)
+
+**Explicit clarification:** When a user deletes their original message:
+
+1. **Adapter does not receive notification** — Telegram API does not notify bots about message deletions in group chats (only in 1:1 with bot as chat owner)
+2. **Bot reply is NOT deleted** — The bot's reply remains in the chat (orphaned but harmless)
+3. **No retroactive cleanup** — Bot does not attempt to find and delete orphaned replies
+4. **reply_mapping is NOT updated** — The mapping entry remains until evicted by FIFO limit
+
+**Rationale:**
+- Telegram API limitation for group chats
+- Orphaned replies are acceptable in MVP (no user-visible impact)
+- Implementing cleanup would require polling or webhook configuration changes
+
+**Future consideration:** If DELETE_MESSAGE support is needed, it would require:
+- Telegram webhook with `allowed_updates` including `message` deletions (only works for supergroups)
+- Or periodic cleanup job to remove orphaned replies
+
 ---
 
 ## 4. Adapter Runtime State Model

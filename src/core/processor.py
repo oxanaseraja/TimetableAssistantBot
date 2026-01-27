@@ -6,7 +6,7 @@ import logging
 from typing import Mapping, Optional
 from .contracts import (
     CoreMessageEvent, UserProfile, ChannelContext, CoreConfig,
-    DetectedTime, TimezoneSignals, ResolvedTimeContext, ConvertedTime, DisplayBlock
+    DetectedTime, TimezoneSignals, ResolvedTimeContext, ConvertedTime, DisplayBlock, DisplayFlags
 )
 from .parser.time_parser import parse_times
 from .timezone.extractor import extract_timezone_hint
@@ -150,11 +150,14 @@ def process(
         
         # Step 6: Build DisplayBlock
         # Sort entries according to ordering strategy
+        # Note: Entry TypedDict is created as dict literal - this is standard Python practice.
+        # TypedDict is a type annotation for static type checkers, not a runtime class.
         entries = []
         for conv_time in converted_times:
             # Format time as HH:MM (24-hour, zero-padded)
             time_str = conv_time.local_time.strftime("%H:%M")
             
+            # Entry TypedDict: {"timezone": str, "local_time": str, "cities": List[str]}
             entries.append({
                 "timezone": conv_time.timezone_id,
                 "local_time": time_str,
@@ -239,12 +242,12 @@ def process(
         partial = len(total_candidates) > config.max_timezones
         
         return DisplayBlock(
-            entries=entries,
+            entries=tuple(entries),  # Convert to tuple for immutability
             ordering=config.ordering,
-            flags={
-                "ambiguous": False,  # If truly ambiguous, we return None earlier
-                "partial": partial
-            }
+            flags=DisplayFlags(
+                ambiguous=False,  # If truly ambiguous, we return None earlier
+                partial=partial
+            )
         )
     
     except Exception:

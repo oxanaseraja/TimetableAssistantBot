@@ -556,6 +556,12 @@ Deterministic selection algorithm:
 
 **Timezone hint applies only to the time mention within ±30 chars window.**
 
+**Window calculation clarification:**
+- Window is centered around the **START position** of the time mention (not the center or end)
+- Formula: `start = max(0, time_position - 30)`, `end = min(len(text), time_position + 30)`
+- For time mention "10:30" at position 20: window is `[0:50]` (characters 0-49)
+- Window may be asymmetric at text boundaries (beginning or end of message)
+
 Each time mention has its own independent timezone resolution.
 
 Example:

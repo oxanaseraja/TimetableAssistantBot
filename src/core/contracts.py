@@ -64,20 +64,31 @@ class ConvertedTime:
 
 
 class Entry(TypedDict):
+    """Single timezone entry in DisplayBlock."""
     timezone: str
     local_time: str
-    cities: List[str]
+    cities: List[str]  # Populated by adapter, not core
 
 
-class DisplayFlags(TypedDict):
+@dataclass(frozen=True)
+class DisplayFlags:
+    """Display flags for DisplayBlock.
+    
+    Changed from TypedDict to frozen dataclass for full immutability.
+    See ARCHITECTURAL_INVARIANTS.md #6.
+    """
     ambiguous: bool
     partial: bool
 
 
 @dataclass(frozen=True)
 class DisplayBlock:
-    """Formatted output for adapter to render."""
-    entries: List[Entry]
+    """Formatted output for adapter to render.
+    
+    Note: entries is a Tuple (immutable) to ensure full immutability
+    of the frozen dataclass. See ARCHITECTURAL_INVARIANTS.md #6.
+    """
+    entries: Tuple[Entry, ...]  # Immutable tuple for full immutability
     ordering: Literal["SOURCE_FIRST", "OFFSET_ASC", "ALPHABETICAL"]
     flags: DisplayFlags
 

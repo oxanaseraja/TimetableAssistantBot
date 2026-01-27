@@ -200,7 +200,9 @@ class TelegramAdapter:
             )
         except Exception as exc:
             # Invariant #12: Adapter suppresses all core errors
-            logger.error(f"Core error: {exc}", exc_info=True)
+            # Use warning level since errors are suppressed and user sees nothing
+            # Per ADAPTER_CONTRACTS.md §2: "User receives no error message in MVP"
+            logger.warning(f"Core error (suppressed): {exc}", exc_info=True)
             display_block = None
         
         # Send reply if display_block is not None

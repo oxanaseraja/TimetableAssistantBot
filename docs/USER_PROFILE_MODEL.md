@@ -199,7 +199,13 @@ def compute_active_timezones(
 - Source of truth: ChannelContext.members + UserProfile.timezone
 - Unknown members are ignored (not an error)
 - Null timezones are excluded
+- **Duplicates are automatically deduplicated** — if multiple members have the same timezone, it appears only once in the result
 - Result is sorted alphabetically for determinism
+
+**Deduplication behavior:**
+- Uses Python `set()` for automatic deduplication
+- Example: 3 members with "Europe/Amsterdam" and 1 with "Asia/Yerevan" → `["Asia/Yerevan", "Europe/Amsterdam"]`
+- Deduplication happens before sorting
 
 ---
 
