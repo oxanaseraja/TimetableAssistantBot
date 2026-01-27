@@ -144,7 +144,7 @@ If user timezone is unknown (not in `users.json`):
 ChannelContext {
     internal_channel_id: string,
     default_timezone: string | null,
-    active_timezones: List<string>
+    active_timezones: Tuple<string, ...>
 }
 ```
 

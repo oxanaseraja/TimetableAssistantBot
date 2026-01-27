@@ -447,15 +447,35 @@ def extract_timezone_hint(
     
     # Priority 1: UTC/GMT offset
     TZ_OFFSET_REGEX = re.compile(r'(UTC|GMT)?[+-]\d{1,2}(:\d{2})?', re.IGNORECASE)
-    match = TZ_OFFSET_REGEX.search(context)
-    if match:
-        return normalize_offset(match.group())
+    offset_matches = list(TZ_OFFSET_REGEX.finditer(context))
+    if offset_matches:
+        valid_offsets = []
+        for match in offset_matches:
+            normalized = normalize_offset(match.group())
+            if normalized:
+                valid_offsets.append((match, normalized))
+        if valid_offsets:
+            closest_match, normalized = min(
+                valid_offsets,
+                key=lambda item: (abs((start + item[0].start()) - time_position), item[0].start())
+            )
+            return normalized
     
     # Priority 2: IANA timezone ID
     TZ_IANA_REGEX = re.compile(r'\b[A-Za-z_]+/[A-Za-z_]+\b')
-    match = TZ_IANA_REGEX.search(context)
-    if match and match.group() in zoneinfo.available_timezones():
-        return match.group()
+    iana_matches = list(TZ_IANA_REGEX.finditer(context))
+    if iana_matches:
+        valid_matches = []
+        for match in iana_matches:
+            tz_id = match.group()
+            if tz_id in zoneinfo.available_timezones():
+                valid_matches.append((match, tz_id))
+        if valid_matches:
+            closest_match, tz_id = min(
+                valid_matches,
+                key=lambda item: (abs((start + item[0].start()) - time_position), item[0].start())
+            )
+            return tz_id
     
     # Priority 3: City lookup (uses passed index)
     # Supports single words, multi-word phrases, and normalization
@@ -466,13 +486,14 @@ def extract_timezone_hint(
         return text.lower().replace('.', '')
     
     # Check single words (exact and normalized)
+    city_matches = []
     for match in word_pattern.finditer(context):
         word = match.group()
         word_normalized = normalize_for_lookup(word)
         if word.lower() in city_index:
-            return city_index[word.lower()]
+            city_matches.append((match.start(), city_index[word.lower()], 1))
         elif word_normalized in city_index:
-            return city_index[word_normalized]
+            city_matches.append((match.start(), city_index[word_normalized], 1))
     
     # Check multi-word phrases (2-word and 3-word)
     words_list = word_pattern.findall(context)
@@ -480,17 +501,30 @@ def extract_timezone_hint(
         phrase_2 = f"{words_list[i]} {words_list[i+1]}".lower()
         phrase_2_normalized = normalize_for_lookup(phrase_2)
         if phrase_2 in city_index:
-            return city_index[phrase_2]
+            city_matches.append((words_positions[i][0], city_index[phrase_2], 2))
         elif phrase_2_normalized in city_index:
-            return city_index[phrase_2_normalized]
+            city_matches.append((words_positions[i][0], city_index[phrase_2_normalized], 2))
     
     for i in range(len(words_list) - 2):
         phrase_3 = f"{words_list[i]} {words_list[i+1]} {words_list[i+2]}".lower()
         phrase_3_normalized = normalize_for_lookup(phrase_3)
         if phrase_3 in city_index:
-            return city_index[phrase_3]
+            city_matches.append((words_positions[i][0], city_index[phrase_3], 3))
         elif phrase_3_normalized in city_index:
-            return city_index[phrase_3_normalized]
+            city_matches.append((words_positions[i][0], city_index[phrase_3_normalized], 3))
+    
+    if city_matches:
+        longest_by_start = {}
+        for pos, tz_id, word_count in city_matches:
+            current = longest_by_start.get(pos)
+            if current is None or word_count > current[2]:
+                longest_by_start[pos] = (pos, tz_id, word_count)
+        filtered_matches = list(longest_by_start.values())
+        closest_pos, tz_id, _ = min(
+            filtered_matches,
+            key=lambda item: (abs((start + item[0]) - time_position), item[0])
+        )
+        return tz_id
     
     return None
 ```

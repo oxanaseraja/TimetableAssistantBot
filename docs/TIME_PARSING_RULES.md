@@ -246,7 +246,16 @@ def parse_times(text: str, max_results: int = 3) -> List[DetectedTime]:
 def parse_times(text: str, max_results: int = 3) -> List[DetectedTime]:
     results = []
     
-    # Priority 1: TIME_24H
+    # Priority 1: TIME_12H_AMPM
+    for match in TIME_12H_AMPM_REGEX.finditer(text):
+        try:
+            hour = int(match.group(1))
+            minute = int(match.group(2)) if match.group(2) else None
+            results.append(DetectedTime(...))
+        except (ValueError, IndexError):
+            continue  # Skip invalid match, continue with others
+    
+    # Priority 2: TIME_24H
     for match in TIME_24H_REGEX.finditer(text):
         try:
             hour = int(match.group(1))
@@ -255,7 +264,13 @@ def parse_times(text: str, max_results: int = 3) -> List[DetectedTime]:
         except (ValueError, IndexError):
             continue  # Skip invalid match, continue with others
     
-    # ... similar for other priorities ...
+    # Priority 3: TIME_BARE_HOUR
+    for match in TIME_BARE_HOUR_REGEX.finditer(text):
+        try:
+            hour = int(match.group(2))
+            results.append(DetectedTime(...))
+        except (ValueError, IndexError):
+            continue  # Skip invalid match, continue with others
     
     return sorted(results, key=lambda x: x.position_start)[:max_results]
 ```
