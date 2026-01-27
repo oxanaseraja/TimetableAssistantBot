@@ -50,14 +50,13 @@ Patterns are applied in order. First match wins.
 
 ### 1.3 TIME_BARE_HOUR — Hour only with trigger word
 
-**Trigger words (case-insensitive):**
-- English: `at`, `by`, `around`, `about`, `until`, `till`
-- Russian: `в`, `к`, `около`, `до`
+**Trigger words (case-insensitive, English only):**
+- `at`, `by`, `around`, `about`, `until`, `till`
 
 **Full Regex:**
 
 ```python
-TRIGGER_WORDS = r'(?:at|by|around|about|until|till|в|к|около|до)'
+TRIGGER_WORDS = r'(?:at|by|around|about|until|till)'
 TIME_BARE_HOUR_REGEX = re.compile(
     rf'(?i)\b({TRIGGER_WORDS})\s+([1-9]|1[0-2])\b',
     re.UNICODE
@@ -70,8 +69,8 @@ TIME_BARE_HOUR_REGEX = re.compile(
 |---------|------|--------|-----------|
 | `at 8` | 8 | null | **true** |
 | `At 8` | 8 | null | **true** |
-| `в 10` | 10 | null | **true** |
 | `by 3` | 3 | null | **true** |
+| `around 10` | 10 | null | **true** |
 
 **Ambiguity:** Always ambiguous (no AM/PM, could be 08:00 or 20:00).
 
@@ -90,7 +89,7 @@ These formats are **NOT recognized** in MVP:
 | Dot separator | `10.30` | Conflicts with decimals, versions (`v10.30`) |
 | European `h` | `10h30` | Not common in target locales |
 | Word-based | `half past 10` | Requires NLP |
-| Relative | `in 2 hours`, `через час` | Requires current time context |
+| Relative | `in 2 hours` | Requires current time context |
 | Ranges | `10:00-11:00` | Out of scope |
 | Date+time | `Jan 25 at 10:30` | Out of scope |
 | ISO 8601 | `2026-01-25T10:30:00Z` | Out of scope |

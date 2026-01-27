@@ -1,5 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
 .env
 .venv
+venv/
+ENV/
+env/
+
+# IDE
 .DS_Store
+.vscode/
+.idea/
+
+# Project specific
 users.json
 /local/

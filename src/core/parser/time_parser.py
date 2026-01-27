@@ -20,7 +20,8 @@ TIME_12H_AMPM_REGEX = re.compile(
 )
 
 # TIME_BARE_HOUR: trigger word + hour (1-12)
-TRIGGER_WORDS = r'(?:at|by|around|about|until|till|в|к|около|до)'
+# English trigger words only (Latin script)
+TRIGGER_WORDS = r'(?:at|by|around|about|until|till)'
 TIME_BARE_HOUR_REGEX = re.compile(
     rf'(?i)\b({TRIGGER_WORDS})\s+([1-9]|1[0-2])\b',
     re.UNICODE

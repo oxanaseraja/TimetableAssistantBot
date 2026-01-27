@@ -296,11 +296,10 @@ def overlaps(match, existing_results: List[DetectedTime]) -> bool:
 **Не определено:**
 1. Точный список trigger words как regex alternation
 2. Case sensitivity
-3. Что если trigger word на русском?
 
 **Рекомендация:** Дать полный regex:
 ```python
-TRIGGER_WORDS = r'(?:at|by|around|about|until|till|в|к|около|до)'
+TRIGGER_WORDS = r'(?:at|by|around|about|until|till)'
 TIME_BARE_HOUR = rf'(?i){TRIGGER_WORDS}\s+([1-9]|1[0-2])\b'
 ```
 

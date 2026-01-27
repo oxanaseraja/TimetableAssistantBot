@@ -62,7 +62,7 @@
 `POLICIES.md` §1.1 содержит формальные regex patterns:
 - `TIME_24H` — `10:30`, `23:59`
 - `TIME_12H_AMPM` — `1pm`, `10:30am`
-- `TIME_BARE_HOUR` — `at 8`, `в 10`
+- `TIME_BARE_HOUR` — `at 8`, `by 10`
 
 Unsupported formats явно перечислены.
 
