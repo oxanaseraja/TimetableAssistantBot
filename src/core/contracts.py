@@ -4,7 +4,7 @@ All DTOs are immutable dataclasses.
 """
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Optional, Literal, Mapping
+from typing import List, Optional, Literal, Mapping, TypedDict
 
 
 @dataclass(frozen=True)
@@ -59,12 +59,23 @@ class ConvertedTime:
     utc_offset: str  # ±HH:MM format
 
 
+class Entry(TypedDict):
+    timezone: str
+    local_time: str
+    cities: List[str]
+
+
+class DisplayFlags(TypedDict):
+    ambiguous: bool
+    partial: bool
+
+
 @dataclass(frozen=True)
 class DisplayBlock:
     """Formatted output for adapter to render."""
-    entries: List[dict]  # List of {timezone, local_time, cities}
+    entries: List[Entry]
     ordering: Literal["SOURCE_FIRST", "OFFSET_ASC", "ALPHABETICAL"]
-    flags: dict  # {ambiguous: bool, partial: bool}
+    flags: DisplayFlags
 
 
 @dataclass(frozen=True)

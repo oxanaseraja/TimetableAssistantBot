@@ -45,6 +45,16 @@ class TestTimezoneExtractor(unittest.TestCase):
         self.assertEqual(normalize_offset("GMT-5"), "-05:00")
         self.assertEqual(normalize_offset("+0300"), "+03:00")
         self.assertEqual(normalize_offset("-05:30"), "-05:30")
+
+    def test_offset_normalization_invalid(self):
+        """Test invalid offset normalization edge cases."""
+        self.assertIsNone(normalize_offset("UTC"))
+        self.assertIsNone(normalize_offset("GMT"))
+        self.assertIsNone(normalize_offset("+15:00"))  # hours out of range
+        self.assertIsNone(normalize_offset("+03:60"))  # minutes out of range
+        self.assertIsNone(normalize_offset("UTC+15"))  # hours out of range
+        self.assertIsNone(normalize_offset("+"))       # missing digits
+        self.assertIsNone(normalize_offset("-"))       # missing digits
     
     def test_tokenize(self):
         """Test text tokenization."""
@@ -131,6 +141,33 @@ class TestTimezoneExtractor(unittest.TestCase):
         result = extract_timezone_hint(text, time_pos, city_index)
         self.assertEqual(result, "Europe/Amsterdam",
                         "When distances are equal, first match by text order (left-to-right) should be selected")
+
+    def test_city_normalization_variants(self):
+        """Test city normalization for dots, hyphens, and multi-word phrases."""
+        city_index = {
+            "st petersburg": "Europe/Moscow",
+            "saint-petersburg": "Europe/Moscow",
+            "the hague": "Europe/Amsterdam"
+        }
+        text = "Meeting at 10:30 in St. Petersburg"
+        time_pos = text.find("10:30")
+        result = extract_timezone_hint(text, time_pos, city_index)
+        self.assertEqual(result, "Europe/Moscow")
+
+        text = "Meeting at 10:30 in St Petersburg"
+        time_pos = text.find("10:30")
+        result = extract_timezone_hint(text, time_pos, city_index)
+        self.assertEqual(result, "Europe/Moscow")
+
+        text = "Meeting at 10:30 in Saint-Petersburg"
+        time_pos = text.find("10:30")
+        result = extract_timezone_hint(text, time_pos, city_index)
+        self.assertEqual(result, "Europe/Moscow")
+
+        text = "Meeting at 10:30 in The Hague"
+        time_pos = text.find("10:30")
+        result = extract_timezone_hint(text, time_pos, city_index)
+        self.assertEqual(result, "Europe/Amsterdam")
 
 
 if __name__ == '__main__':
