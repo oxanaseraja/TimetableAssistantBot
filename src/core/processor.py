@@ -45,25 +45,20 @@ def process(
     """
     try:
         # Step 1: Parse times from message text
-        # Check if message exceeds max_time_mentions limit (POLICIES.md §6)
         # Parse with limit+1 to detect if message exceeds limit without parsing all matches
-        # If len(all_times) > max_time_mentions, message is discarded (spam suppression)
         all_times = parse_times(event.text, max_results=config.max_time_mentions + 1)
-        
-        # Ignore messages with > max_time_mentions time mentions (POLICIES.md §6)
-        if len(all_times) > config.max_time_mentions:
-            logger.debug(f"Message discarded: exceeds max_time_mentions limit ({len(all_times)} > {config.max_time_mentions})")
-            return None
         
         # Use only first max_time_mentions times
         detected_times = all_times[:config.max_time_mentions]
+        # partial=True if time mentions exceeded configured limit (SPEC_FREEZE §3.1)
+        partial = len(all_times) > config.max_time_mentions
         
         # Stop if no time detected
         if not detected_times:
             logger.debug("Message discarded: no time detected")
             return None
         
-        # MVP simplification: Process only the first detected time (POLICIES.md §6.1)
+        # MVP simplification: Process only the first detected time (SPEC_FREEZE §3.1)
         detected_time = detected_times[0]
         logger.debug(f"Detected time: {detected_time.raw_text} (hour={detected_time.hour}, minute={detected_time.minute}, am_pm={detected_time.am_pm})")
         
@@ -229,24 +224,7 @@ def process(
         
         # Check if partial (some timezones omitted due to max limit)
         # Specification: CONTRACTS.md §DisplayBlock - partial flag semantics
-        # 
-        # partial = true if:
-        #   1. total_candidates > max_timezones AND
-        #   2. len(converted_times) == max_timezones (all slots filled with successful conversions)
-        # 
-        # This means some valid timezones were excluded due to display limit.
-        # 
-        # Edge case - Conversion failures:
-        # If some timezones fail to convert (invalid IANA ID, conversion errors):
-        # - Failed conversions are excluded from converted_times
-        # - partial = false if len(converted_times) < max_timezones (slots not filled)
-        # - This indicates that not all slots were filled, so no timezones were omitted due to limit
-        # - Even if total_candidates > max_timezones, partial remains false when slots aren't filled
-        # 
-        # Examples:
-        # - total_candidates=6, max_timezones=5, converted_times=5 → partial=true (1 omitted due to limit)
-        # - total_candidates=6, max_timezones=5, converted_times=3 (3 failed) → partial=false (slots not filled)
-        # - total_candidates=3, max_timezones=5, converted_times=3 → partial=false (no limit reached)
+        # partial = true if total candidates exceed max_timezones, regardless of conversion failures
         total_candidates = set()
         if resolved_context.base_timezone:
             total_candidates.add(resolved_context.base_timezone)
@@ -254,7 +232,7 @@ def process(
             total_candidates.add(channel_context.default_timezone)
         total_candidates.update(channel_context.active_timezones)
         
-        partial = len(total_candidates) > config.max_timezones and len(converted_times) == config.max_timezones
+        partial = partial or len(total_candidates) > config.max_timezones
         
         return DisplayBlock(
             entries=entries,

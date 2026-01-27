@@ -173,7 +173,7 @@ class TestProcessor(unittest.TestCase):
         self.assertEqual(result.entries[0]["timezone"], "Europe/Amsterdam")
     
     def test_max_time_mentions_limit(self):
-        """Test that messages with > max_time_mentions are ignored"""
+        """Test that messages with > max_time_mentions are truncated"""
         # Create message with 4 times (exceeds limit of 3)
         event = CoreMessageEvent(
             internal_message_id="test6",
@@ -192,8 +192,9 @@ class TestProcessor(unittest.TestCase):
         
         result = process(event, user_profile, channel_context, self.city_index, self.config)
         
-        # Should return None due to exceeding max_time_mentions limit
-        self.assertIsNone(result)
+        # Should still return a result with partial=True due to truncation
+        self.assertIsNotNone(result)
+        self.assertTrue(result.flags["partial"])
     
     def test_partial_flag_when_timezones_omitted(self):
         """Test that partial flag is set when timezones are omitted due to max limit"""
@@ -260,10 +261,10 @@ class TestProcessor(unittest.TestCase):
         self.assertGreater(len(result.entries), 1)
     
     def test_partial_flag_with_conversion_failures(self):
-        """Test partial flag edge case: conversion failures should not set partial=True.
+        """Test partial flag edge case: conversion failures do not clear partial.
         
         Specification: CONTRACTS.md §DisplayBlock - partial flag semantics.
-        If some timezones fail to convert, partial=False even if total_candidates > max_timezones.
+        If candidates exceed the limit, partial=True even when conversions fail.
         """
         event = CoreMessageEvent(
             internal_message_id="test9",
@@ -299,10 +300,9 @@ class TestProcessor(unittest.TestCase):
         # (3 invalid timezones were excluded due to conversion failures)
         self.assertLess(len(result.entries), config.max_timezones,
                        "Some timezones failed conversion, so not all slots are filled")
-        # partial flag should be False because not all slots are filled
-        # (even though total_candidates = 6 > max_timezones = 5)
-        self.assertFalse(result.flags["partial"],
-                        "partial should be False when slots are not filled due to conversion failures")
+        # partial flag should be True because candidates exceeded max_timezones
+        self.assertTrue(result.flags["partial"],
+                        "partial should be True when candidates exceed max_timezones, regardless of conversion failures")
     
     def test_partial_flag_all_slots_filled(self):
         """Test partial flag: should be True when all slots filled and total_candidates > max_timezones."""

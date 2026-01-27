@@ -180,13 +180,13 @@ Activity tracking and decay are out of scope for MVP.
 
 **Constraints:**
 - Max timezones shown: 5
-- Up to 3 time mentions are allowed per message
+- Up to 3 time mentions are processed per message
 - One line per timezone with city list
-- Stable ordering for tests
+- Deterministic ordering for tests
 
 **Time mentions limit:**
 - Messages with exactly 3 times: processed (first time used in MVP)
-- Messages with more than 3 times (4+): ignored entirely (spam suppression)
+- Messages with more than 3 times (4+): processed with truncation (`partial=True`)
 
 **Ordering:**
 1. Source timezone
@@ -195,7 +195,6 @@ Activity tracking and decay are out of scope for MVP.
 
 **Spam suppression:**
 - One bot reply per user message
-- Ignore messages with > 3 time mentions
 
 **Output format:** See `ADAPTER_CONTRACTS.md` §6.
 

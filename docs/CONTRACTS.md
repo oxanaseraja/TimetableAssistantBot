@@ -350,22 +350,16 @@ Both entries displayed (different identifiers, even though offset is same)
 - total number of candidate timezones
   (base + channel default + active_timezones)
   > max_timezones
-AND
-- displayed entries == max_timezones
 
 Meaning:
-Some valid conversions were omitted due to display limit.
+Some candidates were omitted due to display limit (truncation).
 
 **Critical edge case: Partial conversion failures**
 
 If some timezones fail to convert (e.g., invalid IANA ID, conversion errors):
 - Failed conversions are excluded from `displayed entries`
-- `partial` flag is set to `true` ONLY if:
-  - `total_candidates > max_timezones` AND
-  - `len(displayed_entries) == max_timezones` (all available slots are filled with successful conversions)
-- If `len(displayed_entries) < max_timezones` due to conversion failures:
-  - `partial = false` (even if `total_candidates > max_timezones`)
-  - This indicates that not all slots were filled, so no timezones were omitted due to limit
+- `partial` still reflects truncation only
+- Conversion failures do NOT affect `partial`
 
 **Examples:**
 
@@ -378,13 +372,13 @@ displayed_entries = 5 (first 5 by priority)
 partial = true (1 timezone omitted due to limit)
 ```
 
-Example 2: Conversion failures prevent filling all slots
+Example 2: Conversion failures, truncation still applies
 ```
 total_candidates = 6 (source + 5 active_timezones)
 max_timezones = 5
 3 candidates fail conversion (invalid IANA IDs)
 displayed_entries = 3 (only successful conversions)
-partial = false (slots not filled, failures not due to limit)
+partial = true (candidates exceeded limit regardless of failures)
 ```
 
 Example 3: No limit reached

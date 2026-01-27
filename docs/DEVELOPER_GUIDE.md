@@ -15,7 +15,7 @@ Core modules may use Python's standard `logging` module for debug/info/warning m
 1. **Purpose:** Logging in core modules should remain only for monitoring and debugging purposes, without changing function state.
 
 2. **What to log:**
-   - Debug messages for troubleshooting (e.g., "Message discarded: exceeds max_time_mentions limit")
+   - Debug messages for troubleshooting (e.g., "Message truncated: exceeds max_time_mentions limit")
    - Warning messages for invalid input handling (e.g., "Invalid timezone ID, skipping")
    - Info messages for important state changes (e.g., "Failed to convert X timezone(s)")
 

@@ -67,6 +67,9 @@ The following invariants are considered fundamental and must not be violated by 
   2. IANA timezone  
   3. City  
   4. User profile  
+  5. Channel default timezone  
+  6. Active timezones (if unique)  
+  7. System default ("UTC")  
 
 - Priority wins over distance when equal  
 
@@ -88,6 +91,16 @@ These contracts define externally observable behavior.
 - Maximum number of resolved timezones: `max_timezones`  
 - If candidates exceed limit → `partial=True`  
 
+MVP processes only the first detected time mention in a message.  
+Additional time mentions are ignored in v1.  
+Multi-time support is explicitly deferred to v2+.  
+
+partial flag semantics:
+
+- partial=True indicates that candidates exceeded configured limits  
+- partial does not reflect conversion failures  
+- partial depends only on truncation, not on successful conversions  
+
 Messages exceeding these limits are partially processed, never rejected.
 
 ---
@@ -98,8 +111,9 @@ Messages exceeding these limits are partially processed, never rejected.
 - No duplicate cities within one timezone  
 - Ordering:
   1. Source timezone first  
-  2. Other timezones sorted by UTC offset  
-  3. Stable ordering inside equal offsets  
+  2. Channel default timezone (if different from source)  
+  3. Remaining timezones sorted by UTC offset (ascending)  
+  4. Stable ordering inside equal offsets (deterministic by timezone ID)  
 
 ---
 
@@ -137,10 +151,10 @@ Missing required parameters → adapter does not start (fail-fast)
 
 ### 4.2 Optional Configuration
 
-- core.default_timezone is **not configurable** in MVP  
-- Default timezone behavior is fixed and hardcoded  
+- core.default_timezone is allowed only as final system fallback  
+- It does not participate in normal resolution unless no other signals are available  
 
-Any future configurability requires spec version bump.
+Any future configurability beyond fallback requires spec version bump.
 
 ---
 
@@ -164,6 +178,7 @@ The following features are explicitly excluded from MVP:
 - Relative times ("in two hours", "tomorrow")  
 - Automatic user timezone inference  
 - Multiple source timezones in one sentence  
+- Multiple time mentions per message  
 - Cross-message context  
 
 These are considered v2+ features.
