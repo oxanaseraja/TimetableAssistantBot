@@ -228,6 +228,13 @@ Entry is a dictionary/object with exactly these three fields:
   - Cities are sorted alphabetically
   - Empty list `[]` if no cities match or if timezone is an offset string
 
+**Note on cities field ownership:**
+
+- Core processor always returns `cities: []` (empty list)
+- Adapter populates cities during formatting using `get_cities_for_timezone()`
+- This separation ensures core remains pure (no filesystem / data access)
+- Core does not know about cities.json (see `ARCHITECTURAL_INVARIANTS.md` #2)
+
 Ordering = "SOURCE_FIRST" | "OFFSET_ASC" | "ALPHABETICAL"
 // SOURCE_FIRST: source timezone first, then channel default, then by offset
 //   - Source timezone (where original time was expressed) is always first

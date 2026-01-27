@@ -73,7 +73,9 @@ def map_telegram_update(update: Update) -> Optional[CoreMessageEvent]:
         logger.debug("Message discarded: missing timestamp")
         return None
     
-    timestamp_utc = message.date.replace(tzinfo=timezone.utc)
+    # Use astimezone() to properly convert timezone, not replace()
+    # replace() can create incorrect time if source is not already UTC
+    timestamp_utc = message.date.astimezone(timezone.utc)
     # ... rest of mapping ...
 ```
 
@@ -148,6 +150,12 @@ Rules:
 - load on startup if file exists
 - save on graceful shutdown
 - failure to load/save → ignored
+
+**Persistence file format:**
+- Format: JSON
+- Encoding: UTF-8
+- Structure: `{"platform_id": "internal_id", ...}`
+- Example: `{"telegram:123": "abc123...", "telegram:456": "def456..."}`
 
 ---
 

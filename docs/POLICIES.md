@@ -130,6 +130,16 @@ Rules:
 
 This makes the system predictable and formally bounded.
 
+### DST Fold/Gap Handling
+
+- **Gap (spring forward):** Invalid local times are interpreted as the first valid
+  time after the gap (zoneinfo default behavior)
+
+- **Fold (fall back):** Ambiguous local times are interpreted as the first occurrence
+  (pre-transition time)
+
+- MVP does not detect or report DST ambiguity explicitly.
+
 ---
 
 ## 5. Active Timezones Policy
@@ -159,9 +169,13 @@ Activity tracking and decay are out of scope for MVP.
 
 **Constraints:**
 - Max timezones shown: 5
-- Max time mentions processed: 3
+- Up to 3 time mentions are allowed per message
 - One line per timezone with city list
 - Stable ordering for tests
+
+**Time mentions limit:**
+- Messages with exactly 3 times: processed (first time used in MVP)
+- Messages with more than 3 times (4+): ignored entirely (spam suppression)
 
 **Ordering:**
 1. Source timezone

@@ -169,10 +169,12 @@ class TelegramAdapter:
         if event.is_edit and event.internal_message_id in self.reply_mapping:
             old_reply_id = self.reply_mapping[event.internal_message_id]
             try:
-                await context.bot.delete_message(
-                    chat_id=update.effective_chat.id,
-                    message_id=old_reply_id
-                )
+                # Guard against None effective_chat (rare edge case)
+                if update.effective_chat:
+                    await context.bot.delete_message(
+                        chat_id=update.effective_chat.id,
+                        message_id=old_reply_id
+                    )
             except Exception as e:
                 logger.warning(f"Failed to delete old reply: {e}")
         
@@ -262,6 +264,8 @@ class TelegramAdapter:
             self.reply_mapping[event.internal_message_id] = reply_message.message_id
             
             # Limit size of reply_mapping (max 10,000, drop oldest FIFO) (ADAPTER_CONTRACTS.md §4)
+            # Safe under current single-threaded asyncio model.
+            # If multithreading is introduced, protect with asyncio.Lock.
             if len(self.reply_mapping) > 10000:
                 # Remove oldest entry (FIFO) - OrderedDict.popitem(last=False) removes first (oldest) item
                 self.reply_mapping.popitem(last=False)
@@ -271,7 +275,8 @@ class TelegramAdapter:
                 self.processed_message_ids[event.internal_message_id] = None
                 
                 # Limit size of processed_message_ids (max 10,000, drop oldest FIFO)
-                # OrderedDict.popitem(last=False) removes oldest (first) item
+                # Safe under current single-threaded asyncio model.
+                # If multithreading is introduced, protect with asyncio.Lock.
                 if len(self.processed_message_ids) > 10000:
                     self.processed_message_ids.popitem(last=False)
         

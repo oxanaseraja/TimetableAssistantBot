@@ -106,6 +106,17 @@ The system **explicitly supports** the following city name formats:
 
 All other punctuation (commas, apostrophes, etc.) acts as word boundaries and breaks tokenization.
 
+**CJK Language Handling:**
+
+- Spaces between words are required for tokenization
+- Languages without spaces (Chinese, Japanese, Thai) require explicit spaces
+  around city names
+- Exact match only, no morphological segmentation
+
+Examples:
+- `"会议 北京 10:00"` → supported (spaces present around city name)
+- `"会议北京10:00"` → not supported (no spaces, city name not tokenized)
+
 **Normalization Rules:**
 
 1. **Case Normalization:**
@@ -197,6 +208,12 @@ for entry in cities_json:
 - Each city/alias appears in exactly one entry
 - No duplicates across entries
 - Adapter loads this file at startup
+
+**Duplicate handling:**
+
+- If a city or alias appears multiple times, last entry wins (dict semantics)
+- This is undefined behavior; data should be validated to avoid duplicates
+- Adapter may log a warning but continues operation
 
 **Error Handling for cities.json:**
 

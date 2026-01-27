@@ -120,6 +120,17 @@ def overlaps(match, existing_results: List[DetectedTime]) -> bool:
 
 ### 3.2 Main Algorithm
 
+**Priority order:**
+
+1. **TIME_12H_AMPM** — most specific, includes AM/PM marker
+2. **TIME_24H** — less specific, no AM/PM
+3. **TIME_BARE_HOUR** — least specific, always ambiguous
+
+**Note:** More specific patterns must be matched before less specific ones
+to avoid losing semantic markers (e.g. "am"/"pm"). For example, "10:30am"
+must be recognized as 12-hour format with AM marker, not as "10:30" (24H)
+with orphaned "am" text.
+
 ```python
 def parse_times(text: str, max_results: int = 3) -> List[DetectedTime]:
     """
@@ -134,31 +145,32 @@ def parse_times(text: str, max_results: int = 3) -> List[DetectedTime]:
     """
     results = []
     
-    # Priority 1: TIME_24H
-    for match in TIME_24H_REGEX.finditer(text):
+    # Priority 1: TIME_12H_AMPM (most specific - includes AM/PM marker)
+    # Must be checked first so "10:30am" is recognized as 12-hour format
+    # Regex: \b(1[0-2]|0?[1-9])(?::([0-5]\d))?\s*(am|pm|...)\b
+    # Groups: (1)=hour, (2)=minute (digits only, no colon), (3)=am/pm
+    for match in TIME_12H_AMPM_REGEX.finditer(text):
+        hour = int(match.group(1))
+        minute = int(match.group(2)) if match.group(2) else None  # group(2) is digits only
+        am_pm = match.group(3).upper().replace('.', '')  # Normalize "a.m." → "AM"
         results.append(DetectedTime(
             raw_text=match.group(),
-            hour=int(match.group(1)),
-            minute=int(match.group(2)),
-            am_pm=None,
+            hour=hour,
+            minute=minute,
+            am_pm=am_pm,
             position_start=match.start(),
             position_end=match.end(),
             ambiguous=False
         ))
     
-    # Priority 2: TIME_12H_AMPM (skip if overlaps with existing)
-    # Regex: \b(1[0-2]|0?[1-9])(?::([0-5]\d))?\s*(am|pm|...)\b
-    # Groups: (1)=hour, (2)=minute (digits only, no colon), (3)=am/pm
-    for match in TIME_12H_AMPM_REGEX.finditer(text):
+    # Priority 2: TIME_24H (skip if overlaps with existing 12H matches)
+    for match in TIME_24H_REGEX.finditer(text):
         if not overlaps(match, results):
-            hour = int(match.group(1))
-            minute = int(match.group(2)) if match.group(2) else None  # group(2) is digits only
-            am_pm = match.group(3).upper().replace('.', '')  # Normalize "a.m." → "AM"
             results.append(DetectedTime(
                 raw_text=match.group(),
-                hour=hour,
-                minute=minute,
-                am_pm=am_pm,
+                hour=int(match.group(1)),
+                minute=int(match.group(2)),
+                am_pm=None,
                 position_start=match.start(),
                 position_end=match.end(),
                 ambiguous=False
