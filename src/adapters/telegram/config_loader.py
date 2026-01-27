@@ -85,6 +85,11 @@ def load_config(config_path: str) -> Dict[str, Any]:
     
     if config is None:
         config = {}
+    elif not isinstance(config, dict):
+        logger.warning(
+            f"Config root must be a dict, got '{type(config).__name__}'. Treating as empty config."
+        )
+        config = {}
     
     # Resolve environment variables in configuration
     config = _resolve_env_variables(config)

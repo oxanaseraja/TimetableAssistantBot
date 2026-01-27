@@ -42,6 +42,7 @@ def load_cities_index(cities_path: str) -> Dict[str, str]:
     
     index = {}
     skipped_count = 0
+    duplicate_count = 0
     
     def normalize_city_key(text: str) -> str:
         """Normalize city name by removing dots for abbreviation matching.
@@ -85,9 +86,21 @@ def load_cities_index(cities_path: str) -> Dict[str, str]:
         city_lower = city.lower()
         city_normalized = normalize_city_key(city)
         # Store exact match (preserves original capitalization info)
+        if city_lower in index and index[city_lower] != timezone:
+            duplicate_count += 1
+            logger.warning(
+                f"cities.json duplicate city key '{city_lower}': "
+                f"overwriting '{index[city_lower]}' with '{timezone}' (last wins)"
+            )
         index[city_lower] = timezone
         # Store normalized match (for abbreviations like "St." -> "st")
         if city_normalized != city_lower:
+            if city_normalized in index and index[city_normalized] != timezone:
+                duplicate_count += 1
+                logger.warning(
+                    f"cities.json duplicate city key '{city_normalized}': "
+                    f"overwriting '{index[city_normalized]}' with '{timezone}' (last wins)"
+                )
             index[city_normalized] = timezone
         
         # Add aliases (both exact and normalized versions)
@@ -96,13 +109,28 @@ def load_cities_index(cities_path: str) -> Dict[str, str]:
                 alias_lower = alias.lower()
                 alias_normalized = normalize_city_key(alias)
                 # Store exact match
+                if alias_lower in index and index[alias_lower] != timezone:
+                    duplicate_count += 1
+                    logger.warning(
+                        f"cities.json duplicate alias key '{alias_lower}': "
+                        f"overwriting '{index[alias_lower]}' with '{timezone}' (last wins)"
+                    )
                 index[alias_lower] = timezone
                 # Store normalized match
                 if alias_normalized != alias_lower:
+                    if alias_normalized in index and index[alias_normalized] != timezone:
+                        duplicate_count += 1
+                        logger.warning(
+                            f"cities.json duplicate alias key '{alias_normalized}': "
+                            f"overwriting '{index[alias_normalized]}' with '{timezone}' (last wins)"
+                        )
                     index[alias_normalized] = timezone
     
-    if skipped_count > 0:
-        logger.warning(f"cities.json: skipped {skipped_count} invalid entries, loaded {len(index)} city mappings")
+    if skipped_count > 0 or duplicate_count > 0:
+        logger.warning(
+            f"cities.json: skipped {skipped_count} invalid entries, "
+            f"duplicates={duplicate_count}, loaded {len(index)} city mappings"
+        )
     else:
         logger.info(f"cities.json: loaded {len(index)} city mappings from {len(cities_data)} entries")
     

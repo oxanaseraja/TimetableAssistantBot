@@ -50,8 +50,8 @@ def process(
         
         # Use only first max_time_mentions times
         detected_times = all_times[:config.max_time_mentions]
-        # partial=True if time mentions exceeded configured limit (SPEC_FREEZE §3.1)
-        partial = len(all_times) > config.max_time_mentions
+        # Track time mention truncation for diagnostics only
+        time_mentions_truncated = len(all_times) > config.max_time_mentions
         
         # Stop if no time detected
         if not detected_times:
@@ -60,7 +60,11 @@ def process(
         
         # MVP simplification: Process only the first detected time (SPEC_FREEZE §3.1)
         detected_time = detected_times[0]
-        logger.debug(f"Detected time: {detected_time.raw_text} (hour={detected_time.hour}, minute={detected_time.minute}, am_pm={detected_time.am_pm})")
+        logger.debug(
+            f"Detected time: {detected_time.raw_text} "
+            f"(hour={detected_time.hour}, minute={detected_time.minute}, am_pm={detected_time.am_pm}, "
+            f"mentions_truncated={time_mentions_truncated})"
+        )
         
         # Stop if time is ambiguous (bare hour without am/pm)
         if detected_time.ambiguous:
@@ -232,7 +236,7 @@ def process(
             total_candidates.add(channel_context.default_timezone)
         total_candidates.update(channel_context.active_timezones)
         
-        partial = partial or len(total_candidates) > config.max_timezones
+        partial = len(total_candidates) > config.max_timezones
         
         return DisplayBlock(
             entries=entries,
