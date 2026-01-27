@@ -207,12 +207,9 @@ for entry in cities_json:
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `city` | string | yes | Primary city name |
-| `country` | string | no | ISO 3166-1 alpha-2 country code (metadata only, see note below) |
+| `country` | string | no | ISO 3166-1 alpha-2 country code (metadata only) |
 | `timezone` | string | yes | IANA timezone ID |
 | `aliases` | string[] | no | Alternative names (may be empty) |
-
-**Note on `country` field:**
-`country` is **optional metadata**. It does not participate in timezone extraction, resolution, or indexing. The field exists solely for human readability and potential future display purposes. Entries without `country` are fully valid and processed identically to entries with `country`.
 
 **Rules:**
 - Each city/alias appears in exactly one entry
@@ -222,9 +219,8 @@ for entry in cities_json:
 **Duplicate handling:**
 
 - If a city or alias appears multiple times, last entry wins (dict semantics)
-- Adapter **MUST** log a warning for every duplicate key, regardless of whether the timezone value is the same or different
-- Warning is logged for audit purposes; operation continues normally
-- Data should be validated to avoid duplicates
+- This is undefined behavior; data should be validated to avoid duplicates
+- Adapter may log a warning but continues operation
 
 **Error Handling for cities.json:**
 

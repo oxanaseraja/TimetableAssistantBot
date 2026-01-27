@@ -64,20 +64,10 @@ class ConvertedTime:
 
 
 class Entry(TypedDict):
-    """Single timezone entry in DisplayBlock.
-    
-    Note: Entry is a TypedDict (not frozen dataclass) for practical reasons.
-    This is intentional and permitted per SPEC_FREEZE §2.1:
-    "Presentation-layer fields populated by adapters (e.g., Entry.cities)
-    may use mutable collections."
-    
-    Entry is a presentation DTO populated incrementally by adapter.
-    The `cities` field is mutable List[str] because adapter populates it
-    after core returns DisplayBlock.
-    """
+    """Single timezone entry in DisplayBlock."""
     timezone: str
     local_time: str
-    cities: List[str]  # Mutable, populated by adapter (not core)
+    cities: List[str]  # Populated by adapter, not core
 
 
 @dataclass(frozen=True)

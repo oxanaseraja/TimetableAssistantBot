@@ -1,7 +1,7 @@
 # Specification Freeze — Timetable Assistant Bot (MVP)
 
 Status: Frozen  
-Version: v1.0.2  
+Version: v1.0.1  
 Date: 2026-01-28  
 Scope: MVP core + Telegram adapter  
 
@@ -15,7 +15,6 @@ This document fixes the behavioral and architectural specification of the MVP.
 |------|---------|--------|--------|
 | 2026-01-27 | v1.0 | Initial freeze | — |
 | 2026-01-28 | v1.0.1 | Clarified §9.3 "last match" for duplicate cities; added distance tie-breaker to §2.4; clarified §9.2 cities.json validation | — |
-| 2026-01-28 | v1.0.2 | Clarifications (no behavior change): `country` field is optional metadata; `partial` uses unique candidates; duplicate key warning is audit guarantee; incremental deduplication in target list; Entry mutability permitted for presentation-layer | — |
 After this point, behavior-changing modifications are considered out of scope unless explicitly approved as v2.
 
 **Canonical source documents:** This freeze captures behavioral contracts only. For structural definitions and detailed algorithms, refer to:
@@ -210,7 +209,7 @@ Missing required parameters → adapter does not start (fail-fast)
 | `cities.json` | Invalid JSON syntax | Adapter does not start (fatal) |
 | `cities.json` | Missing file | Adapter does not start (fatal) |
 | `cities.json` | Empty `[]` | Valid state, city extraction disabled |
-| `cities.json` | Duplicate city/alias keys | Last entry wins, warning **always** logged (audit guarantee) |
+| `cities.json` | Duplicate city/alias keys | Last entry wins, warning logged |
 | `cities.json` | Invalid timezone in entry | Entry skipped, warning logged |
 | `users.json` | Invalid JSON syntax | Adapter does not start (fatal) |
 | `users.json` | Missing file | Treated as empty `{}`, adapter starts |

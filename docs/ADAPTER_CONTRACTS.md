@@ -347,9 +347,6 @@ The adapter populates cities for each timezone entry using `get_cities_for_timez
 - If no cities match the timezone → returns empty list `[]`
 - Cities are sorted alphabetically before being added to output
 
-**Note on `"UTC"` timezone:**
-`"UTC"` follows standard city lookup rules. It typically returns empty list `[]` unless `cities.json` explicitly maps cities to the `"UTC"` timezone (rare in practice). This is expected behavior, not an error.
-
 **Empty cities.json behavior:**
 - Empty `cities.json` (`[]`) is a **valid state** (see §5 above)
 - In this case, `get_cities_for_timezone()` returns empty list `[]` for all timezones

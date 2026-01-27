@@ -347,14 +347,12 @@ Both entries displayed (different identifiers, even though offset is same)
 **partial flag semantics:**
 
 `partial = true` iff:
-- count of **unique** candidate timezones
-  (base + channel default + active_timezones, deduplicated by string identity)
+- total number of candidate timezones
+  (base + channel default + active_timezones)
   > max_timezones
 
 Meaning:
 Some candidates were omitted due to display limit (truncation).
-
-**Important:** Candidates are deduplicated before counting. If `base_timezone == channel_default_timezone`, they count as 1, not 2. This ensures `partial` reflects actual output truncation, not theoretical candidate count.
 
 **Critical edge case: Partial conversion failures**
 

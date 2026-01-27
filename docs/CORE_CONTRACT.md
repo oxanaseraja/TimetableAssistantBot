@@ -142,13 +142,8 @@ The processor builds a prioritized list of target timezones for conversion:
 3. **Active timezones** (remaining slots, up to `max_timezones` limit)
    - From `ChannelContext.active_timezones`
    - Added in order until `max_timezones` limit is reached
-   - **Incremental deduplication:** If a timezone from `active_timezones` already exists in the target list (as source or channel default), it is skipped
 
 **Deduplication rule:**
-
-Deduplication is applied **incrementally** during list construction, not as a post-processing step:
-- When adding channel default: skip if equal to source
-- When adding active timezones: skip if already in list
 
 After building the candidate timezone list, the system removes duplicates according to the following identity rule:
 
