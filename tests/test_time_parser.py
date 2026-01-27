@@ -71,6 +71,14 @@ class TestTimeParser(unittest.TestCase):
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].hour, 10)
         self.assertEqual(result[0].minute, 30)
+    
+    def test_overlap_with_bare_hour(self):
+        """Test that bare-hour matches are skipped when overlapping."""
+        # "at 5pm" matches TIME_12H_AMPM, then TIME_BARE_HOUR should skip due to overlap
+        result = parse_times("See you at 5pm")
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].hour, 5)
+        self.assertEqual(result[0].am_pm, "PM")
 
 
 if __name__ == '__main__':

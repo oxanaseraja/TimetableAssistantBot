@@ -62,9 +62,13 @@ class TelegramAdapter:
         self.telegram_config = self.config_dict.get("telegram", {})
         self.data_config = self.config_dict.get("data", {})
         
-        # Validate required fields
+        # Validate required fields (fail-fast)
         # Environment variables are already resolved by load_config()
+        # Optional fields use defaults (retry_attempts, max_lines, etc.)
         token = self.telegram_config.get("token", "")
+        if not token:
+            # Fallback to environment variable for required token
+            token = os.environ.get("TELEGRAM_TOKEN", "")
         if not token:
             raise ValueError("telegram.token is required (set via config or environment variable)")
         
@@ -73,12 +77,21 @@ class TelegramAdapter:
             raise ValueError("telegram.chat_id is required")
         
         cities_path = self.data_config.get("cities_path")
-        if not cities_path:
-            raise ValueError("data.cities_path is required")
-        
         users_path = self.data_config.get("users_path")
+        if (not cities_path or not users_path):
+            # Optional fallback: DATA_PATHS="path/to/cities.json,path/to/users.json"
+            data_paths = os.environ.get("DATA_PATHS", "")
+            if data_paths:
+                parts = [p.strip() for p in data_paths.split(",")]
+                if len(parts) == 2:
+                    if not cities_path:
+                        cities_path = parts[0]
+                    if not users_path:
+                        users_path = parts[1]
         if not users_path:
             raise ValueError("data.users_path is required")
+        if not cities_path:
+            raise ValueError("data.cities_path is required")
         
         # Build core config
         self.core_config = build_core_config(self.config_dict)

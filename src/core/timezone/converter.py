@@ -148,12 +148,15 @@ def convert_time(
             # Format UTC offset as ±HH:MM
             # strftime("%z") returns format like "+0100" or "-0500" (5 chars: sign + 4 digits)
             offset = target_time.strftime("%z")
-            if offset and len(offset) == 5:
-                # Safe to format: "+0100" -> "+01:00"
-                offset_formatted = f"{offset[:3]}:{offset[3:]}"
-            else:
-                # Fallback for edge cases (should not happen with standard zoneinfo)
-                offset_formatted = "+00:00"
+            if not offset or len(offset) != 5:
+                logger.debug(
+                    f"Missing or malformed UTC offset for timezone '{tz_id}' "
+                    f"(got '{offset}'), skipping conversion"
+                )
+                failed_timezones.append(tz_id)
+                continue
+            # Safe to format: "+0100" -> "+01:00"
+            offset_formatted = f"{offset[:3]}:{offset[3:]}"
             
             results.append(ConvertedTime(
                 timezone_id=tz_id,

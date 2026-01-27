@@ -213,6 +213,13 @@ System behavior:
 - This is a valid system state and does not cause errors
 - Adapter may log info message: "Loaded empty cities.json, city extraction disabled"
 
+**Environment fallbacks:**
+- `TELEGRAM_TOKEN` may supply `telegram.token` when the config value is empty.
+- `DATA_PATHS` may supply data file paths in the format:
+  `DATA_PATHS="path/to/cities.json,path/to/users.json"`
+  (comma-separated, two values).
+  If present, missing `data.cities_path`/`data.users_path` are filled from it.
+
 core:
   max_time_mentions: int = 3 # max times to parse per message
 
@@ -233,14 +240,15 @@ output:
 - Clearer separation of concerns
 
 Rules:
-- Missing required → adapter does not start.
-- Defaults applied deterministically.
+- Missing required → adapter does not start (fail-fast).
+- Required values MAY be supplied via environment fallbacks (see below).
+- Defaults applied deterministically for optional fields.
 - No dynamic reload in MVP.
 
 **Empty or Invalid Configuration:**
 - If configuration file is empty or contains only comments → treat as empty config dictionary `{}`
-- All values use defaults as specified in `CONTRACTS.md`
-- Adapter starts normally with default configuration
+- Adapter starts only if required values are available (either in config or env fallbacks)
+- Optional sections use defaults as specified in `CONTRACTS.md`
 - If YAML syntax is invalid → `yaml.YAMLError` is raised → adapter does not start
 
 **Configuration Validation Rules:**
