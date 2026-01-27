@@ -18,13 +18,22 @@ Signals are checked in this order. First match wins.
 |-------|---------------|
 | `UTC+2` | `+02:00` |
 | `GMT-5` | `-05:00` |
-| `+0300` | `+03:00` |
 | `+3` | `+03:00` |
+| `+03:30` | `+03:30` |
 | `-05:30` | `-05:30` |
+
+**Supported formats:**
+- Hour only: `+3`, `+03`, `-5`, `-05`
+- Hour with colon-separated minutes: `+03:00`, `+03:30`, `-05:30`
+- With UTC/GMT prefix: `UTC+2`, `GMT-5`, `UTC+03:00`
+
+**NOT supported (MVP):**
+- Compact 4-digit format without colon: `+0300`, `+0530` (only first 2 digits after sign are matched)
 
 **Rules:**
 - Case-insensitive (`utc`, `UTC`, `Utc` all valid)
 - Normalize to `±HH:MM` format internally
+- To specify non-zero minutes, use colon-separated format (e.g., `+03:30`)
 
 ---
 
