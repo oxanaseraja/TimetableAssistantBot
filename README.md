@@ -55,9 +55,14 @@ Telegram is the MVP platform. Discord/WhatsApp are future scope.
 | `docs/TIME_PARSING_RULES.md` | Time parsing grammar |
 | `docs/POLICIES.md` | Behavioral rules |
 | `docs/END_TO_END_FLOW.md` | Step-by-step example |
+| `docs/SPEC_FREEZE.md` | Specification freeze (v1.0) |
 
+## Specification Status
 
+The MVP specification is formally frozen in `docs/SPEC_FREEZE.md`.
 
+All behavioral contracts, invariants, limits and scope boundaries are fixed there.
+Further changes require a new spec version.
 
 
 
