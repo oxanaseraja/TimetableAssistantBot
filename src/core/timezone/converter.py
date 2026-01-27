@@ -158,7 +158,16 @@ def convert_time(
             # Safe to format: "+0100" -> "+01:00"
             offset_formatted = f"{offset[:3]}:{offset[3:]}"
             
-            display_tz_id = "UTC" if offset_formatted == "+00:00" else tz_id
+            # UTC representation rule (SPEC_FREEZE §3.3):
+            # - Offset string "+00:00" should be displayed as "UTC"
+            # - IANA timezone IDs (Europe/London, Atlantic/Reykjavik, etc.) should keep their original ID
+            #   even if their current offset is +00:00
+            # Check if tz_id is an offset string (±HH:MM format)
+            is_offset_string = re.match(r'^[+-]\d{2}:\d{2}$', tz_id) is not None
+            if is_offset_string and offset_formatted == "+00:00":
+                display_tz_id = "UTC"
+            else:
+                display_tz_id = tz_id
             results.append(ConvertedTime(
                 timezone_id=display_tz_id,
                 local_time=target_time,
