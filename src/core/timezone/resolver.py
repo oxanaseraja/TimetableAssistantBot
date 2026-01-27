@@ -64,17 +64,12 @@ def resolve_timezone(
         )
     
     # Priority 6: System default or ambiguity
-    # Edge case: config.default_timezone may be None (means UTC) or explicit IANA ID
-    if config.default_timezone:
-        return ResolvedTimeContext(
-            base_timezone=config.default_timezone,
-            ambiguity="NONE",
-            resolution_source="SYSTEM_DEFAULT",
-            reason="system default timezone"
-        )
+    # Specification: POLICIES.md §68-72, CORE_CONTRACT.md §89-97
+    # config.default_timezone = null means system UTC (per CONTRACTS.md)
+    # Resolver MUST interpret null as "UTC" when producing ResolvedTimeContext.base_timezone
+    # This is the single source of truth for fallback timezone resolution
     
-    # Ambiguity: multiple active timezones and no other source
-    # Edge case: len(signals.active_timezones) > 1 means multiple conflicting sources
+    # Check for ambiguity first (multiple active timezones)
     # This is HIGH ambiguity per POLICIES.md §4 - no reply sent
     if len(signals.active_timezones) > 1:
         return ResolvedTimeContext(
@@ -84,13 +79,12 @@ def resolve_timezone(
             reason="multiple active timezones, no explicit hint"
         )
     
-    # Fallback to UTC if no active timezones
-    # Edge case: Empty active_timezones AND no config.default_timezone → use UTC
-    # config.default_timezone = None means system UTC (per CONTRACTS.md)
-    # Resolver interprets None as "UTC" - this is the single source of truth for fallback resolution
-    fallback_tz = config.default_timezone if config.default_timezone else "UTC"
+    # System default: interpret None as "UTC" (explicit interpretation required by specification)
+    # This ensures base_timezone is always a string (IANA ID or offset) when ambiguity = "NONE"
+    # base_timezone may be None ONLY when ambiguity = "HIGH"
+    system_default_tz = config.default_timezone if config.default_timezone else "UTC"
     return ResolvedTimeContext(
-        base_timezone=fallback_tz,
+        base_timezone=system_default_tz,
         ambiguity="NONE",
         resolution_source="SYSTEM_DEFAULT",
         reason="no timezone information, using system default"

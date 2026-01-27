@@ -298,3 +298,23 @@ Example:
 10:30 Europe/Amsterdam
 11:30 Europe/Nicosia
 ```
+
+**City lookup behavior:**
+
+The adapter populates cities for each timezone entry using `get_cities_for_timezone()` function:
+
+- **Input:** `timezone_id` (IANA timezone ID or offset string) and `cities_data` (loaded from `cities.json`)
+- **Output:** List of city names (sorted alphabetically) or empty list `[]`
+
+**Behavior:**
+- If `timezone_id` is an offset string (e.g., `"+03:00"`) → returns empty list `[]` (offset strings don't have cities in `cities.json`)
+- If `timezone_id` is an IANA ID → looks up cities in `cities_data` matching this timezone
+- If `cities_data` is empty (`[]`) → returns empty list `[]` for all timezones
+- If no cities match the timezone → returns empty list `[]`
+- Cities are sorted alphabetically before being added to output
+
+**Empty cities.json behavior:**
+- Empty `cities.json` (`[]`) is a **valid state** (see §5 above)
+- In this case, `get_cities_for_timezone()` returns empty list `[]` for all timezones
+- Output format: `{HH:MM} {timezone_id}` (no parentheses, as cities list is empty)
+- System continues to work normally, relying on IANA timezone IDs and offset strings only

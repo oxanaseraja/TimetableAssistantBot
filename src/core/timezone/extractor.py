@@ -10,9 +10,15 @@ from typing import Optional, Mapping, List
 def tokenize(text: str) -> List[str]:
     """
     Split text into word tokens.
-    Uses word boundaries, preserves Unicode letters.
+    Uses word boundaries, preserves Unicode letters, hyphens, and dots.
+    Lowercasing is done during comparison, not here.
+    
+    Pattern: \b[\w.-]+\b captures:
+    - Unicode letters (\w): A-Z, a-z, 0-9, _, and Unicode letters
+    - Hyphens (-): for compound names like "Saint-Petersburg"
+    - Dots (.): for abbreviations like "St.", "Dr.", "Mt."
     """
-    return re.findall(r'\b\w+\b', text, re.UNICODE)
+    return re.findall(r'\b[\w.-]+\b', text, re.UNICODE)
 
 
 def normalize_offset(raw: str) -> Optional[str]:

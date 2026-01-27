@@ -232,6 +232,54 @@ DisplayBlock: Created with 1 entry
 
 ---
 
+## Invalid base_timezone Handling
+
+**Scenario:** `base_timezone` from `ResolvedTimeContext` is invalid (invalid offset string or invalid IANA ID).
+
+**Behavior:**
+- Converter validates `base_timezone` format and range
+- If `base_timezone` is an invalid offset string (out of range [0, 14] hours, [0, 59] minutes) → converter returns empty list `[]`
+- If `base_timezone` is an invalid IANA ID (not in `zoneinfo.available_timezones()`) → converter returns empty list `[]`
+- If converter returns empty list → core processor returns `None` → adapter sends no reply
+
+**Why this behavior:**
+- Resolver is **NOT responsible** for validating timezone format (see Resolver Responsibilities above)
+- Resolver passes `base_timezone` as-is to converter
+- Converter validates format and handles errors gracefully
+- This separation maintains clean pipeline: extractor → resolver → converter
+- Prevents duplicate validation logic
+
+**Examples:**
+
+Example 1: Invalid offset string in base_timezone
+```
+ResolvedTimeContext.base_timezone: "+15:00"  # Out of range [0, 14]
+Converter behavior: Validates range, detects invalid offset
+Result: [] (empty list)
+Core behavior: Returns None (no reply sent)
+```
+
+Example 2: Invalid IANA ID in base_timezone
+```
+ResolvedTimeContext.base_timezone: "Invalid/TZ"
+Converter behavior: zoneinfo.ZoneInfoNotFoundError caught
+Result: [] (empty list)
+Core behavior: Returns None (no reply sent)
+```
+
+Example 3: Valid base_timezone, invalid target timezones
+```
+ResolvedTimeContext.base_timezone: "Europe/Amsterdam"  # Valid
+Target timezones: ["Europe/Amsterdam", "Invalid/TZ", "America/New_York"]
+Converter behavior: Converts base_timezone successfully, skips invalid target
+Result: [ConvertedTime(Europe/Amsterdam), ConvertedTime(America/New_York)]
+Core behavior: Returns DisplayBlock with 2 entries (partial failure handling)
+```
+
+**Note:** This is expected behavior. Resolver passes timezone as-is, converter validates and handles errors. This ensures that invalid timezones from any source (explicit hint, user profile, channel default) are caught and handled gracefully.
+
+---
+
 ## References
 
 - `CONTRACTS.md` — DTO definitions
