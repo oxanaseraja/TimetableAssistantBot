@@ -50,7 +50,7 @@ class TestProcessor(unittest.TestCase):
         channel_context = ChannelContext(
             internal_channel_id="channel1",
             default_timezone=None,
-            active_timezones=["Europe/Amsterdam", "Asia/Yerevan"]
+            active_timezones=("Europe/Amsterdam", "Asia/Yerevan")
         )
         
         result = process(event, user_profile, channel_context, self.city_index, self.config)
@@ -75,7 +75,7 @@ class TestProcessor(unittest.TestCase):
         channel_context = ChannelContext(
             internal_channel_id="channel1",
             default_timezone=None,
-            active_timezones=[]
+            active_timezones=()
         )
 
         result = process(event, user_profile, channel_context, self.city_index, self.config)
@@ -98,7 +98,7 @@ class TestProcessor(unittest.TestCase):
         channel_context = ChannelContext(
             internal_channel_id="channel1",
             default_timezone=None,
-            active_timezones=["Europe/Amsterdam"]
+            active_timezones=("Europe/Amsterdam",)
         )
         
         result = process(event, user_profile, channel_context, self.city_index, self.config)
@@ -120,7 +120,7 @@ class TestProcessor(unittest.TestCase):
         channel_context = ChannelContext(
             internal_channel_id="channel1",
             default_timezone=None,
-            active_timezones=[]
+            active_timezones=()
         )
         
         result = process(event, user_profile, channel_context, self.city_index, self.config)
@@ -141,7 +141,7 @@ class TestProcessor(unittest.TestCase):
         channel_context = ChannelContext(
             internal_channel_id="channel1",
             default_timezone=None,
-            active_timezones=["Europe/Amsterdam", "America/New_York"]
+            active_timezones=("Europe/Amsterdam", "America/New_York")
         )
         
         result = process(event, user_profile, channel_context, self.city_index, self.config)
@@ -163,7 +163,7 @@ class TestProcessor(unittest.TestCase):
         channel_context = ChannelContext(
             internal_channel_id="channel1",
             default_timezone=None,
-            active_timezones=["Europe/Amsterdam", "Asia/Yerevan"]
+            active_timezones=("Europe/Amsterdam", "Asia/Yerevan")
         )
         
         result = process(event, user_profile, channel_context, self.city_index, self.config)
@@ -187,7 +187,7 @@ class TestProcessor(unittest.TestCase):
         channel_context = ChannelContext(
             internal_channel_id="channel1",
             default_timezone="Europe/Amsterdam",
-            active_timezones=["Europe/Amsterdam"]
+            active_timezones=("Europe/Amsterdam",)
         )
         
         result = process(event, user_profile, channel_context, self.city_index, self.config)
@@ -216,13 +216,13 @@ class TestProcessor(unittest.TestCase):
         channel_context = ChannelContext(
             internal_channel_id="channel1",
             default_timezone=None,
-            active_timezones=[
+            active_timezones=(
                 "Europe/Amsterdam",
                 "Asia/Yerevan",
                 "America/New_York",
                 "Asia/Tokyo",
                 "Europe/London"
-            ]  # 5 timezones, but max_timezones=2
+            )  # 5 timezones, but max_timezones=2
         )
         
         result = process(event, user_profile, channel_context, self.city_index, config)
@@ -247,7 +247,7 @@ class TestProcessor(unittest.TestCase):
         channel_context = ChannelContext(
             internal_channel_id="channel1",
             default_timezone=None,  # No channel default
-            active_timezones=["Asia/Yerevan", "America/New_York"]
+            active_timezones=("Asia/Yerevan", "America/New_York")
         )
         
         result = process(event, user_profile, channel_context, self.city_index, self.config)
@@ -277,13 +277,13 @@ class TestProcessor(unittest.TestCase):
         channel_context = ChannelContext(
             internal_channel_id="channel1",
             default_timezone=None,
-            active_timezones=[
+            active_timezones=(
                 "Invalid/Timezone1",  # Invalid - will fail conversion
                 "Invalid/Timezone2",  # Invalid - will fail conversion
                 "Invalid/Timezone3",  # Invalid - will fail conversion
                 "Europe/London",      # Valid
                 "Asia/Tokyo"         # Valid
-            ]  # 5 active timezones + 1 source = 6 total, but 3 will fail
+            )  # 5 active timezones + 1 source = 6 total, but 3 will fail
         )
         config = CoreConfig(
             max_time_mentions=3,
@@ -318,12 +318,12 @@ class TestProcessor(unittest.TestCase):
         channel_context = ChannelContext(
             internal_channel_id="channel1",
             default_timezone="Europe/London",
-            active_timezones=[
+            active_timezones=(
                 "Asia/Tokyo",
                 "America/New_York",
                 "Asia/Yerevan",
                 "Europe/Paris"
-            ]  # 1 source + 1 channel default + 4 active = 6 total, max_timezones=5
+            )  # 1 source + 1 channel default + 4 active = 6 total, max_timezones=5
         )
         config = CoreConfig(
             max_time_mentions=3,
@@ -362,12 +362,12 @@ class TestProcessor(unittest.TestCase):
         channel_context = ChannelContext(
             internal_channel_id="channel1",
             default_timezone=None,
-            active_timezones=[
+            active_timezones=(
                 "Asia/Tokyo",
                 "America/New_York",
                 "Asia/Yerevan",
                 "Europe/London"
-            ]  # 1 source (Amsterdam) + 4 active = 5 total = max_timezones
+            )  # 1 source (Amsterdam) + 4 active = 5 total = max_timezones
         )
         config = CoreConfig(
             max_time_mentions=3,
@@ -405,7 +405,7 @@ class TestProcessor(unittest.TestCase):
         channel_context = ChannelContext(
             internal_channel_id="channel1",
             default_timezone=None,
-            active_timezones=["Europe/Amsterdam"]
+            active_timezones=("Europe/Amsterdam",)
         )
         
         result = process(event, user_profile, channel_context, self.city_index, self.config)
@@ -413,6 +413,78 @@ class TestProcessor(unittest.TestCase):
         # Should still process the time at the beginning (within 4096 char limit)
         self.assertIsNotNone(result)
         self.assertEqual(result.entries[0]["timezone"], "Europe/Amsterdam")
+
+    def test_offset_asc_ordering(self):
+        """Test OFFSET_ASC ordering strategy.
+        
+        Entries should be sorted by UTC offset ascending, then alphabetically.
+        """
+        event = CoreMessageEvent(
+            internal_message_id="test_offset_ord",
+            internal_user_id="user1",
+            internal_channel_id="channel1",
+            text="Meeting at 10:30 Amsterdam",
+            is_edit=False,
+            timestamp_utc=datetime(2026, 1, 25, 12, 0, 0, tzinfo=timezone.utc)
+        )
+        user_profile = UserProfile(internal_user_id="user1", timezone=None)
+        channel_context = ChannelContext(
+            internal_channel_id="channel1",
+            default_timezone=None,
+            active_timezones=("America/New_York", "Asia/Tokyo")  # -05:00 and +09:00
+        )
+        config = CoreConfig(
+            max_time_mentions=3,
+            max_timezones=5,
+            ordering="OFFSET_ASC",
+            default_timezone=None
+        )
+        
+        result = process(event, user_profile, channel_context, self.city_index, config)
+        
+        self.assertIsNotNone(result)
+        # Verify entries are sorted by UTC offset ascending
+        # In January: America/New_York (-05:00) < Europe/Amsterdam (+01:00) < Asia/Tokyo (+09:00)
+        self.assertEqual(len(result.entries), 3)
+        self.assertEqual(result.entries[0]["timezone"], "America/New_York")
+        self.assertEqual(result.entries[1]["timezone"], "Europe/Amsterdam")
+        self.assertEqual(result.entries[2]["timezone"], "Asia/Tokyo")
+    
+    def test_alphabetical_ordering(self):
+        """Test ALPHABETICAL ordering strategy.
+        
+        Entries should be sorted alphabetically by timezone ID.
+        """
+        event = CoreMessageEvent(
+            internal_message_id="test_alpha_ord",
+            internal_user_id="user1",
+            internal_channel_id="channel1",
+            text="Meeting at 10:30 Amsterdam",
+            is_edit=False,
+            timestamp_utc=datetime(2026, 1, 25, 12, 0, 0, tzinfo=timezone.utc)
+        )
+        user_profile = UserProfile(internal_user_id="user1", timezone=None)
+        channel_context = ChannelContext(
+            internal_channel_id="channel1",
+            default_timezone=None,
+            active_timezones=("Europe/London", "Asia/Tokyo")
+        )
+        config = CoreConfig(
+            max_time_mentions=3,
+            max_timezones=5,
+            ordering="ALPHABETICAL",
+            default_timezone=None
+        )
+        
+        result = process(event, user_profile, channel_context, self.city_index, config)
+        
+        self.assertIsNotNone(result)
+        # Verify entries are sorted alphabetically by timezone ID
+        # Asia/Tokyo < Europe/Amsterdam < Europe/London
+        self.assertEqual(len(result.entries), 3)
+        self.assertEqual(result.entries[0]["timezone"], "Asia/Tokyo")
+        self.assertEqual(result.entries[1]["timezone"], "Europe/Amsterdam")
+        self.assertEqual(result.entries[2]["timezone"], "Europe/London")
 
 
 if __name__ == '__main__':

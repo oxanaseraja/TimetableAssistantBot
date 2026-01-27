@@ -132,13 +132,24 @@ This makes the system predictable and formally bounded.
 
 ### DST Fold/Gap Handling
 
+**DST handling is delegated entirely to Python's `zoneinfo` module.**
+
+- No explicit fold/gap handling code in core
+- Behavior follows `zoneinfo` defaults
+- No ambiguity reporting for DST in MVP
+
+**Default `zoneinfo` behavior:**
+
 - **Gap (spring forward):** Invalid local times are interpreted as the first valid
-  time after the gap (zoneinfo default behavior)
+  time after the gap (e.g., 2:30 AM → 3:00 AM when clocks jump from 2:00 to 3:00)
 
 - **Fold (fall back):** Ambiguous local times are interpreted as the first occurrence
-  (pre-transition time)
+  (pre-transition time, `fold=0`)
 
-- MVP does not detect or report DST ambiguity explicitly.
+**Rationale:**
+- Python's `zoneinfo` provides robust, well-tested DST handling
+- Custom DST handling would add complexity without clear benefit in MVP
+- This behavior is consistent and predictable for users
 
 ---
 

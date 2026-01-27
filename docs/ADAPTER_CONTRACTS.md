@@ -334,3 +334,14 @@ The adapter populates cities for each timezone entry using `get_cities_for_timez
 - In this case, `get_cities_for_timezone()` returns empty list `[]` for all timezones
 - Output format: `{HH:MM} {timezone_id}` (no parentheses, as cities list is empty)
 - System continues to work normally, relying on IANA timezone IDs and offset strings only
+
+**City sorting:**
+- Cities are sorted in **ASCII alphabetical order** (case-insensitive)
+- Implementation: `sorted(cities, key=lambda x: x.lower())`
+- Example: `["Berlin", "amsterdam", "CAIRO"]` → `["amsterdam", "Berlin", "CAIRO"]`
+
+**Max cities per timezone:**
+- Maximum **3 cities** are displayed per timezone
+- If more cities exist in `cities.json`, only the first 3 alphabetically are shown
+- This prevents overly long output lines
+- Example: `America/New_York (Atlanta, Boston, Miami)` (even if more cities exist)

@@ -172,6 +172,25 @@ ResolutionSource = "EXPLICIT_HINT" | "USER_PROFILE" | "CHANNEL_DEFAULT" | "ACTIV
 - `ACTIVE_TZ_SINGLE` — only one timezone in active_timezones
 - `SYSTEM_DEFAULT` — fallback to UTC when no other source available
 
+**Explicit hint vs user profile behavior:**
+
+When an explicit hint is present in the message text:
+- Explicit hint becomes `base_timezone` (source timezone for conversion)
+- User profile timezone is **NOT** used as `base_timezone`
+- User profile timezone **MAY** still appear in output as an active timezone
+
+Example:
+```
+User profile: Europe/Amsterdam
+Message: "Meeting at 10:30 UTC+3"
+Explicit hint: +03:00
+
+Result:
+- base_timezone = "+03:00" (from explicit hint)
+- Europe/Amsterdam may appear in output if it's in active_timezones
+- Output shows time in +03:00 first, then other active timezones
+```
+
 ---
 
 ## ConvertedTime

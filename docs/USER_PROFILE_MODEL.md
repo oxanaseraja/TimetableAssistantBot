@@ -74,7 +74,20 @@ In MVP, user profiles are loaded from a **static JSON file**.
 ### On startup:
 1. Load `users.json` if exists
 2. Build in-memory map: `platform_user_id → timezone`
-3. If file missing or invalid → start with empty map
+3. Handle errors according to error handling policy (see below)
+
+### users.json Error Handling
+
+| Condition | Behavior |
+|-----------|----------|
+| Missing file | Treated as empty map `{}` — adapter starts normally |
+| Empty file `{}` | Treated as empty map `{}` — adapter starts normally |
+| Invalid JSON (parse error) | **Fatal error** — adapter fails to start |
+| Permission denied | **Fatal error** — adapter fails to start |
+| Invalid structure (not a dict) | Treated as empty map `{}` with warning |
+
+**Rationale:** Configuration errors must fail fast. Invalid JSON or permission issues
+indicate misconfiguration that should be fixed before the adapter can operate correctly.
 
 ### Empty or Missing users.json behavior:
 

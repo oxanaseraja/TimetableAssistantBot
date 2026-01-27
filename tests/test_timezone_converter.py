@@ -228,6 +228,95 @@ class TestTimezoneConverter(unittest.TestCase):
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].timezone_id, "+03:00")
 
+    def test_dst_gap_spring_forward(self):
+        """Test DST gap (spring forward) handling.
+        
+        When a time falls in a DST gap (e.g., 2:30 AM when clocks jump from 2:00 to 3:00),
+        zoneinfo handles it by moving to the first valid time after the gap.
+        
+        Specification: POLICIES.md §4.1 - DST handling delegated to zoneinfo.
+        """
+        # March 29, 2026 - Europe/Amsterdam springs forward at 2:00 AM
+        # 2:30 AM doesn't exist, it's in the gap
+        detected_time = DetectedTime(
+            raw_text="2:30",
+            hour=2,
+            minute=30,
+            am_pm=None,
+            position_start=0,
+            position_end=4,
+            ambiguous=False
+        )
+        resolved_context = ResolvedTimeContext(
+            base_timezone="Europe/Amsterdam",
+            ambiguity="NONE",
+            resolution_source="EXPLICIT_HINT",
+            reason="test"
+        )
+        # Use a date when DST transition happens in Europe
+        event = CoreMessageEvent(
+            internal_message_id="test_dst_gap",
+            internal_user_id="user1",
+            internal_channel_id="channel1",
+            text="Meeting at 2:30",
+            is_edit=False,
+            timestamp_utc=datetime(2026, 3, 29, 1, 0, 0, tzinfo=timezone.utc)
+        )
+        target_timezones = ["Europe/Amsterdam"]
+        
+        result = convert_time(detected_time, resolved_context, event, target_timezones)
+        
+        # Should handle gracefully - zoneinfo will shift to valid time
+        # The exact behavior is zoneinfo's default (shift forward)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].timezone_id, "Europe/Amsterdam")
+        # During DST gap, time is shifted - we just verify it doesn't crash
+        self.assertIsNotNone(result[0].local_time)
+    
+    def test_dst_fold_fall_back(self):
+        """Test DST fold (fall back) handling.
+        
+        When a time falls in a DST fold (e.g., 2:30 AM when clocks fall back from 3:00 to 2:00),
+        zoneinfo uses the first occurrence (pre-transition, fold=0).
+        
+        Specification: POLICIES.md §4.1 - DST handling delegated to zoneinfo.
+        """
+        # October 25, 2026 - Europe/Amsterdam falls back at 3:00 AM
+        # 2:30 AM occurs twice
+        detected_time = DetectedTime(
+            raw_text="2:30",
+            hour=2,
+            minute=30,
+            am_pm=None,
+            position_start=0,
+            position_end=4,
+            ambiguous=False
+        )
+        resolved_context = ResolvedTimeContext(
+            base_timezone="Europe/Amsterdam",
+            ambiguity="NONE",
+            resolution_source="EXPLICIT_HINT",
+            reason="test"
+        )
+        # Use a date when DST transition happens in Europe
+        event = CoreMessageEvent(
+            internal_message_id="test_dst_fold",
+            internal_user_id="user1",
+            internal_channel_id="channel1",
+            text="Meeting at 2:30",
+            is_edit=False,
+            timestamp_utc=datetime(2026, 10, 25, 1, 0, 0, tzinfo=timezone.utc)
+        )
+        target_timezones = ["Europe/Amsterdam"]
+        
+        result = convert_time(detected_time, resolved_context, event, target_timezones)
+        
+        # Should handle gracefully - zoneinfo uses first occurrence (fold=0)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].timezone_id, "Europe/Amsterdam")
+        # During DST fold, first occurrence is used - we just verify it doesn't crash
+        self.assertIsNotNone(result[0].local_time)
+
 
 if __name__ == '__main__':
     unittest.main()

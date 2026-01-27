@@ -274,7 +274,28 @@ def parse_times(text: str, max_results: int = 3) -> List[DetectedTime]:
 
 ---
 
-## 7. References
+## 7. Empty and Whitespace Input
+
+**Empty string input:**
+- Returns empty list `[]`
+- Core processor returns `None` (no reply)
+- This is expected behavior, not an error
+
+**Whitespace-only input:**
+- Treated identically to empty string
+- Returns empty list `[]`
+- Core processor returns `None` (no reply)
+
+**Examples:**
+```
+Input: ""        → Result: []
+Input: "   "     → Result: []
+Input: "\n\t"    → Result: []
+```
+
+---
+
+## 8. References
 
 - `POLICIES.md` §1 — Time Detection Policy (behavioral rules)
 - `POLICIES.md` §4 — Ambiguity Policy (what happens when ambiguous)

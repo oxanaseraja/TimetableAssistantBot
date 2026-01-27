@@ -32,10 +32,17 @@ Signals are checked in this order. First match wins.
 
 **Pattern:** `[A-Za-z_]+/[A-Za-z_]+`
 
-**Examples:**
-- `Europe/Amsterdam`
-- `Asia/Yerevan`
-- `America/New_York`
+**Supported IANA IDs (MVP):**
+- Only **two-segment** IDs: `Region/City`
+- Examples: `Europe/Amsterdam`, `Asia/Yerevan`, `America/New_York`
+
+**NOT Supported (MVP):**
+- Multi-segment IDs: `America/Argentina/Buenos_Aires`
+- `Etc/GMT+X` offsets: `Etc/GMT+0`, `Etc/GMT-5`
+
+**Rationale:** MVP focuses on human-used timezones only. Complex IANA IDs
+like `America/Argentina/Buenos_Aires` or `Etc/GMT+X` are rarely used in
+casual conversation and can be added post-MVP if needed.
 
 **Rules:**
 - Must be valid IANA timezone (validate against `zoneinfo.available_timezones()`)

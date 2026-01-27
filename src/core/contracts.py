@@ -4,7 +4,7 @@ All DTOs are immutable dataclasses.
 """
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Optional, Literal, Mapping, TypedDict
+from typing import List, Optional, Literal, Mapping, TypedDict, Tuple
 
 
 @dataclass(frozen=True)
@@ -32,11 +32,15 @@ class DetectedTime:
 
 @dataclass(frozen=True)
 class TimezoneSignals:
-    """Timezone hints extracted from message and context."""
+    """Timezone hints extracted from message and context.
+    
+    Note: active_timezones is a Tuple (immutable) to ensure full immutability
+    of the frozen dataclass. See ARCHITECTURAL_INVARIANTS.md #6.
+    """
     explicit_timezone: Optional[str]  # IANA id or offset
     user_timezone: Optional[str]
     channel_timezone: Optional[str]
-    active_timezones: List[str]
+    active_timezones: Tuple[str, ...]  # Immutable tuple for full immutability
 
 
 @dataclass(frozen=True)
@@ -96,7 +100,11 @@ class UserProfile:
 
 @dataclass(frozen=True)
 class ChannelContext:
-    """Channel context with default and active timezones."""
+    """Channel context with default and active timezones.
+    
+    Note: active_timezones is a Tuple (immutable) to ensure full immutability
+    of the frozen dataclass. See ARCHITECTURAL_INVARIANTS.md #6.
+    """
     internal_channel_id: str
     default_timezone: Optional[str]
-    active_timezones: List[str]
+    active_timezones: Tuple[str, ...]  # Immutable tuple for full immutability

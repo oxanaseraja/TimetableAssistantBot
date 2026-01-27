@@ -24,7 +24,7 @@ class TestTimezoneResolver(unittest.TestCase):
             explicit_timezone="Europe/Amsterdam",
             user_timezone="America/New_York",
             channel_timezone="Asia/Yerevan",
-            active_timezones=["Europe/Amsterdam", "America/New_York"]
+            active_timezones=("Europe/Amsterdam", "America/New_York")
         )
         config = CoreConfig(max_time_mentions=3, max_timezones=5, ordering="SOURCE_FIRST", default_timezone=None)
         
@@ -39,7 +39,7 @@ class TestTimezoneResolver(unittest.TestCase):
             explicit_timezone=None,
             user_timezone="America/New_York",
             channel_timezone="Asia/Yerevan",
-            active_timezones=["Europe/Amsterdam", "America/New_York"]
+            active_timezones=("Europe/Amsterdam", "America/New_York")
         )
         config = CoreConfig(max_time_mentions=3, max_timezones=5, ordering="SOURCE_FIRST", default_timezone=None)
         
@@ -53,7 +53,7 @@ class TestTimezoneResolver(unittest.TestCase):
             explicit_timezone=None,
             user_timezone=None,
             channel_timezone="Asia/Yerevan",
-            active_timezones=["Europe/Amsterdam", "America/New_York"]
+            active_timezones=("Europe/Amsterdam", "America/New_York")
         )
         config = CoreConfig(max_time_mentions=3, max_timezones=5, ordering="SOURCE_FIRST", default_timezone=None)
         
@@ -67,7 +67,7 @@ class TestTimezoneResolver(unittest.TestCase):
             explicit_timezone=None,
             user_timezone=None,
             channel_timezone=None,
-            active_timezones=["Europe/Amsterdam"]
+            active_timezones=("Europe/Amsterdam",)
         )
         config = CoreConfig(max_time_mentions=3, max_timezones=5, ordering="SOURCE_FIRST", default_timezone=None)
         
@@ -81,7 +81,7 @@ class TestTimezoneResolver(unittest.TestCase):
             explicit_timezone=None,
             user_timezone=None,
             channel_timezone=None,
-            active_timezones=["Europe/Amsterdam", "America/New_York"]
+            active_timezones=("Europe/Amsterdam", "America/New_York")
         )
         config = CoreConfig(max_time_mentions=3, max_timezones=5, ordering="SOURCE_FIRST", default_timezone=None)
         
@@ -95,7 +95,7 @@ class TestTimezoneResolver(unittest.TestCase):
             explicit_timezone=None,
             user_timezone=None,
             channel_timezone=None,
-            active_timezones=[]
+            active_timezones=()
         )
         config = CoreConfig(max_time_mentions=3, max_timezones=5, ordering="SOURCE_FIRST", default_timezone="UTC")
         
@@ -109,7 +109,7 @@ class TestTimezoneResolver(unittest.TestCase):
             explicit_timezone=None,
             user_timezone=None,
             channel_timezone=None,
-            active_timezones=[]
+            active_timezones=()
         )
         config = CoreConfig(max_time_mentions=3, max_timezones=5, ordering="SOURCE_FIRST", default_timezone=None)
         

@@ -169,5 +169,5 @@ def get_channel_context(
     return ChannelContext(
         internal_channel_id=internal_channel_id,
         default_timezone=default_timezone,
-        active_timezones=active_timezones
+        active_timezones=tuple(active_timezones)  # Convert to tuple for immutability
     )

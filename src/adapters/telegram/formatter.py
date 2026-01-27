@@ -132,22 +132,25 @@ def load_cities_data(cities_path: str) -> list:
     return cities_data
 
 
-def get_cities_for_timezone(timezone_id: str, cities_data: List[dict]) -> List[str]:
+def get_cities_for_timezone(timezone_id: str, cities_data: List[dict], max_cities: int = 3) -> List[str]:
     """
     Get list of city names for a given timezone.
     
     Args:
         timezone_id: IANA timezone ID or offset string (±HH:MM)
         cities_data: Loaded cities.json data
+        max_cities: Maximum number of cities to return (default: 3)
     
     Returns:
-        List of city names (sorted alphabetically)
+        List of city names (sorted alphabetically, case-insensitive, limited to max_cities)
         Empty list if timezone_id is an offset string (cities.json only contains IANA IDs)
     
     Note:
         Only primary city names are returned, not aliases.
         This avoids redundancy in output (e.g., "New York, NYC, NY" would be confusing).
         Aliases are used for extraction/lookup, not for display.
+    
+    Specification: ADAPTER_CONTRACTS.md §6
     """
     import re
     
@@ -167,7 +170,10 @@ def get_cities_for_timezone(timezone_id: str, cities_data: List[dict]) -> List[s
             # Note: Aliases are NOT included in display output to avoid redundancy
             # Aliases are used for extraction/lookup only (see TIMEZONE_EXTRACTION_RULES.md)
     
-    return sorted(cities)
+    # Sort alphabetically (case-insensitive) and limit to max_cities
+    # Specification: ADAPTER_CONTRACTS.md §6 - City sorting and max cities
+    sorted_cities = sorted(cities, key=lambda x: x.lower())
+    return sorted_cities[:max_cities]
 
 
 def format_display_block_with_cities(
