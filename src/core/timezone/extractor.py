@@ -201,11 +201,11 @@ def extract_timezone_hint(
         # Check exact match (with dots)
         if word.lower() in city_index:
             token_pos = match.start()
-            city_matches.append((token_pos, city_index[word.lower()]))
+            city_matches.append((token_pos, city_index[word.lower()], 1))
         # Check normalized match (without dots) for abbreviations
         elif word_normalized in city_index:
             token_pos = match.start()
-            city_matches.append((token_pos, city_index[word_normalized]))
+            city_matches.append((token_pos, city_index[word_normalized], 1))
     
     # Second, try multi-word phrases (for cities like "New York", "The Hague", "St. Petersburg")
     # Check all possible word sequences (2-3 words) in the context
@@ -221,11 +221,11 @@ def extract_timezone_hint(
         # Check exact match
         if phrase_2 in city_index:
             pos = words_positions[i][0]
-            city_matches.append((pos, city_index[phrase_2]))
+            city_matches.append((pos, city_index[phrase_2], 2))
         # Check normalized match (handles "St. Petersburg" -> "st petersburg")
         elif phrase_2_normalized in city_index:
             pos = words_positions[i][0]
-            city_matches.append((pos, city_index[phrase_2_normalized]))
+            city_matches.append((pos, city_index[phrase_2_normalized], 2))
     
     # Check 3-word phrases (e.g., "The Hague", "Saint Petersburg Russia")
     for i in range(len(words_list) - 2):
@@ -235,13 +235,22 @@ def extract_timezone_hint(
         # Check exact match
         if phrase_3 in city_index:
             pos = words_positions[i][0]
-            city_matches.append((pos, city_index[phrase_3]))
+            city_matches.append((pos, city_index[phrase_3], 3))
         # Check normalized match
         elif phrase_3_normalized in city_index:
             pos = words_positions[i][0]
-            city_matches.append((pos, city_index[phrase_3_normalized]))
+            city_matches.append((pos, city_index[phrase_3_normalized], 3))
     
     if city_matches:
+        # Prefer longest phrase when matches overlap at the same start position.
+        # Remove any shorter matches (e.g., single-word) if a longer phrase starts there.
+        longest_by_start = {}
+        for pos, tz_id, word_count in city_matches:
+            current = longest_by_start.get(pos)
+            if current is None or word_count > current[2]:
+                longest_by_start[pos] = (pos, tz_id, word_count)
+        filtered_matches = list(longest_by_start.values())
+
         # Find closest city to time_position
         # Specification: TIMEZONE_EXTRACTION_RULES.md §4 - Ambiguity Handling
         # x[0] is position in context, start + x[0] is absolute position in original text
@@ -250,8 +259,8 @@ def extract_timezone_hint(
         # When multiple cities have equal distance to time_position, we use tuple key
         # (distance, text_position) to ensure deterministic selection (first by text order, left-to-right)
         # This ensures same input → same output (deterministic behavior)
-        closest_pos, tz_id = min(
-            city_matches,
+        closest_pos, tz_id, _ = min(
+            filtered_matches,
             key=lambda x: (abs((start + x[0]) - time_position), x[0])
         )
         return tz_id

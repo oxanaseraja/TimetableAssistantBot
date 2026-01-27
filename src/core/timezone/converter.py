@@ -132,6 +132,7 @@ def convert_time(
     # Partial Failure Handling: skip invalid timezones, log failures, return successful conversions
     # Specification: CORE_CONTRACT.md §125-147
     results = []
+    seen_timezones = set()
     failed_timezones = []
     
     for tz_id in target_timezones:
@@ -168,6 +169,11 @@ def convert_time(
                 display_tz_id = "UTC"
             else:
                 display_tz_id = tz_id
+            # Deduplicate after normalization to enforce unique timezone IDs in output.
+            # Keeps first occurrence based on target_timezones priority order.
+            if display_tz_id in seen_timezones:
+                continue
+            seen_timezones.add(display_tz_id)
             results.append(ConvertedTime(
                 timezone_id=display_tz_id,
                 local_time=target_time,
