@@ -3,6 +3,7 @@ Main core processor - orchestrates time parsing, timezone resolution, and conver
 Specification: CORE_CONTRACT.md
 """
 import logging
+import re
 from typing import Mapping, Optional
 from .contracts import (
     CoreMessageEvent, UserProfile, ChannelContext, CoreConfig,
@@ -176,7 +177,16 @@ def process(
             # Edge cases:
             # - If channel_default_timezone is None → skip priority 1, go directly to offset sorting
             # - If channel_default_timezone == source_timezone → don't duplicate, skip priority 1
-            source_tz = resolved_context.base_timezone
+            # IMPORTANT: Converter may normalize offset "+00:00" to display ID "UTC"
+            # (SPEC_FREEZE.md §3.3). Ordering must still keep the source timezone first.
+            source_tz_raw = resolved_context.base_timezone
+            source_tz = (
+                "UTC"
+                if isinstance(source_tz_raw, str)
+                and re.match(r'^[+-]\d{2}:\d{2}$', source_tz_raw)
+                and source_tz_raw == "+00:00"
+                else source_tz_raw
+            )
             channel_tz = channel_context.default_timezone
             
             def sort_key(entry):

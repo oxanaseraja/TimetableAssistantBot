@@ -263,10 +263,8 @@ class TelegramAdapter:
                 return  # Failed to send
             
             # Update mappings
-            # Move to end on update to ensure recently used entries are not evicted
-            # This is important for edit handling where old messages may be updated
-            if event.internal_message_id in self.reply_mapping:
-                self.reply_mapping.pop(event.internal_message_id)
+            # Strict FIFO semantics (ADAPTER_CONTRACTS.md §4):
+            # Updating an existing key MUST NOT change its insertion order.
             self.reply_mapping[event.internal_message_id] = reply_message.message_id
             
             # Limit size of reply_mapping (max 10,000, drop oldest FIFO) (ADAPTER_CONTRACTS.md §4)
