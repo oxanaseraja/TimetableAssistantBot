@@ -3,9 +3,12 @@ DisplayBlock to Telegram message formatter.
 Specification: TELEGRAM_ADAPTER.md §4, ADAPTER_CONTRACTS.md §6
 """
 import json
+import logging
 from pathlib import Path
 from typing import Dict, List
 from core.contracts import DisplayBlock
+
+logger = logging.getLogger(__name__)
 
 
 def load_cities_index(cities_path: str) -> Dict[str, str]:
@@ -29,20 +32,40 @@ def load_cities_index(cities_path: str) -> Dict[str, str]:
         return {}
     
     index = {}
+    
+    def normalize_city_key(text: str) -> str:
+        """Normalize city name by removing dots for abbreviation matching.
+        
+        This allows "St. Petersburg" and "St Petersburg" to match the same entry.
+        """
+        return text.lower().replace('.', '')
+    
     for entry in cities_data:
         timezone = entry.get("timezone")
         if not timezone:
             continue
         
-        # Add primary city name
-        city = entry.get("city", "").lower()
+        # Add primary city name (both exact and normalized versions)
+        city = entry.get("city", "")
         if city:
-            index[city] = timezone
+            city_lower = city.lower()
+            city_normalized = normalize_city_key(city)
+            # Store exact match (preserves original capitalization info)
+            index[city_lower] = timezone
+            # Store normalized match (for abbreviations like "St." -> "st")
+            if city_normalized != city_lower:
+                index[city_normalized] = timezone
         
-        # Add aliases
+        # Add aliases (both exact and normalized versions)
         for alias in entry.get("aliases", []):
             if alias:
-                index[alias.lower()] = timezone
+                alias_lower = alias.lower()
+                alias_normalized = normalize_city_key(alias)
+                # Store exact match
+                index[alias_lower] = timezone
+                # Store normalized match
+                if alias_normalized != alias_lower:
+                    index[alias_normalized] = timezone
     
     return index
 
@@ -119,6 +142,7 @@ def format_display_block_with_cities(
     """
     lines = []
     
+    logger.debug(f"Formatting DisplayBlock with {len(display_block.entries)} entries")
     for entry in display_block.entries:
         timezone_id = entry["timezone"]
         local_time = entry["local_time"]
@@ -133,6 +157,9 @@ def format_display_block_with_cities(
         else:
             line = f"{local_time} {timezone_id}"
         
+        logger.debug(f"Formatted entry: {line}")
         lines.append(line)
     
-    return "\n".join(lines)
+    formatted_text = "\n".join(lines)
+    logger.info(f"Formatted message ({len(lines)} lines):\n{formatted_text}")
+    return formatted_text

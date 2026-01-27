@@ -65,6 +65,7 @@ def process(
         
         # MVP simplification: Process only the first detected time (POLICIES.md §6.1)
         detected_time = detected_times[0]
+        logger.debug(f"Detected time: {detected_time.raw_text} (hour={detected_time.hour}, minute={detected_time.minute}, am_pm={detected_time.am_pm})")
         
         # Stop if time is ambiguous (bare hour without am/pm)
         if detected_time.ambiguous:
@@ -78,6 +79,7 @@ def process(
             city_index,
             window=30
         )
+        logger.debug(f"Extracted timezone hint: {explicit_tz}")
         
         signals = TimezoneSignals(
             explicit_timezone=explicit_tz,
@@ -85,9 +87,11 @@ def process(
             channel_timezone=channel_context.default_timezone,
             active_timezones=channel_context.active_timezones
         )
+        logger.debug(f"Timezone signals: explicit={explicit_tz}, user={user_profile.timezone}, channel={channel_context.default_timezone}, active={len(channel_context.active_timezones)}")
         
         # Step 3: Resolve timezone
         resolved_context = resolve_timezone(signals, config)
+        logger.debug(f"Resolved timezone: {resolved_context.base_timezone} (source={resolved_context.resolution_source}, ambiguity={resolved_context.ambiguity})")
         
         # Stop if ambiguous
         if resolved_context.ambiguity == "HIGH":
@@ -108,7 +112,11 @@ def process(
         if resolved_context.base_timezone:
             target_timezones_list.append(resolved_context.base_timezone)
         
-        # Include channel default if different (second priority)
+        # Include channel default if different from source (second priority)
+        # Edge case: If source is offset string (e.g., "+02:00") and channel default is IANA ID
+        # with same offset (e.g., "Europe/Amsterdam" in winter = UTC+2), we still include both
+        # because they are semantically different (offset string vs named timezone with DST).
+        # However, if they are string-equal, skip to avoid duplicate.
         if channel_context.default_timezone and channel_context.default_timezone != resolved_context.base_timezone:
             if channel_context.default_timezone not in target_timezones_list:
                 target_timezones_list.append(channel_context.default_timezone)
@@ -126,6 +134,7 @@ def process(
         target_timezones_list = target_timezones_list[:config.max_timezones]
         
         # Step 5: Convert time to target timezones
+        logger.debug(f"Converting time to {len(target_timezones_list)} timezone(s): {target_timezones_list}")
         converted_times = convert_time(
             detected_time,
             resolved_context,
@@ -136,6 +145,9 @@ def process(
         if not converted_times:
             logger.debug("Message discarded: no successful time conversions (all timezones failed or empty target list)")
             return None
+        
+        logger.debug(f"Successfully converted to {len(converted_times)} timezone(s)")
+        logger.debug(f"Converted times: {[(ct.timezone_id, ct.local_time.strftime('%H:%M'), ct.utc_offset) for ct in converted_times]}")
         
         # Step 6: Build DisplayBlock
         # Sort entries according to ordering strategy
@@ -149,6 +161,8 @@ def process(
                 "local_time": time_str,
                 "cities": []  # Adapter will populate cities
             })
+        
+        logger.debug(f"Entries before sorting: {[(e['timezone'], e['local_time']) for e in entries]}")
         
         # Apply ordering
         if config.ordering == "SOURCE_FIRST":

@@ -16,15 +16,65 @@ from core.contracts import CoreConfig
 logger = logging.getLogger(__name__)
 
 
+def _resolve_env_variables(value: Any) -> Any:
+    """
+    Recursively resolve environment variables in configuration values.
+    
+    Supports syntax: "${VAR_NAME}" or "${VAR_NAME:default_value}"
+    
+    Args:
+        value: Configuration value (can be dict, list, str, or other)
+    
+    Returns:
+        Value with environment variables resolved
+    """
+    if isinstance(value, dict):
+        return {k: _resolve_env_variables(v) for k, v in value.items()}
+    elif isinstance(value, list):
+        return [_resolve_env_variables(item) for item in value]
+    elif isinstance(value, str):
+        # Check if value matches ${VAR} or ${VAR:default} pattern
+        if value.startswith("${") and value.endswith("}"):
+            # Extract variable name and optional default
+            var_expr = value[2:-1]  # Remove ${ and }
+            if ":" in var_expr:
+                var_name, default_value = var_expr.split(":", 1)
+                var_name = var_name.strip()
+                default_value = default_value.strip()
+            else:
+                var_name = var_expr.strip()
+                default_value = None
+            
+            # Get from environment
+            env_value = os.environ.get(var_name)
+            if env_value is not None:
+                # Convert string "null" to None for Python compatibility
+                if env_value.lower() == "null":
+                    return None
+                return env_value
+            elif default_value is not None:
+                # Convert string "null" to None for Python compatibility
+                if default_value.lower() == "null":
+                    return None
+                return default_value
+            else:
+                # Variable not found and no default - return original
+                logger.warning(f"Environment variable '{var_name}' not found and no default provided, using empty string")
+                return ""
+        return value
+    else:
+        return value
+
+
 def load_config(config_path: str) -> Dict[str, Any]:
     """
-    Load configuration from YAML file.
+    Load configuration from YAML file and resolve environment variables.
     
     Args:
         config_path: Path to configuration.yaml
     
     Returns:
-        Dictionary with configuration values
+        Dictionary with configuration values (environment variables resolved)
     
     Raises:
         FileNotFoundError: if config file doesn't exist
@@ -35,6 +85,9 @@ def load_config(config_path: str) -> Dict[str, Any]:
     
     if config is None:
         config = {}
+    
+    # Resolve environment variables in configuration
+    config = _resolve_env_variables(config)
     
     return config
 
@@ -52,7 +105,7 @@ def _validate_int_config(
     Specification: ADAPTER_CONTRACTS.md §5 - Type and Range Validation
     
     Args:
-        value: Raw configuration value
+        value: Raw configuration value (can be string from env vars or int)
         name: Configuration parameter name (for logging)
         default: Default value to use if validation fails
         min_val: Minimum allowed value
@@ -63,7 +116,12 @@ def _validate_int_config(
     """
     try:
         # Type conversion: attempt to convert string to int
+        # This handles values from environment variables (always strings)
         if isinstance(value, str):
+            # Handle empty string
+            if not value.strip():
+                logger.warning(f"{name} is empty string, using default {default}")
+                return default
             int_value = int(value)
         elif isinstance(value, int):
             int_value = value

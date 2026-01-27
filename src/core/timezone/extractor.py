@@ -157,14 +157,71 @@ def extract_timezone_hint(
     # Priority 3: City lookup (uses passed index)
     # If multiple matches, use closest to time_position
     city_matches = []
-    # Use regex to find word boundaries for accurate position tracking
-    word_pattern = re.compile(r'\b\w+\b', re.UNICODE)
+    
+    # Strategy: Check both single words and multi-word phrases
+    # Pattern supports:
+    # - Single words: "Amsterdam", "Tokyo"
+    # - Words with hyphens: "Saint-Petersburg", "Buenos-Aires"
+    # - Words with dots: "St.", "Dr.", "Mt." (abbreviations)
+    # - Multi-word phrases: "New York", "The Hague", "St. Petersburg"
+    # 
+    # Pattern: \b[\w.-]+\b captures words that may contain hyphens and dots
+    # This matches: "Amsterdam", "Saint-Petersburg", "St.", "New", "York"
+    word_pattern = re.compile(r'\b[\w.-]+\b', re.UNICODE)
+    
+    # Helper function to normalize city name for lookup
+    # Removes dots from abbreviations (e.g., "St." -> "st") for flexible matching
+    def normalize_for_lookup(text: str) -> str:
+        """Normalize text by removing dots for abbreviation matching."""
+        return text.lower().replace('.', '')
+    
+    # First, try single words/tokens (for cities like "Amsterdam", "Tokyo", "Saint-Petersburg")
     for match in word_pattern.finditer(context):
         word = match.group()
+        word_normalized = normalize_for_lookup(word)
+        
+        # Check exact match (with dots)
         if word.lower() in city_index:
-            # Use match position for accurate distance calculation
             token_pos = match.start()
             city_matches.append((token_pos, city_index[word.lower()]))
+        # Check normalized match (without dots) for abbreviations
+        elif word_normalized in city_index:
+            token_pos = match.start()
+            city_matches.append((token_pos, city_index[word_normalized]))
+    
+    # Second, try multi-word phrases (for cities like "New York", "The Hague", "St. Petersburg")
+    # Check all possible word sequences (2-3 words) in the context
+    # This handles cities with spaces in their names
+    words_list = word_pattern.findall(context)
+    words_positions = [(m.start(), m.group()) for m in word_pattern.finditer(context)]
+    
+    # Check 2-word phrases (e.g., "New York", "Den Haag", "Saint Petersburg", "St. Petersburg")
+    for i in range(len(words_list) - 1):
+        phrase_2 = f"{words_list[i]} {words_list[i+1]}".lower()
+        phrase_2_normalized = normalize_for_lookup(phrase_2)
+        
+        # Check exact match
+        if phrase_2 in city_index:
+            pos = words_positions[i][0]
+            city_matches.append((pos, city_index[phrase_2]))
+        # Check normalized match (handles "St. Petersburg" -> "st petersburg")
+        elif phrase_2_normalized in city_index:
+            pos = words_positions[i][0]
+            city_matches.append((pos, city_index[phrase_2_normalized]))
+    
+    # Check 3-word phrases (e.g., "The Hague", "Saint Petersburg Russia")
+    for i in range(len(words_list) - 2):
+        phrase_3 = f"{words_list[i]} {words_list[i+1]} {words_list[i+2]}".lower()
+        phrase_3_normalized = normalize_for_lookup(phrase_3)
+        
+        # Check exact match
+        if phrase_3 in city_index:
+            pos = words_positions[i][0]
+            city_matches.append((pos, city_index[phrase_3]))
+        # Check normalized match
+        elif phrase_3_normalized in city_index:
+            pos = words_positions[i][0]
+            city_matches.append((pos, city_index[phrase_3_normalized]))
     
     if city_matches:
         # Find closest city to time_position

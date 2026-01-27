@@ -61,6 +61,105 @@ Signals are checked in this order. First match wins.
 | `"AMSTERDAM"` | ✅ Yes |
 | `"Amsterdamn"` | ❌ No (typo) |
 | `"New Amsterdam"` | ❌ No (not in whitelist) |
+| `"New York"` | ✅ Yes (multi-word phrase) |
+| `"St. Petersburg"` | ✅ Yes (with dot normalization) |
+| `"St Petersburg"` | ✅ Yes (normalized to same as above) |
+| `"Saint-Petersburg"` | ✅ Yes (hyphen supported) |
+| `"The Hague"` | ✅ Yes (multi-word phrase) |
+
+### 1.4 Supported City Name Character Set and Normalization Rules
+
+**Character Set:**
+City names support the following characters:
+- **Unicode word characters** (`\w`): All Unicode letters, Unicode decimal digits, and underscore (`_`)
+  - Includes ASCII letters (`A-Z`, `a-z`), ASCII digits (`0-9`), and underscore
+  - Also includes all Unicode letters from any language (e.g., `Москва`, `São Paulo`, `北京`)
+  - Also includes Unicode decimal digits from any script (e.g., `٠١٢٣` Arabic-Indic digits)
+- **Hyphens** (`-`): For compound city names (e.g., `Saint-Petersburg`, `Buenos-Aires`)
+- **Dots** (`.`): For abbreviations (e.g., `St. Petersburg`, `Dr.`, `Mt.`)
+
+**Note:** The pattern uses `re.UNICODE` flag (default in Python 3), which makes `\w` match the full Unicode word character set, not just ASCII.
+
+**Tokenization Pattern:**
+```
+\b[\w.-]+\b
+```
+
+**Supported Formats:**
+
+The system **explicitly supports** the following city name formats:
+
+1. **Words with hyphens:**
+   - `Saint-Petersburg`, `Buenos-Aires`, `Saint-Denis`
+
+2. **Words with dots:**
+   - `St.`, `Dr.`, `Mt.`
+   - Dots are normalized (removed) for flexible matching
+   - `St. Petersburg` matches `St Petersburg`
+
+3. **Multi-word phrases:**
+   - `New York`, `The Hague`, `St. Petersburg`
+   - Phrases are matched as complete sequences (2-word and 3-word)
+
+**Not Supported:**
+
+All other punctuation (commas, apostrophes, etc.) acts as word boundaries and breaks tokenization.
+
+**Normalization Rules:**
+
+1. **Case Normalization:**
+   - All city name matching is case-insensitive
+   - Input is converted to lowercase before lookup
+   - Example: `"Amsterdam"`, `"AMSTERDAM"`, `"amsterdam"` → all match `"amsterdam"` in index
+
+2. **Dot Normalization (Abbreviation Handling):**
+   - Dots in abbreviations are normalized (removed) for flexible matching
+   - This allows `"St. Petersburg"` and `"St Petersburg"` to match the same city
+   - Normalization function: `text.lower().replace('.', '')`
+   - Example: `"St. Petersburg"` → normalized to `"st petersburg"` for lookup
+
+3. **Multi-word Phrase Matching:**
+   - Cities with spaces are matched as complete phrases
+   - Phrases are checked as 2-word and 3-word sequences
+   - Examples:
+     - `"New York"` → matched as phrase `"new york"`
+     - `"St. Petersburg"` → normalized to `"st petersburg"` → matched as phrase
+     - `"The Hague"` → matched as phrase `"the hague"`
+
+**Index Construction:**
+At startup, the adapter builds a city index with both exact and normalized keys:
+
+```python
+def normalize_city_key(text: str) -> str:
+    """Normalize city name by removing dots for abbreviation matching."""
+    return text.lower().replace('.', '')
+
+city_index = {}
+for entry in cities_json:
+    city = entry["city"]
+    city_lower = city.lower()
+    city_normalized = normalize_city_key(city)
+    
+    # Store exact match (preserves original form)
+    city_index[city_lower] = entry["timezone"]
+    
+    # Store normalized match (for abbreviations)
+    if city_normalized != city_lower:
+        city_index[city_normalized] = entry["timezone"]
+```
+
+**Matching Examples:**
+
+| Input Text | Tokenized | Normalized Lookup | Match Result |
+|------------|-----------|-------------------|--------------|
+| `"Meeting at 10:00 Amsterdam"` | `["Meeting", "at", "10:00", "Amsterdam"]` | `"amsterdam"` | ✅ `Europe/Amsterdam` |
+| `"Call at 14:00 New York"` | `["Call", "at", "14:00", "New", "York"]` | `"new york"` | ✅ `America/New_York` |
+| `"Sync at 9:00 St. Petersburg"` | `["Sync", "at", "9:00", "St.", "Petersburg"]` | `"st petersburg"` | ✅ `Europe/Moscow` (if in index) |
+| `"Meeting at 10:00 St Petersburg"` | `["Meeting", "at", "10:00", "St", "Petersburg"]` | `"st petersburg"` | ✅ `Europe/Moscow` (same as above) |
+| `"Call at 14:00 Saint-Petersburg"` | `["Call", "at", "14:00", "Saint-Petersburg"]` | `"saint-petersburg"` | ✅ `Europe/Moscow` (if in index) |
+| `"Sync at 9:00 The Hague"` | `["Sync", "at", "9:00", "The", "Hague"]` | `"the hague"` | ✅ `Europe/Amsterdam` (if in index) |
+
+
 
 ---
 
@@ -143,25 +242,59 @@ Output: Falls back to user/channel/system default timezone, no cities displayed
 
 ## 2.1 Runtime Index
 
-At startup, adapter builds a lookup index for O(1) matching:
+At startup, adapter builds a lookup index for O(1) matching with normalization support:
 
 ```python
+def normalize_city_key(text: str) -> str:
+    """Normalize city name by removing dots for abbreviation matching."""
+    return text.lower().replace('.', '')
+
 city_index: Dict[str, str] = {}  # lowercase name → timezone
 
 for entry in cities_json:
-    city_index[entry["city"].lower()] = entry["timezone"]
+    city = entry["city"]
+    city_lower = city.lower()
+    city_normalized = normalize_city_key(city)
+    
+    # Store exact match (preserves original form)
+    city_index[city_lower] = entry["timezone"]
+    
+    # Store normalized match (for abbreviations like "St." -> "st")
+    if city_normalized != city_lower:
+        city_index[city_normalized] = entry["timezone"]
+    
+    # Same for aliases
     for alias in entry["aliases"]:
-        city_index[alias.lower()] = entry["timezone"]
+        alias_lower = alias.lower()
+        alias_normalized = normalize_city_key(alias)
+        city_index[alias_lower] = entry["timezone"]
+        if alias_normalized != alias_lower:
+            city_index[alias_normalized] = entry["timezone"]
 ```
 
 **Usage:**
+The extraction algorithm uses the normalized lookup function when matching phrases:
+
 ```python
-def lookup_city(text: str) -> Optional[str]:
-    for word in tokenize(text):
-        if word.lower() in city_index:
-            return city_index[word.lower()]
-    return None
+def normalize_for_lookup(text: str) -> str:
+    """Normalize text by removing dots for abbreviation matching."""
+    return text.lower().replace('.', '')
+
+# Single word check
+if word.lower() in city_index or normalize_for_lookup(word) in city_index:
+    return city_index[word.lower()] or city_index[normalize_for_lookup(word)]
+
+# Multi-word phrase check
+phrase_normalized = normalize_for_lookup(phrase)
+if phrase in city_index or phrase_normalized in city_index:
+    return city_index[phrase] or city_index[phrase_normalized]
 ```
+
+**Index Structure:**
+- Keys are lowercase city names (exact and normalized)
+- Values are IANA timezone IDs
+- Both exact and normalized keys point to the same timezone
+- Example: `{"st. petersburg": "Europe/Moscow", "st petersburg": "Europe/Moscow"}`
 
 ---
 
@@ -173,16 +306,23 @@ def lookup_city(text: str) -> Optional[str]:
 def tokenize(text: str) -> List[str]:
     """
     Split text into word tokens.
-    Uses word boundaries, preserves Unicode letters.
+    Uses word boundaries, preserves Unicode letters, hyphens, and dots.
     Lowercasing is done during comparison, not here.
+    
+    Pattern: \b[\w.-]+\b captures:
+    - Unicode letters (\w): A-Z, a-z, 0-9, _, and Unicode letters
+    - Hyphens (-): for compound names like "Saint-Petersburg"
+    - Dots (.): for abbreviations like "St.", "Dr.", "Mt."
     """
-    return re.findall(r'\b\w+\b', text, re.UNICODE)
+    return re.findall(r'\b[\w.-]+\b', text, re.UNICODE)
 ```
 
 **Examples:**
 - `"in Amsterdam"` → `["in", "Amsterdam"]`
 - `"10:30 UTC+2"` → `["10", "30", "UTC", "2"]`
 - `"see you в Москве"` → `["see", "you", "в", "Москве"]`
+- `"Meeting at 10:00 St. Petersburg"` → `["Meeting", "at", "10:00", "St.", "Petersburg"]`
+- `"Call in Saint-Petersburg"` → `["Call", "in", "Saint-Petersburg"]`
 
 ### 3.2 Offset Normalization
 
@@ -280,9 +420,39 @@ def extract_timezone_hint(
         return match.group()
     
     # Priority 3: City lookup (uses passed index)
-    for word in tokenize(context):
+    # Supports single words, multi-word phrases, and normalization
+    word_pattern = re.compile(r'\b[\w.-]+\b', re.UNICODE)
+    
+    def normalize_for_lookup(text: str) -> str:
+        """Normalize text by removing dots for abbreviation matching."""
+        return text.lower().replace('.', '')
+    
+    # Check single words (exact and normalized)
+    for match in word_pattern.finditer(context):
+        word = match.group()
+        word_normalized = normalize_for_lookup(word)
         if word.lower() in city_index:
             return city_index[word.lower()]
+        elif word_normalized in city_index:
+            return city_index[word_normalized]
+    
+    # Check multi-word phrases (2-word and 3-word)
+    words_list = word_pattern.findall(context)
+    for i in range(len(words_list) - 1):
+        phrase_2 = f"{words_list[i]} {words_list[i+1]}".lower()
+        phrase_2_normalized = normalize_for_lookup(phrase_2)
+        if phrase_2 in city_index:
+            return city_index[phrase_2]
+        elif phrase_2_normalized in city_index:
+            return city_index[phrase_2_normalized]
+    
+    for i in range(len(words_list) - 2):
+        phrase_3 = f"{words_list[i]} {words_list[i+1]} {words_list[i+2]}".lower()
+        phrase_3_normalized = normalize_for_lookup(phrase_3)
+        if phrase_3 in city_index:
+            return city_index[phrase_3]
+        elif phrase_3_normalized in city_index:
+            return city_index[phrase_3_normalized]
     
     return None
 ```
@@ -377,6 +547,7 @@ These are explicitly **NOT supported**:
 | State names | `California`, `Texas` | Ambiguous |
 | Abbreviations | `EST`, `CET`, `PST` | Ambiguous (DST, multiple regions) |
 | Partial matches | `York` for `New York` | Too risky |
+| Other punctuation | Commas, apostrophes, etc. | Act as word boundaries and break tokenization |
 
 ---
 

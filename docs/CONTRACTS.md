@@ -53,6 +53,52 @@ TimezoneSignals {
 
 ---
 
+## Timezone Identity Model
+
+**Critical rule:** The system distinguishes timezones by their **string identifier**, not by their effective UTC offset.
+
+**Timezone identity types:**
+
+1. **IANA timezone identifiers** (e.g., `"Europe/Amsterdam"`, `"America/New_York"`)
+   - Named timezones with DST support
+   - Stable identifiers across time periods
+   - May have associated cities in `cities.json`
+
+2. **Fixed UTC offset strings** (e.g., `"+02:00"`, `"-05:00"`)
+   - Anonymous timezones without DST
+   - Normalized format: `±HH:MM` (e.g., `"+03:00"`, `"-05:30"`)
+   - No associated cities (offset strings don't map to cities)
+
+**Identity rule:**
+
+Timezones are treated as **distinct identities** if their string identifiers differ, even if their effective UTC offset at a given timestamp is equal.
+
+**Examples:**
+- `"+02:00"` and `"Europe/Amsterdam"` → **two distinct timezones**
+  - Even if `Europe/Amsterdam` has UTC+2 offset in January (winter time)
+  - They are compared by exact string match: `"+02:00" != "Europe/Amsterdam"`
+- `"Europe/Amsterdam"` and `"Europe/Berlin"` → **two distinct timezones**
+  - Even if they have the same offset (both UTC+1/UTC+2 with DST)
+  - They are compared by exact string match: `"Europe/Amsterdam" != "Europe/Berlin"`
+
+**Rationale:**
+- **Deterministic:** String comparison is unambiguous and predictable
+- **No hidden heuristics:** No semantic equivalence checks by offset
+- **DST-aware:** IANA IDs carry DST information, offset strings don't
+- **Simple specification:** Easy to understand and implement
+- **Prevents DST traps:** Offset strings and IANA IDs behave differently over time
+
+**Implications:**
+- Deduplication uses exact string identity only
+- Multiple timezones with same offset may appear in output
+- Converter preserves original timezone identifier (no normalization to IANA ID)
+
+**See also:**
+- `CORE_CONTRACT.md` §Target Timezone List Construction — how deduplication is applied
+- `CONTRACTS.md` §DisplayBlock — display semantics for multiple timezones with same offset
+
+---
+
 ## ResolvedTimeContext
 
 ```
@@ -191,6 +237,9 @@ Ordering = "SOURCE_FIRST" | "OFFSET_ASC" | "ALPHABETICAL"
 //     remaining timezones sorted by offset
 //   - If channel_default_timezone == source_timezone → don't duplicate,
 //     skip channel default priority, remaining timezones sorted by offset
+//   Deduplication: Comparison uses exact string identity (see Timezone Identity Model)
+//     - "+02:00" != "Europe/Amsterdam" (different strings, both included)
+//     - "Europe/Amsterdam" == "Europe/Amsterdam" (same string, duplicate removed)
 // OFFSET_ASC: sorted by UTC offset ascending, then alphabetically by ID
 // ALPHABETICAL: sorted alphabetically by timezone ID
 
@@ -216,6 +265,46 @@ DisplayFlags {
   - May be empty list `[]`
   - Adapter populates from `cities.json` during formatting
   - Cities are sorted alphabetically
+
+**Display semantics:**
+
+**See also:** `CONTRACTS.md` §Timezone Identity Model and `CORE_CONTRACT.md` §Target Timezone List Construction.
+
+**Critical rule:** If multiple timezones produce identical local times, they may still be displayed separately if their identifiers differ.
+
+**Rationale:**
+- Timezone identity is determined by string identifier, not by effective UTC offset
+- Two timezones with same offset at a given timestamp are still distinct if their identifiers differ
+- This ensures deterministic behavior and prevents hidden semantic equivalence checks
+
+**Examples:**
+
+Example 1: Offset string and IANA ID with same offset
+```
+Input: "Meeting at 14:00 UTC+2"
+Source timezone: "+02:00"
+Channel default: "Europe/Amsterdam"  # UTC+2 in January
+
+DisplayBlock entries:
+- Entry 1: timezone="+02:00", local_time="14:00"
+- Entry 2: timezone="Europe/Amsterdam", local_time="14:00"
+
+Both entries displayed (different identifiers, even though offset is same)
+```
+
+Example 2: Multiple IANA IDs with same offset
+```
+Source: "Europe/Amsterdam"  # UTC+1/UTC+2 with DST
+Active: ["Europe/Berlin"]  # UTC+1/UTC+2 with DST (same offset in winter)
+
+DisplayBlock entries:
+- Entry 1: timezone="Europe/Amsterdam", local_time="14:00"
+- Entry 2: timezone="Europe/Berlin", local_time="14:00"
+
+Both entries displayed (different identifiers, even though offset is same)
+```
+
+**Note:** This behavior is intentional and aligns with the Timezone Identity Model (see §Timezone Identity Model above).
 
 **Ordering rules:**
 - `entries` must be ordered according to `ordering` strategy

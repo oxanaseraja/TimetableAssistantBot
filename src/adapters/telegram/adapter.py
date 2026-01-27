@@ -63,12 +63,8 @@ class TelegramAdapter:
         self.data_config = self.config_dict.get("data", {})
         
         # Validate required fields
+        # Environment variables are already resolved by load_config()
         token = self.telegram_config.get("token", "")
-        if token.startswith("${") and token.endswith("}"):
-            # Environment variable
-            env_var = token[2:-1]
-            token = os.environ.get(env_var, "")
-        
         if not token:
             raise ValueError("telegram.token is required (set via config or environment variable)")
         
@@ -100,29 +96,36 @@ class TelegramAdapter:
         self.telegram_chat_id = chat_id
         
         # Load persistence if configured (ADAPTER_CONTRACTS.md §4)
-        self.persistence_path = self.telegram_config.get("persistence_path")
-        if self.persistence_path:
+        persistence_path_raw = self.telegram_config.get("persistence_path")
+        if persistence_path_raw:
+            # Resolve persistence path relative to config file location
+            config_dir = Path(self.config_path).parent
+            self.persistence_path = str((config_dir / persistence_path_raw).resolve())
             self.load_id_mapping()
     
     def load_data_files(self, cities_path: str, users_path: str):
         """Load cities.json and users.json."""
+        # Resolve paths relative to config file location
+        config_dir = Path(self.config_path).parent
+        cities_path_resolved = (config_dir / cities_path).resolve()
+        users_path_resolved = (config_dir / users_path).resolve()
+        
         # Check if cities file exists (empty list [] is valid state)
-        path = Path(cities_path)
-        if not path.exists():
-            raise FileNotFoundError(f"Cities file not found: {cities_path}")
+        if not cities_path_resolved.exists():
+            raise FileNotFoundError(f"Cities file not found: {cities_path_resolved} (resolved from {cities_path} relative to {config_dir})")
         
         # Load cities data (empty list [] is valid - system works with IANA IDs and offsets only)
-        self.cities_data = load_cities_data(cities_path)
+        self.cities_data = load_cities_data(str(cities_path_resolved))
         
         # Build city index
-        self.city_index = load_cities_index(cities_path)
+        self.city_index = load_cities_index(str(cities_path_resolved))
         
         # Log if cities.json is empty (valid state per ADAPTER_CONTRACTS.md §5)
         if not self.city_index:
             logger.info("Loaded empty cities.json, city extraction disabled (system relies on IANA IDs and offsets only)")
         
         # Load users
-        self.users_data = load_users(users_path)
+        self.users_data = load_users(str(users_path_resolved))
     
     async def on_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """
@@ -130,15 +133,24 @@ class TelegramAdapter:
         
         Specification: ADAPTER_CONTRACTS.md §4
         """
+        # Log that message passed filters
+        message = update.message or update.edited_message
+        if message:
+            logger.debug(f"Message passed filters: chat_id={message.chat.id}, text='{message.text[:50] if message.text else None}...'")
+        
         # Map Telegram update to CoreMessageEvent
         event = map_telegram_update(update)
         if not event:
+            logger.debug("Message discarded: invalid or missing required fields")
             return
         
         # Check for duplicates (unless it's an edit)
         if not event.is_edit:
             if event.internal_message_id in self.processed_message_ids:
+                logger.debug(f"Message {event.internal_message_id} already processed, skipping")
                 return  # Already processed
+        
+        logger.info(f"Processing message: '{event.text[:50]}...' (edit={event.is_edit})")
         
         # Handle edit: delete old reply
         if event.is_edit and event.internal_message_id in self.reply_mapping:
@@ -178,9 +190,12 @@ class TelegramAdapter:
         
         # Send reply if display_block is not None
         if display_block is None:
+            logger.info(f"No reply generated for message: '{event.text[:50]}...' (no time detected, ambiguous, or suppressed)")
             # Remove from reply mapping if it was there
             self.reply_mapping.pop(event.internal_message_id, None)
             return
+        
+        logger.info(f"Generated DisplayBlock with {len(display_block.entries)} timezone entries")
         
         # Format and send reply
         try:
@@ -254,7 +269,42 @@ class TelegramAdapter:
         self.application = Application.builder().token(self.telegram_token).build()
         
         # Create chat filter for configured chat_id
-        chat_filter = filters.Chat(chat_id=int(self.telegram_chat_id))
+        chat_id_int = int(self.telegram_chat_id)
+        chat_filter = filters.Chat(chat_id=chat_id_int)
+        logger.info(f"Configured chat filter: chat_id={chat_id_int} (only messages from this chat will be processed)")
+        
+        # Add a catch-all handler FIRST for debugging (logs ALL incoming messages)
+        async def log_all_updates(update: Update, context: ContextTypes.DEFAULT_TYPE):
+            """Log all updates for debugging purposes."""
+            if update.message:
+                chat_id = update.message.chat.id
+                is_text = bool(update.message.text)
+                is_command = bool(update.message.text and update.message.text.startswith('/'))
+                text_preview = update.message.text[:50] if update.message.text else None
+                
+                # Always log at INFO level for visibility
+                logger.info(
+                    f"📨 Incoming message: chat_id={chat_id} "
+                    f"(expected {chat_id_int}), is_text={is_text}, is_command={is_command}, "
+                    f"text='{text_preview}...'"
+                )
+                
+                # Check why it might be filtered
+                if chat_id != chat_id_int:
+                    logger.warning(f"⚠️  Message from wrong chat_id! Expected {chat_id_int}, got {chat_id}")
+                if not is_text:
+                    logger.warning(f"⚠️  Message is not text (might be photo, sticker, etc.)")
+                if is_command:
+                    logger.info(f"ℹ️  Message is a command (filtered out)")
+            elif update.edited_message:
+                logger.info(f"📝 Edited message received: chat_id={update.edited_message.chat.id}")
+        
+        # Add handler FIRST to catch ALL messages (for debugging)
+        # This runs before other handlers, so we see everything
+        self.application.add_handler(
+            MessageHandler(filters.ALL, log_all_updates),
+            group=0
+        )
         
         # Add message handler (handles both new messages and edits)
         # Filter: text messages (not commands) in the configured chat
@@ -262,7 +312,8 @@ class TelegramAdapter:
             MessageHandler(
                 filters.TEXT & ~filters.COMMAND & chat_filter,
                 self.on_message
-            )
+            ),
+            group=1  # Higher priority group
         )
     
     async def start(self):

@@ -123,6 +123,64 @@ The resolver is **NOT responsible for**:
 
 ---
 
+## Target Timezone List Construction
+
+**See also:** `CONTRACTS.md` §Timezone Identity Model for identity rules.
+
+**Algorithm:**
+
+The processor builds a prioritized list of target timezones for conversion:
+
+1. **Source timezone** (always first)
+   - The `base_timezone` from `ResolvedTimeContext`
+   - This is where the original time was expressed
+
+2. **Channel default timezone** (second priority, if different from source)
+   - From `ChannelContext.default_timezone`
+   - Only added if it differs from source timezone by string identity
+
+3. **Active timezones** (remaining slots, up to `max_timezones` limit)
+   - From `ChannelContext.active_timezones`
+   - Added in order until `max_timezones` limit is reached
+
+**Deduplication rule:**
+
+After building the candidate timezone list, the system removes duplicates according to the following identity rule:
+
+- **Deduplication is performed by exact string identity of timezone identifiers**
+- **No semantic equivalence by offset is applied**
+
+**Examples:**
+
+Example 1: Different string identifiers (not deduplicated)
+```
+Source: "+02:00"
+Channel default: "Europe/Amsterdam"
+Result: ["+02:00", "Europe/Amsterdam"]  # Both included (different strings)
+```
+
+Example 2: Same string identifier (deduplicated)
+```
+Source: "Europe/Amsterdam"
+Channel default: "Europe/Amsterdam"
+Result: ["Europe/Amsterdam"]  # Duplicate removed (same string)
+```
+
+Example 3: Offset string vs IANA ID with same offset (not deduplicated)
+```
+Source: "+02:00"
+Active timezones: ["Europe/Amsterdam"]  # UTC+2 in January
+Result: ["+02:00", "Europe/Amsterdam"]  # Both included (different strings)
+```
+
+**Rationale:**
+- String identity is deterministic and unambiguous
+- No hidden heuristics or semantic equivalence checks
+- Prevents DST-related confusion (offset strings vs IANA IDs behave differently)
+- Simple to implement and test
+
+---
+
 ## Partial Failure Handling in Converter
 
 **Scenario:** Conversion fails for one or more timezones in the target list.
