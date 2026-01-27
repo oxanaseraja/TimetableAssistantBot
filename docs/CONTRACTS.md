@@ -47,9 +47,11 @@ TimezoneSignals {
     explicit_timezone?: string,   // IANA id or offset
     user_timezone?: string,
     channel_timezone?: string,
-    active_timezones: List<string>
+    active_timezones: Tuple<string>  // Immutable per SPEC_FREEZE §2.1
 }
 ```
+
+**Immutability note:** `active_timezones` uses `Tuple` (not `List`) to ensure full immutability of core inputs per SPEC_FREEZE §2.1.
 
 ---
 
@@ -209,7 +211,7 @@ ConvertedTime {
 
 ```
 DisplayBlock {
-    entries: List<Entry>,
+    entries: Tuple<Entry>,  // Immutable per SPEC_FREEZE §2.1
     ordering: Ordering,
     flags: DisplayFlags
 }
@@ -220,6 +222,8 @@ Entry {
     cities: List<string>    // List of city names (may be empty, adapter populates)
 }
 ```
+
+**Immutability note:** `entries` uses `Tuple` (not `List`) to ensure full immutability per SPEC_FREEZE §2.1. The `cities` field remains `List` as it is a presentation-layer field populated by adapters (SPEC_FREEZE §2.1 allows mutable collections for adapter-populated fields).
 
 **Entry structure specification:**
 

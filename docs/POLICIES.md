@@ -51,13 +51,16 @@ No fuzzy matching, no inference, no guessing.
 
 ## 3. Timezone Resolution Precedence
 
-Priority order:
+Priority order (aligned with SPEC_FREEZE §2.4):
 1. `EXPLICIT_HINT` — Explicit offset in text (UTC+2, +0300)
-2. `EXPLICIT_HINT` — Explicit timezone name or city (from text)
-3. `USER_PROFILE` — User profile timezone
-4. `CHANNEL_DEFAULT` — Channel default timezone
-5. `ACTIVE_TZ_SINGLE` — If exactly one active timezone → use it
-6. `SYSTEM_DEFAULT` — Fallback to UTC (if configured) or ambiguity
+2. `EXPLICIT_HINT` — Explicit IANA timezone ID in text (Europe/Amsterdam)
+3. `EXPLICIT_HINT` — City name from text (via cities.json lookup)
+4. `USER_PROFILE` — User profile timezone
+5. `CHANNEL_DEFAULT` — Channel default timezone
+6. `ACTIVE_TZ_SINGLE` — If exactly one active timezone → use it
+7. `SYSTEM_DEFAULT` — Fallback to UTC (if configured) or ambiguity
+
+**Note:** Priorities 1-3 are all `EXPLICIT_HINT` resolution sources but differ in extraction priority. See `TIMEZONE_EXTRACTION_RULES.md` §1 for extraction algorithm.
 
 **SYSTEM_DEFAULT behavior:**
 - Used only when all other sources exhausted
