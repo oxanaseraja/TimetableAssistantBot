@@ -11,22 +11,7 @@ Time parsing is **regex-based only**. No LLM, no heuristics, no guessing.
 
 Patterns are applied in order. First match wins.
 
-### 1.1 TIME_24H — Colon-separated 24-hour format
-
-**Regex:** `\b([01]?\d|2[0-3]):([0-5]\d)\b`
-
-| Example | hour | minute | ambiguous |
-|---------|------|--------|-----------|
-| `10:30` | 10 | 30 | false |
-| `09:05` | 9 | 5 | false |
-| `23:59` | 23 | 59 | false |
-| `0:00` | 0 | 0 | false |
-
-**Ambiguity:** Never ambiguous (24h format is explicit).
-
----
-
-### 1.2 TIME_12H_AMPM — 12-hour format with AM/PM
+### 1.1 TIME_12H_AMPM — 12-hour format with AM/PM
 
 **Regex:** `\b(1[0-2]|0?[1-9])(?::([0-5]\d))?\s*(am|pm|AM|PM|a\.m\.|p\.m\.)\b`
 
@@ -45,6 +30,21 @@ Patterns are applied in order. First match wins.
 - 12am → 00:00
 - 12pm → 12:00
 - 1pm-11pm → 13:00-23:00
+
+---
+
+### 1.2 TIME_24H — Colon-separated 24-hour format
+
+**Regex:** `\b([01]?\d|2[0-3]):([0-5]\d)\b`
+
+| Example | hour | minute | ambiguous |
+|---------|------|--------|-----------|
+| `10:30` | 10 | 30 | false |
+| `09:05` | 9 | 5 | false |
+| `23:59` | 23 | 59 | false |
+| `0:00` | 0 | 0 | false |
+
+**Ambiguity:** Never ambiguous (24h format is explicit).
 
 ---
 

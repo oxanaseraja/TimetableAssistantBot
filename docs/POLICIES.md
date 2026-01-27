@@ -189,7 +189,8 @@ Activity tracking and decay are out of scope for MVP.
 
 **Time mentions limit:**
 - Messages with exactly 3 times: processed (first time used in MVP)
-- Messages with more than 3 times (4+): processed with truncation (`partial=True`)
+- Messages with more than 3 times (4+): processed with truncation (first time used in MVP)
+- `partial` is reserved for timezone truncation only (see `SPEC_FREEZE.md` §3.1)
 
 **Ordering:**
 1. Source timezone

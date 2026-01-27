@@ -46,6 +46,11 @@ If information is missing, core does not guess.
 Missing timezone → ambiguity → no reply.
 Missing am/pm → ambiguity → no reply.
 
+**Frozen context clarification (SPEC precedence):**
+This invariant must be interpreted through `SPEC_FREEZE.md` §2.4.
+Missing-timezone handling uses the frozen resolution path (system default fallback),
+and this invariant does not override that behavior.
+
 ### 5. All ambiguity leads to no reply
 
 Core returns `None` for any ambiguous situation.
