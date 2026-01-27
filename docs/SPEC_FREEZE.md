@@ -352,4 +352,18 @@ This freeze document captures behavioral contracts. For detailed specifications,
 
 ---
 
+## Decision D-001: Compact UTC offsets without colon
+
+Status: CLOSED  
+Scope: TIMEZONE_EXTRACTION_RULES  
+Decision:
+- Compact offsets of form +HHMM are NOT supported.
+- Only +HH or +HH:MM are supported.
+- Example "+0300" is invalid and removed; previous behavior was coincidental.
+
+Rationale:
+- Avoid ambiguous parsing
+- Match documented regex behavior
+
+
 End of document.
