@@ -158,8 +158,9 @@ def convert_time(
             # Safe to format: "+0100" -> "+01:00"
             offset_formatted = f"{offset[:3]}:{offset[3:]}"
             
+            display_tz_id = "UTC" if tz_id == "+00:00" else tz_id
             results.append(ConvertedTime(
-                timezone_id=tz_id,
+                timezone_id=display_tz_id,
                 local_time=target_time,
                 utc_offset=offset_formatted
             ))

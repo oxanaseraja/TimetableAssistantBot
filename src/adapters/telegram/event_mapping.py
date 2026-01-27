@@ -59,9 +59,12 @@ def map_telegram_update(update: Update) -> Optional[CoreMessageEvent]:
         logger.debug(f"Message {telegram_message_id} discarded: missing timestamp (per ADAPTER_CONTRACTS.md §2.3)")
         return None
     
-    # Use astimezone() instead of replace() to properly convert timezone
-    # message.date from Telegram is already timezone-aware, replace() could create incorrect time
-    timestamp_utc = message.date.astimezone(timezone.utc)
+    # Use astimezone() to properly convert timezone.
+    # If the datetime is naive, force UTC tzinfo explicitly.
+    msg_date = message.date
+    if msg_date.tzinfo is None or msg_date.tzinfo.utcoffset(msg_date) is None:
+        msg_date = msg_date.replace(tzinfo=timezone.utc)
+    timestamp_utc = msg_date.astimezone(timezone.utc)
     
     return CoreMessageEvent(
         internal_message_id=internal_message_id,

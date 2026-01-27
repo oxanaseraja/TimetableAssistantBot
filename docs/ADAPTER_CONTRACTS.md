@@ -298,7 +298,7 @@ All configuration values must be validated according to these rules:
 Rules:
 - Always 24-hour format.
 - Zero-padded HH:MM.
-- Timezone shown as IANA id.
+- Timezone shown as IANA id or offset string (`±HH:MM`).
  - Cities shown in parentheses if present, alphabetical order.
  - If cities list is empty → omit parentheses.
 

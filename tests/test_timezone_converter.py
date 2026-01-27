@@ -130,6 +130,39 @@ class TestTimezoneConverter(unittest.TestCase):
         self.assertEqual(result[0].utc_offset, "+03:00")
         self.assertEqual(result[1].utc_offset, "-05:00")
 
+    def test_utc_offset_normalized_to_iana(self):
+        """Test that +00:00 is displayed as UTC."""
+        detected_time = DetectedTime(
+            raw_text="10:30",
+            hour=10,
+            minute=30,
+            am_pm=None,
+            position_start=0,
+            position_end=5,
+            ambiguous=False
+        )
+        resolved_context = ResolvedTimeContext(
+            base_timezone="+00:00",
+            ambiguity="NONE",
+            resolution_source="EXPLICIT_HINT",
+            reason="test"
+        )
+        event = CoreMessageEvent(
+            internal_message_id="test_utc",
+            internal_user_id="user1",
+            internal_channel_id="channel1",
+            text="Meeting at 10:30 UTC+0",
+            is_edit=False,
+            timestamp_utc=datetime(2026, 1, 25, 12, 0, 0, tzinfo=timezone.utc)
+        )
+        target_timezones = ["+00:00"]
+
+        result = convert_time(detected_time, resolved_context, event, target_timezones)
+
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].timezone_id, "UTC")
+        self.assertEqual(result[0].utc_offset, "+00:00")
+
     def test_invalid_offset_string_skipped(self):
         """Test that invalid offset strings are skipped."""
         detected_time = DetectedTime(

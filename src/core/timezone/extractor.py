@@ -8,7 +8,7 @@ from typing import Optional, Mapping, List
 
 
 def tokenize(text: str) -> List[str]:
-    """
+    r"""
     Split text into word tokens.
     Uses word boundaries, preserves Unicode letters, hyphens, and dots.
     Lowercasing is done during comparison, not here.
@@ -49,6 +49,10 @@ def normalize_offset(raw: str) -> Optional[str]:
         
         # Check for empty string after prefix removal
         if not raw:
+            return None
+
+        # Reject multiple leading signs (e.g., "++03:00", "--05:00", "+-03:00")
+        if re.match(r'^[+-]{2,}', raw):
             return None
         
         # Extract sign

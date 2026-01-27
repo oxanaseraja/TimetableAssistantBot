@@ -60,6 +60,29 @@ class TestProcessor(unittest.TestCase):
         # Check that Amsterdam timezone is first (source)
         self.assertEqual(result.entries[0]["timezone"], "Europe/Amsterdam")
         self.assertEqual(result.entries[0]["local_time"], "10:30")
+
+    def test_utc_offset_normalized_in_output(self):
+        """Test that UTC offset is displayed as IANA ID."""
+        event = CoreMessageEvent(
+            internal_message_id="test_utc",
+            internal_user_id="user1",
+            internal_channel_id="channel1",
+            text="Meeting at 10:30 UTC+0",
+            is_edit=False,
+            timestamp_utc=datetime(2026, 1, 25, 12, 0, 0, tzinfo=timezone.utc)
+        )
+        user_profile = UserProfile(internal_user_id="user1", timezone=None)
+        channel_context = ChannelContext(
+            internal_channel_id="channel1",
+            default_timezone=None,
+            active_timezones=[]
+        )
+
+        result = process(event, user_profile, channel_context, self.city_index, self.config)
+
+        self.assertIsNotNone(result)
+        self.assertEqual(result.entries[0]["timezone"], "UTC")
+        self.assertEqual(result.entries[0]["local_time"], "10:30")
     
     def test_ambiguous_time_returns_none(self):
         """Test: 'See you at 8' - ambiguous bare hour"""

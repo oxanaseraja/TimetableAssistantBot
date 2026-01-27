@@ -55,6 +55,8 @@ class TestTimezoneExtractor(unittest.TestCase):
         self.assertIsNone(normalize_offset("UTC+15"))  # hours out of range
         self.assertIsNone(normalize_offset("+"))       # missing digits
         self.assertIsNone(normalize_offset("-"))       # missing digits
+        self.assertIsNone(normalize_offset("++03:00")) # multiple signs
+        self.assertIsNone(normalize_offset("--05:00")) # multiple signs
     
     def test_tokenize(self):
         """Test text tokenization."""

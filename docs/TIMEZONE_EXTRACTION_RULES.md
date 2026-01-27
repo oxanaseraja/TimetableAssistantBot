@@ -202,7 +202,7 @@ for entry in cities_json:
 | `city` | string | yes | Primary city name |
 | `country` | string | yes | ISO 3166-1 alpha-2 country code |
 | `timezone` | string | yes | IANA timezone ID |
-| `aliases` | string[] | yes | Alternative names (can be empty) |
+| `aliases` | string[] | no | Alternative names (may be empty) |
 
 **Rules:**
 - Each city/alias appears in exactly one entry
@@ -400,6 +400,9 @@ def normalize_offset(raw: str) -> Optional[str]:
         # This preserves signal integrity: invalid offsets are ignored, not converted to UTC
         return None
 ```
+
+**Invalid format note:**
+- Multiple leading signs (e.g., `"++03:00"` or `"--05:00"`) are invalid and must return `None`.
 
 **Examples:**
 - `"+3"` → `"+03:00"`
