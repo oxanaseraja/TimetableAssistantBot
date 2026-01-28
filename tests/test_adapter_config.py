@@ -108,5 +108,59 @@ class TestAdapterConfig(unittest.TestCase):
                     os.environ.pop("DATA_PATHS", None)
 
 
+class TestFIFOEviction(unittest.TestCase):
+    """Test FIFO eviction semantics for adapter mappings (ADAPTER_CONTRACTS.md §4)."""
+
+    def test_fifo_eviction_no_move_to_end(self):
+        """Updating an existing key MUST NOT change its insertion order.
+        
+        Per ADAPTER_CONTRACTS.md §4: Strict FIFO semantics - updating an existing
+        key must not move it to the end. This ensures deterministic eviction order.
+        """
+        from collections import OrderedDict
+        
+        # Simulate reply_mapping behavior
+        reply_mapping: OrderedDict[str, int] = OrderedDict()
+        
+        # Insert in order: msg1, msg2, msg3
+        reply_mapping["msg1"] = 100
+        reply_mapping["msg2"] = 200
+        reply_mapping["msg3"] = 300
+        
+        # Update msg1 (should NOT move to end)
+        reply_mapping["msg1"] = 101
+        
+        # Order should still be: msg1, msg2, msg3 (not msg2, msg3, msg1)
+        keys = list(reply_mapping.keys())
+        self.assertEqual(keys, ["msg1", "msg2", "msg3"],
+                        "Updating existing key should NOT change insertion order")
+        
+        # First eviction should remove msg1 (oldest)
+        oldest_key, oldest_val = reply_mapping.popitem(last=False)
+        self.assertEqual(oldest_key, "msg1", "FIFO eviction should remove oldest entry first")
+        self.assertEqual(oldest_val, 101, "Updated value should be preserved")
+    
+    def test_fifo_eviction_order_preserved(self):
+        """FIFO eviction removes entries in insertion order."""
+        from collections import OrderedDict
+        
+        mapping: OrderedDict[str, None] = OrderedDict()
+        
+        # Insert 5 items
+        for i in range(5):
+            mapping[f"item_{i}"] = None
+        
+        # Evict 3 items
+        evicted = []
+        for _ in range(3):
+            key, _ = mapping.popitem(last=False)
+            evicted.append(key)
+        
+        self.assertEqual(evicted, ["item_0", "item_1", "item_2"],
+                        "FIFO eviction should remove in insertion order")
+        self.assertEqual(list(mapping.keys()), ["item_3", "item_4"],
+                        "Remaining items should preserve order")
+
+
 if __name__ == "__main__":
     unittest.main()

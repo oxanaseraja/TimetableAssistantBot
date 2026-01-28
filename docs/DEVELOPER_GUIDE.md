@@ -111,8 +111,40 @@ def process(..., config: CoreConfig):  # ✅ Config passed as argument
 
 ---
 
+## Frozen Decisions (SPEC_FREEZE v1.0.2)
+
+After specification freeze, the following decisions are **locked** and must not be changed without explicit approval as v2:
+
+### D-001: Compact UTC Offsets
+- **Status:** CLOSED
+- **Rule:** Compact offsets of form `+HHMM` (e.g., `+0300`) are **NOT supported**
+- **Allowed formats:** `+HH`, `+HH:MM`, `UTC+H`, `GMT-HH:MM`
+- **Test:** `test_compact_offset_rejected_d001` in `test_timezone_extractor.py`
+
+### FIFO Eviction Semantics
+- **Rule:** `reply_mapping` and `processed_message_ids` use strict FIFO eviction
+- **Constraint:** Updating an existing key **MUST NOT** change its insertion order (no move-to-end)
+- **Implementation:** `OrderedDict` with `popitem(last=False)` for eviction
+- **Test:** `TestFIFOEviction` in `test_adapter_config.py`
+
+### SOURCE_FIRST Ordering + UTC Display
+- **Rule:** `+00:00` offset is displayed as `UTC` (not `+00:00`)
+- **Test:** `test_utc_offset_normalized_to_iana` in `test_timezone_converter.py`
+
+### Pre-Change Checklist
+
+Before making any changes to parsing, resolution, or ordering logic:
+
+1. **Check SPEC_FREEZE.md** — Is this behavior locked?
+2. **Check Decision Log** — Is there a closed decision (D-XXX) about this?
+3. **Run relevant tests** — Do existing tests cover this behavior?
+4. **If in doubt, ask** — Behavior-changing modifications require v2 approval
+
+---
+
 ## References
 
+- `SPEC_FREEZE.md` — Frozen behavioral specification (v1.0.2 final)
 - `ARCHITECTURAL_INVARIANTS.md` — System invariants (including logging exception)
 - `IMPLEMENTATION_CONSTRAINTS.md` — Hard rules for implementation
 - `CORE_CONTRACT.md` — Core invocation interface

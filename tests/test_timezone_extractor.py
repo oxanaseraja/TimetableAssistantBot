@@ -282,6 +282,37 @@ class TestTimezoneExtractor(unittest.TestCase):
         self.assertIn("会议", tokens)
         self.assertIn("北京", tokens)
 
+    def test_compact_offset_rejected_d001(self):
+        """Test that compact offsets (+HHMM) are rejected during extraction.
+        
+        Decision D-001: Compact UTC offsets without colon are NOT supported.
+        Only +HH or +HH:MM formats are valid.
+        Example: "+0300" should NOT be extracted as a timezone hint.
+        
+        The regex uses (?!\\d) lookahead to prevent partial matches inside
+        compact offsets like "+0300" - "+03" won't match because it's
+        followed by digits.
+        """
+        city_index = {}
+        
+        # Compact offset "+0300" should NOT be extracted
+        result = extract_timezone_hint("Meeting at 10:30 +0300", 11, city_index)
+        self.assertIsNone(result, "Compact offset +0300 should be rejected (D-001)")
+        
+        # Compact offset "-0530" should NOT be extracted
+        result = extract_timezone_hint("Call at 2pm -0530", 8, city_index)
+        self.assertIsNone(result, "Compact offset -0530 should be rejected (D-001)")
+        
+        # But valid formats should still work
+        result = extract_timezone_hint("Meeting at 10:30 +03:00", 11, city_index)
+        self.assertEqual(result, "+03:00", "Standard +HH:MM format should work")
+        
+        result = extract_timezone_hint("Meeting at 10:30 UTC+3", 11, city_index)
+        self.assertEqual(result, "+03:00", "UTC+H format should work")
+        
+        result = extract_timezone_hint("Meeting at 10:30 +3", 11, city_index)
+        self.assertEqual(result, "+03:00", "+H format should work")
+
 
 if __name__ == '__main__':
     unittest.main()

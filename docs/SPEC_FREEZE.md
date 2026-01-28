@@ -1,7 +1,7 @@
 # Specification Freeze — Timetable Assistant Bot (MVP)
 
-Status: Frozen  
-Version: v1.0.1  
+Status: Frozen (Handover-ready)  
+Version: v1.0.2 final  
 Date: 2026-01-28  
 Scope: MVP core + Telegram adapter  
 
@@ -15,6 +15,8 @@ This document fixes the behavioral and architectural specification of the MVP.
 |------|---------|--------|--------|
 | 2026-01-27 | v1.0 | Initial freeze | — |
 | 2026-01-28 | v1.0.1 | Clarified §9.3 "last match" for duplicate cities; added distance tie-breaker to §2.4; clarified §9.2 cities.json validation | — |
+| 2026-01-28 | v1.0.2 final | Closed Decision D-001 (compact offsets rejected); final verification completed; handover-ready status | — |
+
 After this point, behavior-changing modifications are considered out of scope unless explicitly approved as v2.
 
 **Canonical source documents:** This freeze captures behavioral contracts only. For structural definitions and detailed algorithms, refer to:
