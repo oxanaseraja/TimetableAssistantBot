@@ -9,25 +9,31 @@ All documents are in this `docs/` folder.
 
 0. `LLM_EXECUTION_PROTOCOL.md` — **execution rules (read first)**
 1. `IMPLEMENTATION_CONSTRAINTS.md` — **hard rules (must follow)**
-2. `ARCHITECTURAL_INVARIANTS.md` — system invariants
-3. `ARCHMINI.md` — system overview
-3. `TIME_PARSING_RULES.md` — input contract (time)
-4. `TIMEZONE_EXTRACTION_RULES.md` — input contract (timezone)
-5. `POLICIES.md` — behavioral rules
-6. `CONTRACTS.md` — DTO definitions
-7. `END_TO_END_FLOW.md` — step-by-step example
-8. `USER_PROFILE_MODEL.md` — data source
-9. `DEPENDENCIES.md` — runtime stack
-10. `ADAPTER_CONTRACTS.md` — adapter behavior
-11. `TELEGRAM_ADAPTER.md` — Telegram implementation plan
+2. `SPEC_FREEZE.md` — **frozen behavioral specification (MVP v1.0.1)**
+3. `ARCHITECTURAL_INVARIANTS.md` — system invariants
+4. `ARCHMINI.md` — system overview
+5. `TIME_PARSING_RULES.md` — input contract (time)
+6. `TIMEZONE_EXTRACTION_RULES.md` — input contract (timezone)
+7. `POLICIES.md` — behavioral rules
+8. `CONTRACTS.md` — DTO definitions
+9. `END_TO_END_FLOW.md` — step-by-step example
+10. `USER_PROFILE_MODEL.md` — data source
+11. `DEPENDENCIES.md` — runtime stack
+12. `ADAPTER_CONTRACTS.md` — adapter behavior
+13. `TELEGRAM_ADAPTER.md` — Telegram implementation plan
 
 ---
 
 ## Document Categories
 
+### Getting Started
+- `ONBOARDING.md` — quick start guide for new developers
+- `README.md` — spec folder overview
+
 ### System Constraints
 - `ARCHITECTURAL_INVARIANTS.md` — 16 invariants (must-read)
 - `ARCHMINI.md` — system overview and boundaries
+- `SPEC_FREEZE.md` — frozen behavioral specification (MVP v1.0.1)
 
 ### Input Contracts (Grammar)
 - `TIME_PARSING_RULES.md` — regex patterns for time parsing
@@ -36,6 +42,7 @@ All documents are in this `docs/` folder.
 ### Behavioral Rules
 - `POLICIES.md` — core policies
 - `DESIGN_CHOICES.md` — design rationale
+- `CONVERTER_RULES.md` — time conversion rules and edge cases
 
 ### Data Contracts
 - `CONTRACTS.md` — DTO definitions
@@ -48,6 +55,8 @@ All documents are in this `docs/` folder.
 - `TELEGRAM_ADAPTER.md` — Telegram implementation plan
 - `CORE_CONTRACT.md` — core invocation interface
 - `DEPENDENCIES.md` — Python version, libraries
+- `config_schema.md` — configuration YAML schema
+- `RUNNING.md` — core execution instructions
 
 ### Examples
 - `END_TO_END_FLOW.md` — complete walkthrough with DTOs
@@ -59,13 +68,21 @@ All documents are in this `docs/` folder.
 - `ARCH_CHECKLIST.md` — completeness checklist
 - `ARCH_DIAGRAM.md` — architecture diagram
 - `DEVELOPER_GUIDE.md` — practical guidelines for developers
+- `ARCHITECTURAL_VERIFICATION_REPORT.md` — verification report
 
 ### Execution Protocol
 - `LLM_EXECUTION_PROTOCOL.md` — rules for LLM code generation
 - `IMPLEMENTATION_CONSTRAINTS.md` — hard constraints for implementation
+- `HANDOVER.md` — specification gap handling and AI verification notes
+
+### Project Management
+- `TASK.md` — task definition
+- `FUTURE_WORK.md` — planned future enhancements
+- `limitationsOfReality.md` — known limitations and constraints
+- `PROJECT_ANALYSIS.md` — project analysis
 
 ### Meta
 - `DOC_INDEX.md` — this file
-- `README.md` — spec folder overview
 - `LLM_SPEC_ANALYSIS.md` — specification readiness analysis
 - `journal/PROGRESS.md` — implementation journal
+- `journal/01_spec_architecture.md` — architecture specification journal entry
