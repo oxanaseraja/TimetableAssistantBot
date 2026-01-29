@@ -1,5 +1,7 @@
 ## Handling Specification Gaps & AI Verification
 
+**Where to go next:** Full document list and reading order — `DOC_INDEX.md`. Quick start for developers — `ONBOARDING.md`.
+
 ### Intent
 
 **Source of Truth:** The original specification documents (CONTRACTS.md, POLICIES.md, CORE_CONTRACT.md, TIME_PARSING_RULES.md, TIMEZONE_EXTRACTION_RULES.md) are the authoritative source. SPEC_FREEZE.md and HANDOVER.md were added in a second iteration and must align with the original specification.
@@ -156,12 +158,12 @@ Messages should be partially processed, not rejected.
 
 **Decision:**
 
-* Fix code to process first `max_time_mentions`
-* Set `partial=True` when overflow occurs
+* Fix code to process first `max_time_mentions` (in MVP, only the first detected time is used)
+* Do **not** set `partial=True` for time-mention overflow — `partial` is reserved for **timezone** truncation only (`max_timezones`); see SPEC_FREEZE §3.1 and POLICIES.md. Time-mention overflow is logged for diagnostics only.
 
 **Rationale:**
 Rejecting the entire message violates silence-policy and UX invariants.
-Partial output preserves utility while respecting limits.
+Processing the first N mentions preserves utility while respecting limits.
 
 ---
 
@@ -222,6 +224,8 @@ This project maintains a strict hierarchy of specification authority:
 
 5. **HANDOVER.md**  
    Describes process, rationale, and engineering decisions.
+
+**Input contracts (also authoritative):** `TIME_PARSING_RULES.md` and `TIMEZONE_EXTRACTION_RULES.md` are part of the authoritative source (see Intent above). They are referenced by POLICIES.md and CONTRACTS.md as the grammar and extraction contracts; the hierarchy above lists the top-level structural documents.
 
 **Rationale:**
 SPEC_FREEZE is a convergence artifact, not a normative specification.

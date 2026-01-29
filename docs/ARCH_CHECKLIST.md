@@ -1,7 +1,7 @@
 # ARCH_CHECKLIST.md — Architecture Completeness Checklist
 
-This checklist captures the missing architecture artifacts required for a
-complete, implementation-ready design.
+This checklist captures the architecture topics that must be covered for a
+complete, implementation-ready design. The referenced documents define the current MVP state.
 
 ---
 
@@ -19,7 +19,7 @@ MVP: defined minimal
 - Define stop conditions and reasons (no time, ambiguity, suppression).
 - Specify data passed between stages explicitly.
 - Define side-effect policy (pure functions only, no I/O inside stages).
-See: `ARCHMINI.md`.
+See: `ARCHITECTURE.md`.
 
 ## 3. Data Ownership & Storage Architecture
 MVP: defined minimal
@@ -29,11 +29,11 @@ MVP: defined minimal
 See: `STATE_MODEL.md`.
 
 ## 4. Timezone & City Data Sources
-MVP: defined minimal
-- Source of IANA timezones.
-- City resolution: not supported in MVP (cities always empty).
-- Update policy: out of scope.
-See: `POLICIES.md` (cities), `CONTRACTS.md` (DisplayBlock.cities).
+MVP: defined
+- Source of IANA timezones: `zoneinfo` (stdlib).
+- City resolution: cities from `cities.json`; extraction per `TIMEZONE_EXTRACTION_RULES.md`; adapter populates cities in output (max 3 per timezone).
+- Update policy: out of scope (static file in MVP).
+See: `POLICIES.md` §2, `TIMEZONE_EXTRACTION_RULES.md`, `CONTRACTS.md` (DisplayBlock), `ADAPTER_CONTRACTS.md` §6.
 
 ## 5. Security & Secrets
 MVP: defined minimal
@@ -50,12 +50,12 @@ MVP: defined minimal
 See: `ADAPTER_CONTRACTS.md`.
 
 ## 7. Testing Architecture
-MVP: required
+MVP: defined minimal
 - Unit/integration/contract test scope.
 - Golden cases aligned with `POLICIES.md`.
 - Deterministic inputs and frozen time.
-- Coverage goals and CI expectations.
-See: `TESTING_STRATEGY.md`.
+- Coverage goals and CI: minimal in MVP (see `TESTING_STRATEGY.md`).
+See: `TESTING_STRATEGY.md`, `END_TO_END_FLOW.md` (golden cases).
 
 ## 8. Deployment Architecture
 MVP: defined minimal

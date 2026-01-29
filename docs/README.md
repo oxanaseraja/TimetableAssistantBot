@@ -31,7 +31,7 @@ This folder contains the complete specification for the TimetableAssistantBot.
 ### 3. Behavioral Rules
 
 - `POLICIES.md` — core policies (references grammar files)
-- `DESIGN_CHOICES.md` — rationale for decisions
+- `ONBOARDING.md` — rationale (Why these constraints)
 
 ### 4. Data Contracts
 

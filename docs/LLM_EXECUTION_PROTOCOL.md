@@ -10,6 +10,8 @@ This document defines the execution rules for LLM code generation.
 2. Read `ARCHITECTURAL_INVARIANTS.md` before any other document
 3. Read all referenced specification documents
 
+For full reading order see `DOC_INDEX.md` § Reading Order for LLM.
+
 ---
 
 ## During Implementation
@@ -41,8 +43,7 @@ This document defines the execution rules for LLM code generation.
 
 ## Traceability
 
-16. Update `src/SPEC_COVERAGE.md` when implementing a spec document
-17. Each module should reference its source spec in docstring
+16. Each module must reference its source spec in docstring
 
 ---
 

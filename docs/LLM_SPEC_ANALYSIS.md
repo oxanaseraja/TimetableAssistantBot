@@ -53,7 +53,7 @@
 
 ### 1.6 Design Choices ✅
 
-`DESIGN_CHOICES.md` объясняет "почему" для каждого решения.
+`ONBOARDING.md` (блок «Why these constraints») кратко объясняет «почему» для ключевых решений.
 
 ---
 
@@ -91,7 +91,7 @@ Unsupported formats явно перечислены.
 ### 1.10 Dependencies ✅ NEW
 
 `DEPENDENCIES.md` + `requirements.txt`:
-- Python >= 3.10
+- Python >= 3.9
 - `python-telegram-bot >= 20.0`
 - `pyyaml >= 6.0`
 - `zoneinfo` (stdlib)
@@ -187,7 +187,7 @@ DST handling:
 
 ## 5. Документы для LLM (reading order)
 
-1. `ARCHMINI.md` — system overview
+1. `ARCHITECTURE.md` — system overview
 2. `POLICIES.md` — all rules (parsing, resolution, ambiguity)
 3. `CONTRACTS.md` — DTO definitions
 4. `END_TO_END_FLOW.md` — step-by-step example

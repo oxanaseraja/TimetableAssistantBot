@@ -111,7 +111,7 @@ def process(..., config: CoreConfig):  # ✅ Config passed as argument
 
 ---
 
-## Frozen Decisions (SPEC_FREEZE v1.0.2)
+## Frozen Decisions (SPEC_FREEZE v1.0.0)
 
 After specification freeze, the following decisions are **locked** and must not be changed without explicit approval as v2:
 
@@ -144,7 +144,7 @@ Before making any changes to parsing, resolution, or ordering logic:
 
 ## References
 
-- `SPEC_FREEZE.md` — Frozen behavioral specification (v1.0.2 final)
+- `SPEC_FREEZE.md` — Frozen behavioral specification (v1.0.0)
 - `ARCHITECTURAL_INVARIANTS.md` — System invariants (including logging exception)
 - `IMPLEMENTATION_CONSTRAINTS.md` — Hard rules for implementation
 - `CORE_CONTRACT.md` — Core invocation interface

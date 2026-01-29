@@ -9,9 +9,9 @@ All documents are in this `docs/` folder.
 
 0. `LLM_EXECUTION_PROTOCOL.md` — **execution rules (read first)**
 1. `IMPLEMENTATION_CONSTRAINTS.md` — **hard rules (must follow)**
-2. `SPEC_FREEZE.md` — **frozen behavioral specification (MVP v1.0.1)**
+2. `SPEC_FREEZE.md` — **frozen behavioral specification (MVP v1.0.0)**
 3. `ARCHITECTURAL_INVARIANTS.md` — system invariants
-4. `ARCHMINI.md` — system overview
+4. `ARCHITECTURE.md` — system overview
 5. `TIME_PARSING_RULES.md` — input contract (time)
 6. `TIMEZONE_EXTRACTION_RULES.md` — input contract (timezone)
 7. `POLICIES.md` — behavioral rules
@@ -28,12 +28,13 @@ All documents are in this `docs/` folder.
 
 ### Getting Started
 - `ONBOARDING.md` — quick start guide for new developers
+- `LOCAL_TESTING.md` — step-by-step local setup and testing (token, chat_id, users.json, run)
 - `README.md` — spec folder overview
 
 ### System Constraints
 - `ARCHITECTURAL_INVARIANTS.md` — 16 invariants (must-read)
-- `ARCHMINI.md` — system overview and boundaries
-- `SPEC_FREEZE.md` — frozen behavioral specification (MVP v1.0.1)
+- `ARCHITECTURE.md` — system overview and boundaries
+- `SPEC_FREEZE.md` — frozen behavioral specification (MVP v1.0.0)
 
 ### Input Contracts (Grammar)
 - `TIME_PARSING_RULES.md` — regex patterns for time parsing
@@ -41,8 +42,8 @@ All documents are in this `docs/` folder.
 
 ### Behavioral Rules
 - `POLICIES.md` — core policies
-- `DESIGN_CHOICES.md` — design rationale
-- `CONVERTER_RULES.md` — time conversion rules and edge cases
+Design rationale: see `ONBOARDING.md` (Why these constraints)
+- Converter rules (utc_offset format, partial failure): see `CORE_CONTRACT.md` §UTC Offset Formatting, §Partial Failure
 
 ### Data Contracts
 - `CONTRACTS.md` — DTO definitions
@@ -60,6 +61,7 @@ All documents are in this `docs/` folder.
 
 ### Examples
 - `END_TO_END_FLOW.md` — complete walkthrough with DTOs
+- `TEST_PHRASES.md` — example messages for manual testing
 - `data/cities.json` — city whitelist example
 - `data/users.example.json` — user config example
 
@@ -68,7 +70,6 @@ All documents are in this `docs/` folder.
 - `ARCH_CHECKLIST.md` — completeness checklist
 - `ARCH_DIAGRAM.md` — architecture diagram
 - `DEVELOPER_GUIDE.md` — practical guidelines for developers
-- `ARCHITECTURAL_VERIFICATION_REPORT.md` — verification report
 
 ### Execution Protocol
 - `LLM_EXECUTION_PROTOCOL.md` — rules for LLM code generation

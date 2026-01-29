@@ -3,10 +3,12 @@
 This document defines the expected structure of `configuration.yaml`.
 It is a human-readable schema for validation and onboarding.
 
+**Environment variables:** Values may use `${VAR_NAME}` or `${VAR_NAME:default_value}`; resolved at load time (see adapter config loader).
+
 ### Root
 
 - Type: object (YAML mapping)
-- If root is not a mapping, it is treated as `{}` with a warning.
+- If root is `null` or not a mapping, it is treated as `{}` (warning logged if not a mapping).
 
 ### Sections
 
@@ -17,7 +19,7 @@ It is a human-readable schema for validation and onboarding.
 - `chat_id` (string or int, required)
 - `retry_attempts` (int, optional, default: 3, range: 1..10)
 - `max_lines` (int, optional, default: 5, range: 1..10)
-- `persistence_path` (string, optional)
+- `persistence_path` (string or null, optional)
 
 #### `data`
 
@@ -40,8 +42,15 @@ Environment fallback:
 - `ordering` (string, optional, default: `"SOURCE_FIRST"`)
   - Allowed: `"SOURCE_FIRST"`, `"OFFSET_ASC"`, `"ALPHABETICAL"`
 
+#### `logging` (optional)
+
+- `level` (string, optional, default: `"INFO"`)
+  - Allowed: `"DEBUG"`, `"INFO"`, `"WARNING"`, `"ERROR"`
+- Validation is implementation-specific; not part of core/adapter contract.
+
 ### Validation Notes
 
 - Invalid numeric values → default is used with warning.
 - Invalid IANA timezone → treated as `null` (UTC fallback) with warning.
 - Invalid YAML → `yaml.YAMLError` is raised and adapter fails to start.
+- Full type/range validation rules: see `ADAPTER_CONTRACTS.md` §5.

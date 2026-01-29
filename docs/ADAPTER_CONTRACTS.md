@@ -43,6 +43,23 @@ Core errors:
 
 ---
 
+## 2.1 Security (MVP)
+
+- Token is supplied via config/env only.
+- Token is never stored in repo.
+- No rotation in MVP.
+- Missing/invalid token → fail fast, no retries.
+
+---
+
+## 2.2 Observability (MVP)
+
+- Structured logs only.
+- Error counters are recorded.
+- No alerts in MVP.
+
+---
+
 ## 2.3 Message Timestamp Requirement
 
 **Requirement:** All platform messages must have a valid timestamp.
@@ -83,23 +100,6 @@ def map_telegram_update(update: Update) -> Optional[CoreMessageEvent]:
 - If `message.date` is `None` → return `None`, discard event
 - If `message.date` exists but is naive (no timezone) → add UTC timezone explicitly
 - Never use `datetime.now()` as fallback (violates determinism)
-
----
-
-## 2.1 Security (MVP)
-
-- Token is supplied via config/env only.
-- Token is never stored in repo.
-- No rotation in MVP.
-- Missing/invalid token → fail fast, no retries.
-
----
-
-## 2.2 Observability (MVP)
-
-- Structured logs only.
-- Error counters are recorded.
-- No alerts in MVP.
 
 ---
 
@@ -164,7 +164,7 @@ Rules:
 - **MUST be implemented using an insertion-ordered structure (`OrderedDict` or equivalent) to guarantee FIFO eviction independently of language implementation details**
 
 **id_mapping:**
-- optional persistence
+- optional persistence (path is platform-specific, e.g. `telegram.persistence_path`; see `TELEGRAM_ADAPTER.md`)
 - load on startup if file exists
 - save on graceful shutdown
 - failure to load/save → ignored
@@ -211,17 +211,20 @@ on_edit(message):
 
 ## 5. Config Contract
 
+See `config_schema.md` for the full schema. Summary:
+
 ```yaml
 telegram:
   token: string              # required (or from env TELEGRAM_TOKEN)
-  chat_id: string            # required, numeric string (converted to int by adapter)
+  chat_id: string | int      # required (converted to int by adapter)
   persistence_path: string | null = null
   retry_attempts: int = 3
   max_lines: int = 5         # max lines in adapter output
 
 data:
   cities_path: string        # required (path to cities.json)
-  users_path: string         # required (path to users.json)
+  users_path: string        # required (path to users.json)
+```
 
 **Empty cities.json behavior:**
 
@@ -246,8 +249,10 @@ System behavior:
   (comma-separated, two values).
   If present, missing `data.cities_path`/`data.users_path` are filled from it.
 
+```yaml
 core:
   max_time_mentions: int = 3 # max times to parse per message
+  default_timezone: string | null = null  # IANA ID or null (UTC fallback)
 
 output:
   max_timezones: int = 5     # max timezones in DisplayBlock
@@ -257,8 +262,9 @@ output:
 **Structure notes:**
 - `telegram:` — platform-specific settings
 - `data:` — paths to data files (platform-agnostic)
-- `core:` — core processing settings (maps to CoreConfig.max_time_mentions)
+- `core:` — core processing settings (maps to CoreConfig.max_time_mentions, default_timezone)
 - `output:` — output formatting settings (maps to CoreConfig.max_timezones, ordering)
+- Additional sections (e.g. `logging`) may exist; validation is implementation-specific.
 
 **Rationale for core/output split:**
 - `core:` = things that affect parsing/processing

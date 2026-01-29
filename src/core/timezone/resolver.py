@@ -54,7 +54,7 @@ def resolve_timezone(
             reason="from channel default"
         )
     
-    # Priority 6: Single active timezone (after explicit hint resolution in extractor)
+    # Priority 5: Single active timezone
     # Edge case: Empty active_timezones (len == 0) falls through to SYSTEM_DEFAULT
     if len(signals.active_timezones) == 1:
         return ResolvedTimeContext(

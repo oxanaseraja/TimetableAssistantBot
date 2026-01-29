@@ -120,6 +120,8 @@ def overlaps(match, existing_results: List[DetectedTime]) -> bool:
 
 ### 3.2 Main Algorithm
 
+Input is truncated to 4096 characters per §5 before the steps below.
+
 **Priority order:**
 
 1. **TIME_12H_AMPM** — most specific, includes AM/PM marker

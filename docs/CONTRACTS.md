@@ -24,6 +24,33 @@ Used as reference date for DST calculations.
 
 ---
 
+## UserProfile
+
+```
+UserProfile {
+    internal_user_id: string,   // SHA256 hash, hex encoded
+    timezone: string | null    // IANA timezone ID or null (offset strings NOT allowed)
+}
+```
+
+**Note:** Only IANA timezone IDs are allowed in `timezone`. Offset strings (`±HH:MM`) are not allowed in user profiles (see `USER_PROFILE_MODEL.md`). Core receives UserProfile from adapter; adapter loads from `users.json`.
+
+---
+
+## ChannelContext
+
+```
+ChannelContext {
+    internal_channel_id: string,
+    default_timezone: string | null,
+    active_timezones: Tuple<string>  // Immutable per SPEC_FREEZE §2.1
+}
+```
+
+**Note:** Core receives ChannelContext from adapter. Adapter builds it from `users.json` (channel default and active timezones). See `USER_PROFILE_MODEL.md`, `STATE_MODEL.md`.
+
+---
+
 ## DetectedTime
 
 ```
@@ -164,8 +191,7 @@ ResolvedTimeContext:
   reason: "multiple active timezones, no explicit hint"
 ```
 
-ResolutionSource = "EXPLICIT_HINT" | "USER_PROFILE" | "CHANNEL_DEFAULT" | "ACTIVE_TZ_SINGLE" | "SYSTEM_DEFAULT"
-```
+**ResolutionSource** = `"EXPLICIT_HINT"` | `"USER_PROFILE"` | `"CHANNEL_DEFAULT"` | `"ACTIVE_TZ_SINGLE"` | `"SYSTEM_DEFAULT"`
 
 **ResolutionSource values:**
 - `EXPLICIT_HINT` — timezone found in message text (offset, IANA ID, or city)
@@ -200,8 +226,8 @@ Result:
 ```
 ConvertedTime {
     timezone_id: string,
-    local_time: datetime,
-    utc_offset: string
+    local_time: datetime,   // timezone-aware, in target timezone
+    utc_offset: string      // ±HH:MM format (e.g. "+02:00")
 }
 ```
 
@@ -258,6 +284,7 @@ Entry is a dictionary/object with exactly these three fields:
 - This separation ensures core remains pure (no filesystem / data access)
 - Core does not know about cities.json (see `ARCHITECTURAL_INVARIANTS.md` #2)
 
+```
 Ordering = "SOURCE_FIRST" | "OFFSET_ASC" | "ALPHABETICAL"
 // SOURCE_FIRST: source timezone first, then channel default, then by offset
 //   - Source timezone (where original time was expressed) is always first
@@ -278,7 +305,7 @@ Ordering = "SOURCE_FIRST" | "OFFSET_ASC" | "ALPHABETICAL"
 
 DisplayFlags {
     ambiguous: boolean,   // true if any input time was ambiguous
-    partial: boolean      // true if some timezones were omitted due to max limit (5)
+    partial: boolean      // true if some timezones were omitted due to max_timezones limit
 }
 ```
 
@@ -351,8 +378,8 @@ Both entries displayed (different identifiers, even though offset is same)
 **partial flag semantics:**
 
 `partial = true` iff:
-- total number of candidate timezones
-  (base + channel default + active_timezones)
+- total number of **unique** candidate timezones
+  (base + channel default + active_timezones, after deduplication)
   > max_timezones
 
 Meaning:
@@ -419,14 +446,14 @@ CoreConfig {
 **Purpose:** Configuration for core processing logic. Passed as argument to maintain purity (no global config access).
 
 **Defaults:**
-- `max_time_mentions = 3` (from POLICIES.md §2)
-- `max_timezones = 5` (from POLICIES.md §2)
+- `max_time_mentions = 3` (from POLICIES.md §1, §6)
+- `max_timezones = 5` (from POLICIES.md §6)
 - `ordering = "SOURCE_FIRST"` (from POLICIES.md §6)
 - `default_timezone = null` (null means UTC)
 
 **Note on `default_timezone`:**
 - Both `null` and the string `"UTC"` are treated as system UTC fallback
-- When `default_timezone = null` or `default_timezone = "UTC"`, resolver interprets it as `"UTC"` (see POLICIES.md §68-72)
+- When `default_timezone = null` or `default_timezone = "UTC"`, resolver interprets it as `"UTC"` (see POLICIES.md §3 System Default Timezone Resolution)
 - This provides flexibility: users can specify either `null` or `"UTC"` in configuration, both result in UTC fallback behavior
 - Example: `default_timezone: null` and `default_timezone: "UTC"` are equivalent
 

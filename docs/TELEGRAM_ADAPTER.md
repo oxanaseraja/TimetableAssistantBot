@@ -1,6 +1,6 @@
 # TELEGRAM_ADAPTER.md — MVP Integration Plan
 
-**Purpose:** Connect platform-agnostic core (`ARCHMINI.md`) to Telegram.  
+**Purpose:** Connect platform-agnostic core (`ARCHITECTURE.md`) to Telegram.  
 **Scope:** MVP only. Discord/WhatsApp — Optional / Future.
 
 Authoritative references:

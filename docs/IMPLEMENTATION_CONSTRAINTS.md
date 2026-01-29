@@ -45,7 +45,7 @@ These constraints are **absolute**. Violation = incorrect implementation.
 try:
     display = process(...)
 except Exception as exc:
-    logging.error("Core error", exc_info=exc)
+    logging.error("Core error: %s", exc, exc_info=True)
     display = None
 ```
 

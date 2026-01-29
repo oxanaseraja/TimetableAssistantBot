@@ -66,7 +66,7 @@ class TestTimeParser(unittest.TestCase):
     def test_overlap_detection(self):
         """Test that overlapping matches are handled correctly.
         
-        Per TIME_PARSING_RULES.md §1.2: "10:30am" is a 12-hour format with AM/PM.
+        Per TIME_PARSING_RULES.md §1.1: "10:30am" is a 12-hour format with AM/PM.
         TIME_12H_AMPM has priority over TIME_24H to preserve the AM/PM marker.
         """
         result = parse_times("Meeting at 10:30am")

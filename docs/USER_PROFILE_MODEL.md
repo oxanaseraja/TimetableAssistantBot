@@ -43,6 +43,8 @@ Additional fields (name, language, etc.) are out of scope.
 
 ## 3. Source of UserProfile (MVP)
 
+**Platform limitation:** Platform APIs (e.g. Telegram Bot API) do not provide user timezone automatically. Therefore timezone must be obtained via explicit user input or external configuration. Automatic onboarding and timezone collection are product-layer features and out of scope for MVP.
+
 In MVP, user profiles are loaded from a **static JSON file**.
 
 ### File: `users.json`
@@ -196,7 +198,7 @@ def compute_active_timezones(
 
 **Rules:**
 - Recomputed on every message (not cached)
-- Source of truth: ChannelContext.members + UserProfile.timezone
+- Source of truth: channel config's `members` list (users.json channel entry) and each member's timezone from users_data
 - Unknown members are ignored (not an error)
 - Null timezones are excluded
 - **Duplicates are automatically deduplicated** — if multiple members have the same timezone, it appears only once in the result

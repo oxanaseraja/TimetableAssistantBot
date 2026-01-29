@@ -423,7 +423,7 @@ def normalize_offset(raw: str) -> Optional[str]:
 **Examples:**
 - `"+3"` → `"+03:00"`
 - `"UTC+2"` → `"+02:00"`
-- `"+0300"` → `"+03:00"`
+- `"+0300"` → `"+03:00"` (not matched in extraction per D-001; normalization semantics only)
 - `"GMT-5"` → `"-05:00"`
 - `"-05:30"` → `"-05:30"`
 
@@ -441,7 +441,7 @@ def extract_timezone_hint(
     
     Args:
         text: Full message text
-        time_position: Character position of time mention
+        time_position: Start position of the time mention (DetectedTime.position_start from TIME_PARSING_RULES)
         city_index: Pre-built city→timezone lookup (passed from adapter)
         window: Characters to look before/after (default 30)
     
@@ -455,7 +455,8 @@ def extract_timezone_hint(
     context = text[start:end]
     
     # Priority 1: UTC/GMT offset
-    TZ_OFFSET_REGEX = re.compile(r'(UTC|GMT)?[+-]\d{1,2}(:\d{2})?', re.IGNORECASE)
+    # (?!\d) prevents matching compact +0300 (D-001): only colon-separated or hour-only
+    TZ_OFFSET_REGEX = re.compile(r'(UTC|GMT)?[+-]\d{1,2}(:\d{2})?(?!\d)', re.IGNORECASE)
     offset_matches = list(TZ_OFFSET_REGEX.finditer(context))
     if offset_matches:
         valid_offsets = []
@@ -600,7 +601,7 @@ Deterministic selection algorithm:
 **Timezone hint applies only to the time mention within ±30 chars window.**
 
 **Window calculation clarification:**
-- Window is centered around the **START position** of the time mention (not the center or end)
+- Window is centered around the **start position** of the time mention (same as `DetectedTime.position_start` from TIME_PARSING_RULES; not center or end of the time span)
 - Formula: `start = max(0, time_position - 30)`, `end = min(len(text), time_position + 30)`
 - For time mention "10:30" at position 20: window is `[0:50]` (characters 0-49)
 - Window may be asymmetric at text boundaries (beginning or end of message)
@@ -703,7 +704,8 @@ The converter (`convert_time`) supports both IANA timezone IDs and fixed UTC off
 
 ## 8. References
 
-- `POLICIES.md` §1.4 — Timezone Hint Extraction
+- `POLICIES.md` §2 — Timezone Extraction Policy
 - `POLICIES.md` §3 — Timezone Resolution Precedence
+- `TIME_PARSING_RULES.md` — time positions (position_start, position_end) feed into time_position
 - `cities.json` — City whitelist (adapter-owned)
 - `CORE_CONTRACT.md` — Converter error handling

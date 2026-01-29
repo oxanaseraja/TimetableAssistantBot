@@ -1,5 +1,5 @@
 # TimetableAssistantBot - MVP Dependencies
-# Python >= 3.10 required
+# Python >= 3.9 required
 
 # Telegram Bot API
 python-telegram-bot>=20.0,<21.0

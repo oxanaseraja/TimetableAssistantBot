@@ -52,7 +52,7 @@ No fuzzy matching, no inference, no guessing.
 ## 3. Timezone Resolution Precedence
 
 Priority order (aligned with SPEC_FREEZE §2.4):
-1. `EXPLICIT_HINT` — Explicit offset in text (UTC+2, +0300)
+1. `EXPLICIT_HINT` — Explicit offset in text (e.g. UTC+2, +03:00; compact +0300 not supported, see SPEC_FREEZE D-001)
 2. `EXPLICIT_HINT` — Explicit IANA timezone ID in text (Europe/Amsterdam)
 3. `EXPLICIT_HINT` — City name from text (via cities.json lookup)
 4. `USER_PROFILE` — User profile timezone

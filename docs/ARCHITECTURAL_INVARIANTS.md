@@ -289,7 +289,7 @@ No flaky tests from timing or randomness.
 
 ## References
 
-- `ARCHMINI.md` — system overview
+- `ARCHITECTURE.md` — system overview
 - `POLICIES.md` — behavioral rules
-- `DESIGN_CHOICES.md` — rationale for decisions
+- `ONBOARDING.md` — rationale (Why these constraints)
 - `LLM_EXECUTION_PROTOCOL.md` — execution rules

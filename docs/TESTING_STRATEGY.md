@@ -1,6 +1,6 @@
 # TESTING_STRATEGY.md — MVP Tests
 
-Scope is minimal and deterministic.
+Scope is minimal and deterministic. All tests are deterministic (fixed time, no network); see `IMPLEMENTATION_CONSTRAINTS.md` § Verification.
 
 ---
 
@@ -12,6 +12,7 @@ Scope is minimal and deterministic.
 ## 2. Policy Golden Cases
 - Canonical examples aligned to POLICIES.md
 - Each case: input → expected DisplayBlock or None
+- See `END_TO_END_FLOW.md` for step-by-step example used in processor tests
 
 ## 3. Adapter Contract Tests
 - CoreMessageEvent mapping

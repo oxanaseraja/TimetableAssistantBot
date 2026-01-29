@@ -3,7 +3,7 @@
 ## Near-term (Optional / Future)
 - Implement full `TimeParser` parsing logic and validation.
 - Add timezone hint resolution (city/offset mapping).
-- Add ambiguity scoring and thresholds from `ARCHMINI.md`. (Optional / Future)
+- Add ambiguity scoring and thresholds from `ARCHITECTURE.md`. (Optional / Future)
 
 ## Mid-term (Optional / Future)
 - Add persistent storage for user/channel context.

@@ -181,7 +181,24 @@ Result: ["+02:00", "Europe/Amsterdam"]  # Both included (different strings)
 
 ---
 
+## UTC Offset Formatting (Converter)
+
+**Requirement:** The converter must return `utc_offset` (in `ConvertedTime`) strictly in `±HH:MM` format. If a valid offset cannot be produced, the timezone is skipped as invalid.
+
+**Rationale:** No fallback values (e.g. fabricating `+00:00`) — preserves determinism and data integrity.
+
+**Algorithm:**
+1. Get `offset = target_time.strftime("%z")`
+2. If `offset` is empty or length is not 5, skip the timezone.
+3. Otherwise compute `offset_formatted = f"{offset[:3]}:{offset[3:]}"` (e.g. `"+0100"` → `"+01:00"`).
+
+**Error handling:** Any conversion error → skip that timezone. Partial failures must not block successful conversions (see §Partial Failure Handling in Converter below).
+
+---
+
 ## Partial Failure Handling in Converter
+
+**See also:** §UTC Offset Formatting (Converter) above — invalid or malformed offset → timezone skipped.
 
 **Scenario:** Conversion fails for one or more timezones in the target list.
 
