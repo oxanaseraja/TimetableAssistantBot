@@ -302,4 +302,4 @@ Core behavior: Returns DisplayBlock with 2 entries (partial failure handling)
 - `CONTRACTS.md` — DTO definitions
 - `USER_PROFILE_MODEL.md` — how adapter constructs UserProfile
 - `ARCHITECTURAL_INVARIANTS.md` — purity constraints
-- `TIMEZONE_EXTRACTION_RULES.md` — converter support for offset strings
+- `TIMEZONE_EXTRACTION_RULES.md` — extraction of offset/IANA/city hints from message text (converter accepts offset strings as defined here and in CONTRACTS)

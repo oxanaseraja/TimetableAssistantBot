@@ -12,6 +12,8 @@ Start here:
 - `STATE_MODEL.md` for state ownership (MVP).
 - `TESTING_STRATEGY.md` for test architecture (MVP).
 
+For full document index and reading order see `DOC_INDEX.md`.
+
 **Running and testing locally:** See `LOCAL_TESTING.md` for step-by-step setup (token, chat_id, users.json, run). See `TEST_PHRASES.md` for example messages to try.
 
 Core modules:

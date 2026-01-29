@@ -21,7 +21,7 @@ This folder contains the complete specification for the TimetableAssistantBot.
 
 ### 1. System Constraints (Must-Read First)
 
-- `ARCHITECTURAL_INVARIANTS.md` — 16 invariants that must always hold
+- `ARCHITECTURAL_INVARIANTS.md` — 23 invariants that must always hold
 
 ### 2. Input Contracts (Grammar)
 

@@ -47,6 +47,7 @@ Authoritative references:
 ```
 adapters/telegram/
 ├─ adapter.py           # main adapter: startup, event handling, Telegram API
+├─ config_loader.py     # load and validate configuration.yaml
 ├─ event_mapping.py     # Telegram update → CoreMessageEvent
 ├─ formatter.py         # DisplayBlock → formatted text for Telegram
 ├─ user_loader.py       # users.json → UserProfile, ChannelContext
@@ -93,22 +94,20 @@ HH:MM <timezone> (City1, City2)
 
 Rules:
 - One line per timezone.
-- Max 5 lines.
+- Up to max_lines (default 5); see ADAPTER_CONTRACTS.md §5.
 - Cities loaded from local list, grouped by timezone, sorted alphabetically.
 - If cities list is empty → omit parentheses.
 - Output format follows `ADAPTER_CONTRACTS.md`.
 
 Edit handling:
 - Always delete the old reply.
-- Send a fully recomputed reply (up to 5 lines).
+- Send a fully recomputed reply (up to max_lines).
 
 ---
 
 ## 5. Adapter Configuration (MVP)
 
-Defined in root `configuration.yaml`.
-
-See `ADAPTER_CONTRACTS.md §5` for full schema.
+Defined in `configuration.yaml` (e.g. `src/configuration.yaml`). See `ADAPTER_CONTRACTS.md §5` for full schema.
 
 **Telegram-specific settings:**
 ```yaml

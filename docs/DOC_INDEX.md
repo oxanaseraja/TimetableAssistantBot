@@ -32,7 +32,7 @@ All documents are in this `docs/` folder.
 - `README.md` — spec folder overview
 
 ### System Constraints
-- `ARCHITECTURAL_INVARIANTS.md` — 16 invariants (must-read)
+- `ARCHITECTURAL_INVARIANTS.md` — 23 invariants (must-read)
 - `ARCHITECTURE.md` — system overview and boundaries
 - `SPEC_FREEZE.md` — frozen behavioral specification (MVP v1.0.0)
 

@@ -80,48 +80,18 @@
 ## 4. Repository Structure
 project/
 ├── src/
-│ ├── core/ # Platform-agnostic core logic
-│ └── adapters/ # Platform-specific implementations
-│ └── telegram/ # MVP adapter
+│   ├── core/           # Platform-agnostic core logic
+│   ├── adapters/       # Platform-specific implementations
+│   │   └── telegram/   # MVP adapter
+│   ├── configuration.yaml
+│   ├── env.example
+│   ├── run.sh
+│   ├── main.py
+│   └── data/           # cities.json, users.json (paths from config)
 ├── docs/
-│ ├── journal/ # Implementation specs
-│ └── [architecture documents]
-├── configuration.yaml # Project-level configuration
-├── env.example # Environment variables template
-└── run.sh # Local execution script
-
-
----
-
-## 5. Extension Points & Evolution
-
-### 5.1. Adding New Platforms
-- Create new adapter under `src/adapters/` (e.g., `src/adapters/discord/`)
-- Implement `ADAPTER_CONTRACTS.md` requirements
-- Update configuration as needed
-
-### 5.2. Storage Evolution (Production)
-- Current: In-memory state (MVP)
-- Future: Persistent storage layer (see `STORAGE_MODEL.md`, `STATE_MODEL.md`)
-
-### 5.3. Rule Extensions
-- Modify parser rules via `TIME_PARSING_RULES.md`
-- Update behavioral policies in `POLICIES.md`
-- All changes require spec updates first
-
----
-
-## 6. Key References
-
-| Document | Purpose |
-|----------|---------|
-| `POLICIES.md` | Deterministic behavioral rules |
-| `CONTRACTS.md` | Data transfer object definitions |
-| `CORE_CONTRACT.md` | Core invocation interface |
-| `ADAPTER_CONTRACTS.md` | Adapter runtime requirements |
-| `TIME_PARSING_RULES.md` | Regex patterns for time parsing |
-| `ONBOARDING.md` | Rationale (Why these constraints) |
-| `TESTING_STRATEGY.md` | Testing approach and coverage |
+│   ├── journal/        # Implementation specs
+│   └── [architecture documents]
+└── tests/
 
 
 ---
