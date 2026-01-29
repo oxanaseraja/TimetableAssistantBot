@@ -17,7 +17,7 @@ These constraints are **absolute**. Violation = incorrect implementation.
 
 ## Parsing Constraints
 
-6. **Time parsing is regex only** — patterns from `TIME_PARSING_RULES.md`
+6. **Time parsing is regex only** — patterns from `spec/TIME_PARSING_RULES.md`
 7. **Timezone extraction is whitelist only** — cities from `cities.json`
 8. **No normalization of input** — don't convert `10.30` to `10:30`
 9. **No NLP, no LLM, no ML** — pure deterministic matching
@@ -75,6 +75,6 @@ Before submitting implementation:
 
 1. Core has no imports of `os`, `io`, `pathlib`, `requests`, etc.
 2. Core has no global variables
-3. Core function signature matches `CORE_CONTRACT.md`
-4. All regex patterns match `TIME_PARSING_RULES.md` exactly
+3. Core function signature matches `spec/CORE_CONTRACT.md`
+4. All regex patterns match `spec/TIME_PARSING_RULES.md` exactly
 5. Tests use frozen time, no real network

@@ -33,7 +33,7 @@ UserProfile {
 }
 ```
 
-**Note:** Only IANA timezone IDs are allowed in `timezone`. Offset strings (`±HH:MM`) are not allowed in user profiles (see `USER_PROFILE_MODEL.md`). Core receives UserProfile from adapter; adapter loads from `users.json`.
+**Note:** Only IANA timezone IDs are allowed in `timezone`. Offset strings (`±HH:MM`) are not allowed in user profiles (see `../USER_PROFILE_MODEL.md`). Core receives UserProfile from adapter; adapter loads from `users.json`.
 
 ---
 
@@ -47,7 +47,7 @@ ChannelContext {
 }
 ```
 
-**Note:** Core receives ChannelContext from adapter. Adapter builds it from `users.json` (channel default and active timezones). See `USER_PROFILE_MODEL.md`, `STATE_MODEL.md`.
+**Note:** Core receives ChannelContext from adapter. Adapter builds it from `users.json` (channel default and active timezones). See `../USER_PROFILE_MODEL.md`, `../STATE_MODEL.md`.
 
 ---
 

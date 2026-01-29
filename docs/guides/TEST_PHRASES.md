@@ -31,7 +31,7 @@ Daily sync at 11:00 Tokyo
 
 **Expected behavior:** Bot recognizes city, resolves timezone, and converts time.
 
-**Available cities** (from `cities.json`): see `src/data/cities.json` or `docs/data/cities.json`.
+**Available cities** (from `cities.json`): see `src/data/cities.json` or `../data/cities.json`.
 
 ---
 
@@ -159,7 +159,7 @@ Meeting at 3
 Meeting at 10, call at 11, sync at 12, review at 13, standup at 14
 ```
 
-**Expected behavior:** Only the first time is processed; excess mentions are not used (see SPEC_FREEZE §3.1).
+**Expected behavior:** Only the first time is processed; excess mentions are not used (see `../spec/SPEC_FREEZE.md` §3.1).
 
 ---
 
@@ -236,7 +236,7 @@ Standup at 9:00am GMT-5
 Sync at 15:30 -05:00
 ```
 
-**Note:** Compact format `+0300` (no colon) is not supported (SPEC_FREEZE D-001). Use `+03:00` or `UTC+3`.
+**Note:** Compact format `+0300` (no colon) is not supported (`../spec/SPEC_FREEZE.md` D-001). Use `+03:00` or `UTC+3`.
 
 ---
 
@@ -269,7 +269,7 @@ If the group has several members with different timezones and no explicit hint:
 Meeting at 10:30
 ```
 
-**Expected behavior:** Ambiguity → no reply (per POLICIES §3, §4).
+**Expected behavior:** Ambiguity → no reply (per `../spec/POLICIES.md` §3, §4).
 
 ---
 
@@ -292,7 +292,7 @@ Meeting at 10:30
 
 ## References
 
-- `TIME_PARSING_RULES.md` — supported time formats
-- `TIMEZONE_EXTRACTION_RULES.md` — timezone hint extraction
-- `POLICIES.md` §4 — ambiguity policy
-- `END_TO_END_FLOW.md` — step-by-step example
+- `../spec/TIME_PARSING_RULES.md` — supported time formats
+- `../spec/TIMEZONE_EXTRACTION_RULES.md` — timezone hint extraction
+- `../spec/POLICIES.md` §4 — ambiguity policy
+- `../END_TO_END_FLOW.md` — step-by-step example

@@ -90,7 +90,7 @@ TELEGRAM_CHAT_ID=-1001234567890
 - `${VAR_NAME}` — required (error if unset)
 - `${VAR_NAME:default_value}` — optional with default
 
-See `config_schema.md` for the full schema.
+See `../config_schema.md` for the full schema.
 
 ---
 
@@ -120,7 +120,7 @@ Edit `src/data/users.json` (or the path set in config):
 - Replace IDs with your real user and chat IDs
 - Use IANA timezone IDs only (no offset strings like `+03:00` in users.json)
 - `channel:-1001234567890` must match the group `chat_id` used by the bot
-- See `USER_PROFILE_MODEL.md` and `docs/data/users.example.json`
+- See `../USER_PROFILE_MODEL.md` and `../data/users.example.json`
 
 **Common IANA IDs:** `Europe/Amsterdam`, `America/New_York`, `Asia/Tokyo`, etc.  
 Full list: [List of tz database time zones](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)
@@ -135,7 +135,7 @@ From project root:
 pip install -r src/requirements.txt
 ```
 
-Or use a virtual environment: `python3 -m venv venv`, then `source venv/bin/activate` (Unix) and `pip install -r src/requirements.txt`. See `DEPENDENCIES.md`.
+Or use a virtual environment: `python3 -m venv venv`, then `source venv/bin/activate` (Unix) and `pip install -r src/requirements.txt`. See `../DEPENDENCIES.md`.
 
 ---
 
@@ -251,13 +251,13 @@ Use DEBUG for troubleshooting (e.g. which timezone was resolved, which time was 
 - Ensure the bot is added to the group
 - Ensure `chat_id` in config matches the group ID (negative for groups)
 - Check logs for errors
-- Ensure the message contains a supported time format (see `TIME_PARSING_RULES.md`)
+- Ensure the message contains a supported time format (see `../spec/TIME_PARSING_RULES.md`)
 
 ### "Invalid timezone"
 
 - Use only IANA timezone IDs in `users.json` (e.g. `Europe/Amsterdam`), not offset strings like `+03:00`
 - Check IDs against [tz database list](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)
-- See `USER_PROFILE_MODEL.md` §9
+- See `../USER_PROFILE_MODEL.md` §9
 
 ---
 
@@ -293,6 +293,6 @@ Press `Ctrl+C` in the terminal.
 
 - `RUNNING.md` — core vs full application
 - `src/README.md` — Quick Start
-- `config_schema.md` — configuration schema
-- `USER_PROFILE_MODEL.md` — users.json and profiles
+- `../config_schema.md` — configuration schema
+- `../USER_PROFILE_MODEL.md` — users.json and profiles
 - `TEST_PHRASES.md` — test message examples

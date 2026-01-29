@@ -19,7 +19,7 @@ def process(
 ) -> DisplayBlock | None
 ```
 
-See `CORE_CONTRACT.md` for full specification.
+See `spec/CORE_CONTRACT.md` for full specification.
 
 Rules:
 - Call is synchronous.
@@ -280,7 +280,7 @@ Rules:
 **Empty or Invalid Configuration:**
 - If configuration file is empty or contains only comments → treat as empty config dictionary `{}`
 - Adapter starts only if required values are available (either in config or env fallbacks)
-- Optional sections use defaults as specified in `CONTRACTS.md`
+- Optional sections use defaults as specified in `spec/CONTRACTS.md`
 - If YAML syntax is invalid → `yaml.YAMLError` is raised → adapter does not start
 
 **Configuration Validation Rules:**
@@ -300,7 +300,7 @@ All configuration values must be validated according to these rules:
 - `max_timezones`: Must be integer in range [1, 10]. Invalid values → use default 5, log warning.
 - `ordering`: Must be one of "SOURCE_FIRST", "OFFSET_ASC", "ALPHABETICAL". Invalid values → use default "SOURCE_FIRST", log warning.
 - `default_timezone`: Must be valid IANA timezone ID, null, or the string "UTC". Invalid values → treat as null (UTC), log warning.
-  - Both `null` and `"UTC"` are treated as system UTC fallback (see CONTRACTS.md §CoreConfig)
+  - Both `null` and `"UTC"` are treated as system UTC fallback (see `spec/CONTRACTS.md` §CoreConfig)
 - `max_lines`: Must be integer in range [1, 10]. Invalid values → use default 5, log warning.
 - `retry_attempts`: Must be integer in range [1, 10]. Invalid values → use default 3, log warning.
 

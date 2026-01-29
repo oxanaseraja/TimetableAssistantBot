@@ -1,10 +1,10 @@
 ## Handling Specification Gaps & AI Verification
 
-**Where to go next:** Full document list and reading order — `DOC_INDEX.md`. Quick start for developers — `ONBOARDING.md`.
+**Where to go next:** Full document list and reading order — `DOC_INDEX.md`. Quick start for developers — `guides/ONBOARDING.md`.
 
 ### Intent
 
-**Source of Truth:** The original specification documents (CONTRACTS.md, POLICIES.md, CORE_CONTRACT.md, TIME_PARSING_RULES.md, TIMEZONE_EXTRACTION_RULES.md) are the authoritative source. SPEC_FREEZE.md and HANDOVER.md were added in a second iteration and must align with the original specification.
+**Source of Truth:** The original specification documents (`spec/CONTRACTS.md`, `spec/POLICIES.md`, `spec/CORE_CONTRACT.md`, `spec/TIME_PARSING_RULES.md`, `spec/TIMEZONE_EXTRACTION_RULES.md`) are the authoritative source. `spec/SPEC_FREEZE.md` and HANDOVER.md were added in a second iteration and must align with the original specification.
 
 This project was implemented under an intentionally incomplete and evolving specification.
 During development, multiple layers of formal contracts were introduced (CORE_CONTRACT, TIME_PARSING_RULES, TIMEZONE_EXTRACTION_RULES, SPEC_FREEZE, etc.) and iteratively aligned with the codebase.
@@ -34,11 +34,11 @@ SPEC_FREEZE records the final converged behavioral snapshot of the MVP.
 It is NOT an independent source of truth.
 
 Authoritative sources remain:
-- CONTRACTS.md — data structures and DTO contracts  
-- POLICIES.md — behavioral rules and priority logic  
-- CORE_CONTRACT.md — core interface guarantees  
+- `spec/CONTRACTS.md` — data structures and DTO contracts  
+- `spec/POLICIES.md` — behavioral rules and priority logic  
+- `spec/CORE_CONTRACT.md` — core interface guarantees  
 
-SPEC_FREEZE documents the resolved interpretation of these contracts
+`spec/SPEC_FREEZE.md` documents the resolved interpretation of these contracts
 after convergence and AI verification.
 
 ---
@@ -159,7 +159,7 @@ Messages should be partially processed, not rejected.
 **Decision:**
 
 * Fix code to process first `max_time_mentions` (in MVP, only the first detected time is used)
-* Do **not** set `partial=True` for time-mention overflow — `partial` is reserved for **timezone** truncation only (`max_timezones`); see SPEC_FREEZE §3.1 and POLICIES.md. Time-mention overflow is logged for diagnostics only.
+* Do **not** set `partial=True` for time-mention overflow — `partial` is reserved for **timezone** truncation only (`max_timezones`); see `spec/SPEC_FREEZE.md` §3.1 and `spec/POLICIES.md`. Time-mention overflow is logged for diagnostics only.
 
 **Rationale:**
 Rejecting the entire message violates silence-policy and UX invariants.
@@ -209,23 +209,23 @@ Removing it would degrade UX in group contexts.
 
 This project maintains a strict hierarchy of specification authority:
 
-1. **CONTRACTS.md**  
+1. **`spec/CONTRACTS.md`**  
    Defines all DTO structures and data contracts.
 
-2. **POLICIES.md**  
+2. **`spec/POLICIES.md`**  
    Defines behavioral rules, priority ordering, and decision policies.
 
-3. **CORE_CONTRACT.md**  
+3. **`spec/CORE_CONTRACT.md`**  
    Defines the core interface and processing guarantees.
 
-4. **SPEC_FREEZE.md**  
+4. **`spec/SPEC_FREEZE.md`**  
    Records the final converged behavioral snapshot of the MVP.
    It documents resolved interpretations but does not override the above sources.
 
 5. **HANDOVER.md**  
    Describes process, rationale, and engineering decisions.
 
-**Input contracts (also authoritative):** `TIME_PARSING_RULES.md` and `TIMEZONE_EXTRACTION_RULES.md` are part of the authoritative source (see Intent above). They are referenced by POLICIES.md and CONTRACTS.md as the grammar and extraction contracts; the hierarchy above lists the top-level structural documents.
+**Input contracts (also authoritative):** `spec/TIME_PARSING_RULES.md` and `spec/TIMEZONE_EXTRACTION_RULES.md` are part of the authoritative source (see Intent above). They are referenced by `spec/POLICIES.md` and `spec/CONTRACTS.md` as the grammar and extraction contracts; the hierarchy above lists the top-level structural documents.
 
 **Rationale:**
 SPEC_FREEZE is a convergence artifact, not a normative specification.
@@ -235,7 +235,7 @@ The authoritative sources remain the original architectural contracts.
 
 ## Notes for Future Development
 
-* **Source of truth:** The original specification documents (CONTRACTS.md, POLICIES.md, CORE_CONTRACT.md) are the authoritative source. SPEC_FREEZE freezes the behavior derived from these documents.
+* **Source of truth:** The original specification documents (`spec/CONTRACTS.md`, `spec/POLICIES.md`, `spec/CORE_CONTRACT.md`) are the authoritative source. `spec/SPEC_FREEZE.md` freezes the behavior derived from these documents.
 
 * Any change affecting:
 

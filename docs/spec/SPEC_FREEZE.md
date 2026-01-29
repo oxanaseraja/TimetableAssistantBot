@@ -215,7 +215,7 @@ Missing required parameters → adapter does not start (fail-fast)
 | `users.json` | Missing file | Treated as empty `{}`, adapter starts |
 | `users.json` | Invalid structure (not dict) | Treated as empty `{}`, warning logged |
 
-**Note:** Adapter retry policy (retry_attempts, backoff) is frozen per `ADAPTER_CONTRACTS.md` §2.
+**Note:** Adapter retry policy (retry_attempts, backoff) is frozen per `../ADAPTER_CONTRACTS.md` §2.
 
 ---
 
@@ -347,8 +347,8 @@ This freeze document captures behavioral contracts. For detailed specifications,
 | `TIMEZONE_EXTRACTION_RULES.md` | Extraction algorithms, normalization rules |
 | `TIME_PARSING_RULES.md` | Parsing grammar, regex patterns |
 | `ARCHITECTURAL_INVARIANTS.md` | System invariants (23 total) |
-| `ADAPTER_CONTRACTS.md` | Adapter runtime contract, error handling |
-| `USER_PROFILE_MODEL.md` | User/channel data model |
+| `../ADAPTER_CONTRACTS.md` | Adapter runtime contract, error handling |
+| `../USER_PROFILE_MODEL.md` | User/channel data model |
 
 ---
 

@@ -1,7 +1,7 @@
 # Spec: Minimal Core Architecture
 
-This spec mirrors `ARCHITECTURE.md` and exists as the numbered implementation
-specification entry. **Canonical:** `ARCHITECTURE.md`; implementation plan: `TELEGRAM_ADAPTER.md`.
+This spec mirrors `../spec/ARCHITECTURE.md` and exists as the numbered implementation
+specification entry. **Canonical:** `../spec/ARCHITECTURE.md`; implementation plan: `../TELEGRAM_ADAPTER.md`.
 
 Scope:
 - Parsing time mentions

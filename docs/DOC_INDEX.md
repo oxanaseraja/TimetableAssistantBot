@@ -9,13 +9,13 @@ All documents are in this `docs/` folder.
 
 0. `LLM_EXECUTION_PROTOCOL.md` — **execution rules (read first)**
 1. `IMPLEMENTATION_CONSTRAINTS.md` — **hard rules (must follow)**
-2. `SPEC_FREEZE.md` — **frozen behavioral specification (MVP v1.0.0)**
-3. `ARCHITECTURAL_INVARIANTS.md` — system invariants
-4. `ARCHITECTURE.md` — system overview
-5. `TIME_PARSING_RULES.md` — input contract (time)
-6. `TIMEZONE_EXTRACTION_RULES.md` — input contract (timezone)
-7. `POLICIES.md` — behavioral rules
-8. `CONTRACTS.md` — DTO definitions
+2. `spec/SPEC_FREEZE.md` — **frozen behavioral specification (MVP v1.0.0)**
+3. `spec/ARCHITECTURAL_INVARIANTS.md` — system invariants
+4. `spec/ARCHITECTURE.md` — system overview
+5. `spec/TIME_PARSING_RULES.md` — input contract (time)
+6. `spec/TIMEZONE_EXTRACTION_RULES.md` — input contract (timezone)
+7. `spec/POLICIES.md` — behavioral rules
+8. `spec/CONTRACTS.md` — DTO definitions
 9. `END_TO_END_FLOW.md` — step-by-step example
 10. `USER_PROFILE_MODEL.md` — data source
 11. `DEPENDENCIES.md` — runtime stack
@@ -27,26 +27,26 @@ All documents are in this `docs/` folder.
 ## Document Categories
 
 ### Getting Started
-- `ONBOARDING.md` — quick start guide for new developers
-- `LOCAL_TESTING.md` — step-by-step local setup and testing (token, chat_id, users.json, run)
+- `guides/ONBOARDING.md` — quick start guide for new developers
+- `guides/LOCAL_TESTING.md` — step-by-step local setup and testing (token, chat_id, users.json, run)
 - `README.md` — spec folder overview
 
 ### System Constraints
-- `ARCHITECTURAL_INVARIANTS.md` — 23 invariants (must-read)
-- `ARCHITECTURE.md` — system overview and boundaries
-- `SPEC_FREEZE.md` — frozen behavioral specification (MVP v1.0.0)
+- `spec/ARCHITECTURAL_INVARIANTS.md` — 23 invariants (must-read)
+- `spec/ARCHITECTURE.md` — system overview and boundaries
+- `spec/SPEC_FREEZE.md` — frozen behavioral specification (MVP v1.0.0)
 
 ### Input Contracts (Grammar)
-- `TIME_PARSING_RULES.md` — regex patterns for time parsing
-- `TIMEZONE_EXTRACTION_RULES.md` — timezone hint matching
+- `spec/TIME_PARSING_RULES.md` — regex patterns for time parsing
+- `spec/TIMEZONE_EXTRACTION_RULES.md` — timezone hint matching
 
 ### Behavioral Rules
-- `POLICIES.md` — core policies
-Design rationale: see `ONBOARDING.md` (Why these constraints)
-- Converter rules (utc_offset format, partial failure): see `CORE_CONTRACT.md` §UTC Offset Formatting, §Partial Failure
+- `spec/POLICIES.md` — core policies
+Design rationale: see `guides/ONBOARDING.md` (Why these constraints)
+- Converter rules (utc_offset format, partial failure): see `spec/CORE_CONTRACT.md` §UTC Offset Formatting, §Partial Failure
 
 ### Data Contracts
-- `CONTRACTS.md` — DTO definitions
+- `spec/CONTRACTS.md` — DTO definitions
 - `USER_PROFILE_MODEL.md` — user data source
 - `STATE_MODEL.md` — state ownership
 - `STORAGE_MODEL.md` — MVP vs production storage
@@ -54,14 +54,14 @@ Design rationale: see `ONBOARDING.md` (Why these constraints)
 ### Runtime Contracts
 - `ADAPTER_CONTRACTS.md` — adapter runtime contract
 - `TELEGRAM_ADAPTER.md` — Telegram implementation plan
-- `CORE_CONTRACT.md` — core invocation interface
+- `spec/CORE_CONTRACT.md` — core invocation interface
 - `DEPENDENCIES.md` — Python version, libraries
 - `config_schema.md` — configuration YAML schema
-- `RUNNING.md` — core execution instructions
+- `guides/RUNNING.md` — core execution instructions
 
 ### Examples
 - `END_TO_END_FLOW.md` — complete walkthrough with DTOs
-- `TEST_PHRASES.md` — example messages for manual testing
+- `guides/TEST_PHRASES.md` — example messages for manual testing
 - `data/cities.json` — city whitelist example
 - `data/users.example.json` — user config example
 
@@ -69,7 +69,7 @@ Design rationale: see `ONBOARDING.md` (Why these constraints)
 - `TESTING_STRATEGY.md` — test architecture
 - `ARCH_CHECKLIST.md` — completeness checklist
 - `ARCH_DIAGRAM.md` — architecture diagram
-- `DEVELOPER_GUIDE.md` — practical guidelines for developers
+- `guides/DEVELOPER_GUIDE.md` — practical guidelines for developers
 
 ### Execution Protocol
 - `LLM_EXECUTION_PROTOCOL.md` — rules for LLM code generation

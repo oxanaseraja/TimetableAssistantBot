@@ -1,11 +1,11 @@
 # TELEGRAM_ADAPTER.md — MVP Integration Plan
 
-**Purpose:** Connect platform-agnostic core (`ARCHITECTURE.md`) to Telegram.  
+**Purpose:** Connect platform-agnostic core (`spec/ARCHITECTURE.md`) to Telegram.  
 **Scope:** MVP only. Discord/WhatsApp — Optional / Future.
 
 Authoritative references:
-- `POLICIES.md` — deterministic rules (including adapter rules)
-- `CONTRACTS.md` — DTO contracts
+- `spec/POLICIES.md` — deterministic rules (including adapter rules)
+- `spec/CONTRACTS.md` — DTO contracts
 - `ADAPTER_CONTRACTS.md` — adapter runtime contract
 
 ---
@@ -18,7 +18,7 @@ Authoritative references:
    - Delete events are ignored (MVP rule).
 
 2. **ID Mapping**
-   - Deterministic SHA256 mapping (see `POLICIES.md`).
+   - Deterministic SHA256 mapping (see `spec/POLICIES.md`).
    - Core never receives platform identifiers.
 
 3. **Core Invocation**
@@ -33,11 +33,11 @@ Authoritative references:
    - Cities loaded from local `cities.json`, grouped by timezone, sorted alphabetically.
 
 5. **Duplicate Suppression**
-   - Deterministic rule by `internal_message_id` (see `POLICIES.md`).
+   - Deterministic rule by `internal_message_id` (see `spec/POLICIES.md`).
    - In-memory only; optional persistence only hydrates this set at startup.
 
 6. **Persistence (Optional / Future)**
-   - `adapter_mapping.json` load/save on startup/shutdown (see `POLICIES.md`).
+   - `adapter_mapping.json` load/save on startup/shutdown (see `spec/POLICIES.md`).
    - Failures are ignored (adapter continues with empty mapping).
 
 ---
@@ -73,7 +73,7 @@ CoreMessageEvent {
 }
 ```
 
-All internal IDs are derived from platform IDs using SHA256 (see `POLICIES.md`).
+All internal IDs are derived from platform IDs using SHA256 (see `spec/POLICIES.md`).
 
 Deterministic mapping (Telegram):
 ```

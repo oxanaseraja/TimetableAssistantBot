@@ -291,5 +291,5 @@ No flaky tests from timing or randomness.
 
 - `ARCHITECTURE.md` — system overview
 - `POLICIES.md` — behavioral rules
-- `ONBOARDING.md` — rationale (Why these constraints)
-- `LLM_EXECUTION_PROTOCOL.md` — execution rules
+- `../guides/ONBOARDING.md` — rationale (Why these constraints)
+- `../LLM_EXECUTION_PROTOCOL.md` — execution rules

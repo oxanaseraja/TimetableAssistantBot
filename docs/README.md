@@ -21,28 +21,28 @@ This folder contains the complete specification for the TimetableAssistantBot.
 
 ### 1. System Constraints (Must-Read First)
 
-- `ARCHITECTURAL_INVARIANTS.md` — 23 invariants that must always hold
+- `spec/ARCHITECTURAL_INVARIANTS.md` — 23 invariants that must always hold
 
 ### 2. Input Contracts (Grammar)
 
-- `TIME_PARSING_RULES.md` — regex patterns for time parsing
-- `TIMEZONE_EXTRACTION_RULES.md` — timezone hint matching rules
+- `spec/TIME_PARSING_RULES.md` — regex patterns for time parsing
+- `spec/TIMEZONE_EXTRACTION_RULES.md` — timezone hint matching rules
 
 ### 3. Behavioral Rules
 
-- `POLICIES.md` — core policies (references grammar files)
-- `ONBOARDING.md` — rationale (Why these constraints)
+- `spec/POLICIES.md` — core policies (references grammar files)
+- `guides/ONBOARDING.md` — rationale (Why these constraints)
 
 ### 4. Data Contracts
 
-- `CONTRACTS.md` — DTO definitions
+- `spec/CONTRACTS.md` — DTO definitions
 - `USER_PROFILE_MODEL.md` — user data source
 
 ### 5. Runtime Contracts
 
 - `ADAPTER_CONTRACTS.md` — adapter behavior
 - `TELEGRAM_ADAPTER.md` — Telegram-specific implementation plan
-- `CORE_CONTRACT.md` — core invocation interface
+- `spec/CORE_CONTRACT.md` — core invocation interface
 
 ### 6. Examples
 

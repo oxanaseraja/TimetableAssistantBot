@@ -11,7 +11,7 @@ MVP: required
 - Specify sync vs async invocation.
 - Define error behavior (no exceptions to adapter).
 - Define return semantics (DisplayBlock | None and meaning of None).
-See: `CORE_CONTRACT.md`.
+See: `spec/CORE_CONTRACT.md`.
 
 ## 2. Pipeline Execution Spec
 MVP: defined minimal
@@ -19,7 +19,7 @@ MVP: defined minimal
 - Define stop conditions and reasons (no time, ambiguity, suppression).
 - Specify data passed between stages explicitly.
 - Define side-effect policy (pure functions only, no I/O inside stages).
-See: `ARCHITECTURE.md`.
+See: `spec/ARCHITECTURE.md`.
 
 ## 3. Data Ownership & Storage Architecture
 MVP: defined minimal
@@ -33,7 +33,7 @@ MVP: defined
 - Source of IANA timezones: `zoneinfo` (stdlib).
 - City resolution: cities from `cities.json`; extraction per `TIMEZONE_EXTRACTION_RULES.md`; adapter populates cities in output (max 3 per timezone).
 - Update policy: out of scope (static file in MVP).
-See: `POLICIES.md` §2, `TIMEZONE_EXTRACTION_RULES.md`, `CONTRACTS.md` (DisplayBlock), `ADAPTER_CONTRACTS.md` §6.
+See: `spec/POLICIES.md` §2, `spec/TIMEZONE_EXTRACTION_RULES.md`, `spec/CONTRACTS.md` (DisplayBlock), `ADAPTER_CONTRACTS.md` §6.
 
 ## 5. Security & Secrets
 MVP: defined minimal
@@ -52,7 +52,7 @@ See: `ADAPTER_CONTRACTS.md`.
 ## 7. Testing Architecture
 MVP: defined minimal
 - Unit/integration/contract test scope.
-- Golden cases aligned with `POLICIES.md`.
+- Golden cases aligned with `spec/POLICIES.md`.
 - Deterministic inputs and frozen time.
 - Coverage goals and CI: minimal in MVP (see `TESTING_STRATEGY.md`).
 See: `TESTING_STRATEGY.md`, `END_TO_END_FLOW.md` (golden cases).

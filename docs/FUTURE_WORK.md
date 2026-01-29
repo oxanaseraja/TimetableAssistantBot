@@ -1,14 +1,14 @@
 # Future Work
 
-Details: `ARCHITECTURE.md` §5, `USER_PROFILE_MODEL.md` §8, `STORAGE_MODEL.md`.
+Details: `spec/ARCHITECTURE.md` §5, `USER_PROFILE_MODEL.md` §8, `STORAGE_MODEL.md`.
 
 ---
 
 ## Near-term (Optional / Future)
 
-- Extend parser with additional time formats (per `TIME_PARSING_RULES.md`).
-- Extend timezone resolution (e.g. multi-segment IANA, Etc/GMT+X per `TIMEZONE_EXTRACTION_RULES.md`).
-- (Optional) Define explicit ambiguity rules or thresholds (current: no reply on ambiguity, `POLICIES.md` §4).
+- Extend parser with additional time formats (per `spec/TIME_PARSING_RULES.md`).
+- Extend timezone resolution (e.g. multi-segment IANA, Etc/GMT+X per `spec/TIMEZONE_EXTRACTION_RULES.md`).
+- (Optional) Define explicit ambiguity rules or thresholds (current: no reply on ambiguity, `spec/POLICIES.md` §4).
 
 ## Mid-term (Optional / Future)
 

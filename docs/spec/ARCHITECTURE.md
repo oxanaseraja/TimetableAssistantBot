@@ -64,10 +64,10 @@
 ## 3. Component Dependencies
 
 ### 3.1. Adapters Depend On:
-- `ADAPTER_CONTRACTS.md` — runtime requirements and lifecycle
+- `../ADAPTER_CONTRACTS.md` — runtime requirements and lifecycle
 - `CONTRACTS.md` — DTO definitions for data exchange
 - `CORE_CONTRACT.md` — core invocation interface
-- Platform-specific specifications (e.g., `TELEGRAM_ADAPTER.md`)
+- Platform-specific specifications (e.g., `../TELEGRAM_ADAPTER.md`)
 
 ### 3.2. Core Depends On:
 - `POLICIES.md` — deterministic behavioral rules
@@ -100,12 +100,12 @@ project/
 
 ### 5.1. Adding New Platforms
 - Create new adapter under `src/adapters/` (e.g., `src/adapters/discord/`)
-- Implement `ADAPTER_CONTRACTS.md` requirements
+- Implement `../ADAPTER_CONTRACTS.md` requirements
 - Update configuration as needed
 
 ### 5.2. Storage Evolution (Production)
 - Current: In-memory state (MVP)
-- Future: Persistent storage layer (see `STORAGE_MODEL.md`, `STATE_MODEL.md`)
+- Future: Persistent storage layer (see `../STORAGE_MODEL.md`, `../STATE_MODEL.md`)
 
 ### 5.3. Rule Extensions
 - Modify parser rules via `TIME_PARSING_RULES.md`
@@ -121,7 +121,7 @@ project/
 | `POLICIES.md` | Deterministic behavioral rules |
 | `CONTRACTS.md` | Data transfer object definitions |
 | `CORE_CONTRACT.md` | Core invocation interface |
-| `ADAPTER_CONTRACTS.md` | Adapter runtime requirements |
+| `../ADAPTER_CONTRACTS.md` | Adapter runtime requirements |
 | `TIME_PARSING_RULES.md` | Regex patterns for time parsing |
-| `ONBOARDING.md` | Rationale (Why these constraints) |
-| `TESTING_STRATEGY.md` | Testing approach and coverage |
+| `../guides/ONBOARDING.md` | Rationale (Why these constraints) |
+| `../TESTING_STRATEGY.md` | Testing approach and coverage |

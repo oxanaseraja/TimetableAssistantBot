@@ -25,7 +25,7 @@ Core (`src/core/`) uses **standard library only**:
 | `zoneinfo` | Timezone conversion (IANA database) |
 | `re` | Regex-based time parsing |
 | `typing`, `dataclasses` | Type hints and DTOs |
-| `logging` | Debug/info (allowed per CORE_CONTRACT) |
+| `logging` | Debug/info (allowed per `spec/CORE_CONTRACT.md`) |
 
 Adapter modules (e.g. `event_mapping`, `user_loader`) also use stdlib: `hashlib` (SHA256 for ID mapping), `json` (loading cities.json, users.json). Core never loads files; adapter passes data in.
 
@@ -159,7 +159,7 @@ pip install -r src/requirements.txt
 
 ## 9. References
 
-- `POLICIES.md` — Core rules (stdlib only)
+- `spec/POLICIES.md` — Core rules (stdlib only)
 - `TELEGRAM_ADAPTER.md` — Adapter implementation plan
-- `CORE_CONTRACT.md` — Core invocation (logging allowed in core)
+- `spec/CORE_CONTRACT.md` — Core invocation (logging allowed in core)
 - `configuration.yaml` — Runtime configuration (in `src/`)

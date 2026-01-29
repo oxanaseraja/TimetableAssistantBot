@@ -17,7 +17,7 @@ Core never stores, modifies, or queries user data directly.
 
 ```
 UserProfile {
-    internal_user_id: string,   # SHA256 hash (see POLICIES.md §8)
+    internal_user_id: string,   # SHA256 hash (see `spec/POLICIES.md` §8)
     timezone: string | null     # IANA timezone ID or null
 }
 ```
@@ -104,7 +104,7 @@ In this case:
 - `active_timezones` may be empty
 
 System behavior:
-- Resolution relies on explicit timezone hints in text (see `TIMEZONE_EXTRACTION_RULES.md`)
+- Resolution relies on explicit timezone hints in text (see `spec/TIMEZONE_EXTRACTION_RULES.md`)
 - Or `SYSTEM_DEFAULT` if configured
 - If no timezone can be resolved → no reply is sent (ambiguity)
 
@@ -248,7 +248,7 @@ These are explicitly **not part of MVP**.
 
 **Offset strings:**
 - May appear **only** as explicit hints extracted from message text
-- Are handled by extractor (see `TIMEZONE_EXTRACTION_RULES.md` §1.1)
+- Are handled by extractor (see `spec/TIMEZONE_EXTRACTION_RULES.md` §1.1)
 - Bypass user/channel timezone resolution (highest priority)
 
 **Rationale:**
@@ -304,7 +304,7 @@ This ensures:
 
 ## 11. References
 
-- `POLICIES.md` §3 — Timezone Resolution Precedence
-- `POLICIES.md` §5 — Active Timezones Policy
-- `CONTRACTS.md` — DTO definitions
-- `ARCHITECTURAL_INVARIANTS.md` — system invariants
+- `spec/POLICIES.md` §3 — Timezone Resolution Precedence
+- `spec/POLICIES.md` §5 — Active Timezones Policy
+- `spec/CONTRACTS.md` — DTO definitions
+- `spec/ARCHITECTURAL_INVARIANTS.md` — system invariants

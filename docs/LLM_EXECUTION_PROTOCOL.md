@@ -7,7 +7,7 @@ This document defines the execution rules for LLM code generation.
 ## Before Writing Any Code
 
 1. Read `DOC_INDEX.md` fully
-2. Read `ARCHITECTURAL_INVARIANTS.md` before any other document
+2. Read `spec/ARCHITECTURAL_INVARIANTS.md` before any other document
 3. Read all referenced specification documents
 
 For full reading order see `DOC_INDEX.md` § Reading Order for LLM.

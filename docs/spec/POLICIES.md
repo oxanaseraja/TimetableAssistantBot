@@ -167,7 +167,7 @@ Activity tracking and decay are out of scope for MVP.
 **Timezone acquisition (MVP):**
 - `UserProfile.timezone` is pre-populated by adapter from `users.json`
 - User-facing timezone setup is out of scope
-- See `USER_PROFILE_MODEL.md` for details
+- See `../USER_PROFILE_MODEL.md` for details
 
 **Empty active_timezones behavior:**
 - If `active_timezones = []` (empty list):
@@ -200,7 +200,7 @@ Activity tracking and decay are out of scope for MVP.
 **Spam suppression:**
 - One bot reply per user message
 
-**Output format:** See `ADAPTER_CONTRACTS.md` §6.
+**Output format:** See `../ADAPTER_CONTRACTS.md` §6.
 
 ---
 
@@ -242,7 +242,7 @@ Rules:
 - Edit removing time → delete previous reply (if exists)
 - Edit changing time → recompute and update
 
-Implementation: See `ADAPTER_CONTRACTS.md` §4 (reply_mapping).
+Implementation: See `../ADAPTER_CONTRACTS.md` §4 (reply_mapping).
 
 ---
 
@@ -270,6 +270,6 @@ These rules are adapter-specific and do not affect core logic.
 
 - `TIME_PARSING_RULES.md` — time grammar (input contract)
 - `TIMEZONE_EXTRACTION_RULES.md` — timezone extraction rules
-- `USER_PROFILE_MODEL.md` — user data source
-- `ADAPTER_CONTRACTS.md` — adapter runtime contract
+- `../USER_PROFILE_MODEL.md` — user data source
+- `../ADAPTER_CONTRACTS.md` — adapter runtime contract
 - `ARCHITECTURAL_INVARIANTS.md` — system invariants

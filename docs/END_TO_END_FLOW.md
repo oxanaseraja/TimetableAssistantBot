@@ -39,7 +39,7 @@ CoreMessageEvent {
 
 **Input:** `CoreMessageEvent.text`  
 **Output DTO:** `DetectedTime[]`  
-**Method:** Regex patterns only (see `POLICIES.md` §1.1). No LLM interpretation.
+**Method:** Regex patterns only (see `spec/POLICIES.md` §1.1). No LLM interpretation.
 
 ```
 DetectedTime [
