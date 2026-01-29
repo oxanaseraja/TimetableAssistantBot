@@ -7,7 +7,8 @@ These constraints are **absolute**. Violation = incorrect implementation.
 ## Core Constraints
 
 1. **Core must be pure** — no global state, no IO, no storage access
-2. **Core is a single function** — `process(event, user_profile, channel_context)`
+   - **Exception:** Core modules may use Python's standard `logging` module for debug/info/warning messages. This does not affect function purity or deterministic behavior. Logging should remain only for monitoring and debugging purposes, without changing function state.
+2. **Core is a single function** — `process(event, user_profile, channel_context, city_index, config)`
 3. **All state is passed as arguments** — no singletons, no caches, no module-level variables
 4. **No inference beyond specified rules** — if spec doesn't define it, don't implement it
 5. **No fallback heuristics** — missing data = ambiguity = None
@@ -16,7 +17,7 @@ These constraints are **absolute**. Violation = incorrect implementation.
 
 ## Parsing Constraints
 
-6. **Time parsing is regex only** — patterns from `TIME_PARSING_RULES.md`
+6. **Time parsing is regex only** — patterns from `spec/TIME_PARSING_RULES.md`
 7. **Timezone extraction is whitelist only** — cities from `cities.json`
 8. **No normalization of input** — don't convert `10.30` to `10:30`
 9. **No NLP, no LLM, no ML** — pure deterministic matching
@@ -44,7 +45,7 @@ These constraints are **absolute**. Violation = incorrect implementation.
 try:
     display = process(...)
 except Exception as exc:
-    logging.error("Core error", exc_info=exc)
+    logging.error("Core error: %s", exc, exc_info=True)
     display = None
 ```
 
@@ -74,6 +75,6 @@ Before submitting implementation:
 
 1. Core has no imports of `os`, `io`, `pathlib`, `requests`, etc.
 2. Core has no global variables
-3. Core function signature matches `CORE_CONTRACT.md`
-4. All regex patterns match `TIME_PARSING_RULES.md` exactly
+3. Core function signature matches `spec/CORE_CONTRACT.md`
+4. All regex patterns match `spec/TIME_PARSING_RULES.md` exactly
 5. Tests use frozen time, no real network

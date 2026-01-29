@@ -17,10 +17,24 @@ Core never stores, modifies, or queries user data directly.
 
 ```
 UserProfile {
-    internal_user_id: string,   # SHA256 hash (see POLICIES.md §8)
+    internal_user_id: string,   # SHA256 hash (see `spec/POLICIES.md` §8)
     timezone: string | null     # IANA timezone ID or null
 }
 ```
+
+**Critical constraint:**
+- **Only IANA timezone IDs are allowed** in `timezone` field
+- **Offset strings (`±HH:MM`) are NOT allowed** in user profiles
+- **Offset strings (`±HH:MM`) are NOT allowed** in `users.json` file
+- Offset strings may appear **only** as explicit hints extracted from message text
+- Invalid timezone IDs are treated as `null` (missing timezone)
+
+**Why offset strings are not allowed:**
+- Profiles represent stable, persistent user data
+- Offset strings are situational hints from message text
+- Offset strings don't carry DST information
+- Offset strings cannot be validated via `zoneinfo.available_timezones()`
+- This separation ensures data integrity and predictable behavior
 
 Only `timezone` field is used in MVP.
 Additional fields (name, language, etc.) are out of scope.
@@ -28,6 +42,8 @@ Additional fields (name, language, etc.) are out of scope.
 ---
 
 ## 3. Source of UserProfile (MVP)
+
+**Platform limitation:** Platform APIs (e.g. Telegram Bot API) do not provide user timezone automatically. Therefore timezone must be obtained via explicit user input or external configuration. Automatic onboarding and timezone collection are product-layer features and out of scope for MVP.
 
 In MVP, user profiles are loaded from a **static JSON file**.
 
@@ -60,7 +76,42 @@ In MVP, user profiles are loaded from a **static JSON file**.
 ### On startup:
 1. Load `users.json` if exists
 2. Build in-memory map: `platform_user_id → timezone`
-3. If file missing or invalid → start with empty map
+3. Handle errors according to error handling policy (see below)
+
+### users.json Error Handling
+
+| Condition | Behavior |
+|-----------|----------|
+| Missing file | Treated as empty map `{}` — adapter starts normally |
+| Empty file `{}` | Treated as empty map `{}` — adapter starts normally |
+| Invalid JSON (parse error) | **Fatal error** — adapter fails to start |
+| Permission denied | **Fatal error** — adapter fails to start |
+| Invalid structure (not a dict) | Treated as empty map `{}` with warning |
+
+**Rationale:** Configuration errors must fail fast. Invalid JSON or permission issues
+indicate misconfiguration that should be fixed before the adapter can operate correctly.
+
+### Empty or Missing users.json behavior:
+
+Both cases are treated identically:
+- Missing file → empty map `{}`
+- Empty file `{}` → empty map `{}`
+- System starts normally with no user/channel data
+
+In this case:
+- All users have `timezone = None`
+- All channels have `default_timezone = None`
+- `active_timezones` may be empty
+
+System behavior:
+- Resolution relies on explicit timezone hints in text (see `spec/TIMEZONE_EXTRACTION_RULES.md`)
+- Or `SYSTEM_DEFAULT` if configured
+- If no timezone can be resolved → no reply is sent (ambiguity)
+
+**Rationale:**
+- Bot is voluntary helper, not all users fill profiles
+- System gracefully degrades to explicit hints
+- Matches MVP product model: "bot learns timezones" (not "must know")
 
 ### On message:
 1. Lookup sender's timezone from in-memory map
@@ -95,7 +146,7 @@ If user timezone is unknown (not in `users.json`):
 ChannelContext {
     internal_channel_id: string,
     default_timezone: string | null,
-    active_timezones: List<string>
+    active_timezones: Tuple<string, ...>
 }
 ```
 
@@ -147,10 +198,16 @@ def compute_active_timezones(
 
 **Rules:**
 - Recomputed on every message (not cached)
-- Source of truth: ChannelContext.members + UserProfile.timezone
+- Source of truth: channel config's `members` list (users.json channel entry) and each member's timezone from users_data
 - Unknown members are ignored (not an error)
 - Null timezones are excluded
+- **Duplicates are automatically deduplicated** — if multiple members have the same timezone, it appears only once in the result
 - Result is sorted alphabetically for determinism
+
+**Deduplication behavior:**
+- Uses Python `set()` for automatic deduplication
+- Example: 3 members with "Europe/Amsterdam" and 1 with "Asia/Yerevan" → `["Asia/Yerevan", "Europe/Amsterdam"]`
+- Deduplication happens before sorting
 
 ---
 
@@ -178,7 +235,57 @@ These are explicitly **not part of MVP**.
 
 ---
 
-## 9. Layer Isolation
+## 9. Timezone ID Validation
+
+**Requirement:** All timezone IDs in `users.json` must be valid IANA timezone identifiers.
+
+**Critical constraint:**
+- **Only IANA timezone IDs are allowed** in `users.json` and channel profiles
+- **Offset strings (`±HH:MM`) are NOT allowed** in:
+  - User profiles (`timezone` field)
+  - Channel `default_timezone`
+  - `active_timezones` list
+
+**Offset strings:**
+- May appear **only** as explicit hints extracted from message text
+- Are handled by extractor (see `spec/TIMEZONE_EXTRACTION_RULES.md` §1.1)
+- Bypass user/channel timezone resolution (highest priority)
+
+**Rationale:**
+- Profiles = stable, persistent data
+- Offset = situational hint from text
+- Offset doesn't carry DST information
+- Offset cannot be validated via `zoneinfo.available_timezones()`
+- This separation ensures data integrity and predictable behavior
+
+**Validation rules:**
+- Timezone IDs are validated against `zoneinfo.available_timezones()`
+- Validation occurs at configuration load time (adapter startup)
+- Validation occurs when processing user profiles and channel contexts
+- **Offset strings (`±HH:MM`) are explicitly rejected** before IANA validation
+- Offset strings are detected using regex pattern `^[+-]\d{2}:\d{2}$` and rejected with warning
+
+**Behavior for invalid timezone IDs:**
+- Invalid `default_timezone` in config → treated as `None` (UTC fallback)
+- Invalid `timezone` in user profile → treated as `None` (missing timezone)
+- Invalid `default_timezone` in channel context → treated as `None`
+- Invalid timezone in `active_timezones` → excluded from list
+- **Offset strings in any field** → explicitly rejected with warning, treated as `None` or excluded
+
+**Error handling:**
+- Validation errors are logged
+- Invalid timezones are silently ignored (treated as missing)
+- Offset strings trigger explicit warning messages before rejection
+- Adapter continues operation with valid timezones only
+
+**Rationale:**
+- Ensures only valid IANA timezones are used
+- Prevents runtime errors from invalid configuration
+- Graceful degradation: invalid entries don't break entire system
+
+---
+
+## 10. Layer Isolation
 
 **Critical constraint:**
 
@@ -195,9 +302,9 @@ This ensures:
 
 ---
 
-## 10. References
+## 11. References
 
-- `POLICIES.md` §3 — Timezone Resolution Precedence
-- `POLICIES.md` §5 — Active Timezones Policy
-- `CONTRACTS.md` — DTO definitions
-- `ARCHITECTURAL_INVARIANTS.md` — system invariants
+- `spec/POLICIES.md` §3 — Timezone Resolution Precedence
+- `spec/POLICIES.md` §5 — Active Timezones Policy
+- `spec/CONTRACTS.md` — DTO definitions
+- `spec/ARCHITECTURAL_INVARIANTS.md` — system invariants

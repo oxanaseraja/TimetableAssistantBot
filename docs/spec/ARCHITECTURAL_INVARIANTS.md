@@ -27,6 +27,8 @@ Core does not:
 - Access databases
 - Log to external systems
 
+**Exception:** Core modules may use Python's standard `logging` module for debug/info/warning messages. This does not affect function purity or deterministic behavior. Logging should remain only for monitoring and debugging purposes, without changing function state.
+
 All IO happens in adapters.
 
 ### 3. Core never accesses storage
@@ -43,6 +45,11 @@ Core never queries or modifies persistent state.
 If information is missing, core does not guess.
 Missing timezone → ambiguity → no reply.
 Missing am/pm → ambiguity → no reply.
+
+**Frozen context clarification (SPEC precedence):**
+This invariant must be interpreted through `SPEC_FREEZE.md` §2.4.
+Missing-timezone handling uses the frozen resolution path (system default fallback),
+and this invariant does not override that behavior.
 
 ### 5. All ambiguity leads to no reply
 
@@ -65,7 +72,7 @@ No caching, no counters, no debug flags at module level.
 **Allowed (immutable):**
 - Compiled regex patterns (`re.compile(...)`)
 - Frozen sets (`frozenset(...)`)
-- Constants (`MAX_TIMES = 3`)
+- Constants (`MAX_TEXT_LENGTH = 4096`)
 - Type definitions
 
 **Forbidden (mutable):**
@@ -282,7 +289,7 @@ No flaky tests from timing or randomness.
 
 ## References
 
-- `ARCHMINI.md` — system overview
+- `ARCHITECTURE.md` — system overview
 - `POLICIES.md` — behavioral rules
-- `DESIGN_CHOICES.md` — rationale for decisions
-- `LLM_EXECUTION_PROTOCOL.md` — execution rules
+- `../guides/ONBOARDING.md` — rationale (Why these constraints)
+- `../LLM_EXECUTION_PROTOCOL.md` — execution rules

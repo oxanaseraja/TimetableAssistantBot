@@ -20,13 +20,15 @@ Decay/activity-based updates are out of scope for MVP.
 
 ## Adapter State
 
-RuntimeState (MVP):
-- `processed_message_ids`: in-memory set
-- `id_mapping`: optional persistence via `adapter_mapping.json`
-- `city_list`: local file (`cities.json`) loaded by adapter
+RuntimeState (MVP) — see `ADAPTER_CONTRACTS.md` §4 for full definition and rules:
+- `processed_message_ids`: in-memory, FIFO-ordered (OrderedDict or equivalent); prevents duplicate processing
+- `reply_mapping`: in-memory, FIFO-ordered (OrderedDict or equivalent); maps original message → bot reply ID (edit/delete handling)
+- `id_mapping`: optional persistence (path from config, e.g. `persistence_path`); platform-specific; see `TELEGRAM_ADAPTER.md`
 
-Persistence:
-- Optional / Future
+Adapter also loads at startup (not part of RuntimeState):
+- `city_index` from `cities.json` (path from config); passed to core as argument
+
+Persistence (id_mapping only, if path configured):
 - Load on startup if file exists
 - Save on graceful shutdown
 - Failures ignored

@@ -9,10 +9,11 @@ to evolve in production.
 
 **Adapter runtime (in-memory):**
 - `processed_message_ids` — prevents duplicate processing (process lifetime only).
+- `reply_mapping` — original message → bot reply ID (edit/delete handling); process lifetime only.
 
-**Adapter local files:**
-- `cities.json` — city list used for output grouping.
-- `adapter_mapping.json` — optional ID mapping persistence (if enabled).
+**Adapter local files (paths from config):**
+- City list — path from config (e.g. `data.cities_path`); used for extraction and output grouping.
+- ID mapping — optional; path from config (e.g. `telegram.persistence_path`); example filename `adapter_mapping.json` (see `ADAPTER_CONTRACTS.md` §4, `TELEGRAM_ADAPTER.md`).
 
 **Configuration:**
 - `configuration.yaml` — static config (token, chat_id, limits).

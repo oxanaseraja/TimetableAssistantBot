@@ -8,27 +8,26 @@ LLM must use **only** these libraries — no alternatives, no additions.
 ## 1. Python Version
 
 ```
-Python >= 3.10
+Python >= 3.9
 ```
 
-**Why 3.10+:**
-- `zoneinfo` is stdlib (no pytz needed)
-- Better type hints
-- Pattern matching (optional, nice to have)
+**Why 3.9+:** `zoneinfo` is stdlib (no pytz needed).
 
 ---
 
 ## 2. Core Dependencies
 
-Core uses **standard library only**:
+Core (`src/core/`) uses **standard library only**:
 
 | Module | Purpose |
 |--------|---------|
 | `datetime` | Time manipulation |
 | `zoneinfo` | Timezone conversion (IANA database) |
 | `re` | Regex-based time parsing |
-| `hashlib` | SHA256 for ID mapping |
-| `json` | Loading cities.json, users.json |
+| `typing`, `dataclasses` | Type hints and DTOs |
+| `logging` | Debug/info (allowed per `spec/CORE_CONTRACT.md`) |
+
+Adapter modules (e.g. `event_mapping`, `user_loader`) also use stdlib: `hashlib` (SHA256 for ID mapping), `json` (loading cities.json, users.json). Core never loads files; adapter passes data in.
 
 **No external dependencies in core.**
 
@@ -77,6 +76,18 @@ pyyaml >= 6.0
 
 ---
 
+### Environment Variables
+
+```
+python-dotenv >= 1.0.0
+```
+
+**Why python-dotenv:**
+- Load `.env` files for local development
+- Keeps secrets out of repo while supporting easy setup
+
+---
+
 ## 4. Forbidden Dependencies (MVP)
 
 These are explicitly **NOT allowed**:
@@ -95,8 +106,17 @@ These are explicitly **NOT allowed**:
 ## 5. requirements.txt
 
 ```
+# Telegram Bot API
 python-telegram-bot>=20.0,<21.0
+
+# Configuration parsing
 pyyaml>=6.0
+
+# Environment variable loading (.env file support)
+python-dotenv>=1.0.0
+
+# Windows timezone support (optional, auto-installed on Windows)
+tzdata; sys_platform == "win32"
 ```
 
 ---
@@ -118,11 +138,11 @@ These are **not required** for runtime.
 
 ```bash
 # Create virtual environment
-python3.10 -m venv venv
-source venv/bin/activate
+python3 -m venv venv
+source venv/bin/activate   # Windows: venv\Scripts\activate
 
-# Install dependencies
-pip install -r requirements.txt
+# Install dependencies (requirements.txt is in src/)
+pip install -r src/requirements.txt
 ```
 
 ---
@@ -133,21 +153,13 @@ pip install -r requirements.txt
 
 **On Linux:** Usually pre-installed (`/usr/share/zoneinfo`)
 **On macOS:** Pre-installed
-**On Windows:** Install `tzdata` package:
-
-```
-pip install tzdata
-```
-
-Add to requirements.txt for Windows compatibility:
-```
-tzdata; sys_platform == "win32"
-```
+**On Windows:** The project's `requirements.txt` already includes `tzdata; sys_platform == "win32"` so `pip install -r requirements.txt` installs `tzdata` on Windows. Without it, `zoneinfo` may fail on Windows.
 
 ---
 
 ## 9. References
 
-- `POLICIES.md` — Core rules (stdlib only)
+- `spec/POLICIES.md` — Core rules (stdlib only)
 - `TELEGRAM_ADAPTER.md` — Adapter implementation plan
-- `configuration.yaml` — Runtime configuration
+- `spec/CORE_CONTRACT.md` — Core invocation (logging allowed in core)
+- `configuration.yaml` — Runtime configuration (in `src/`)

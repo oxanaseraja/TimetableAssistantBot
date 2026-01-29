@@ -39,7 +39,7 @@ CoreMessageEvent {
 
 **Input:** `CoreMessageEvent.text`  
 **Output DTO:** `DetectedTime[]`  
-**Method:** Regex patterns only (see `POLICIES.md` §1.1). No LLM interpretation.
+**Method:** Regex patterns only (see `spec/POLICIES.md` §1). No LLM interpretation.
 
 ```
 DetectedTime [
@@ -126,25 +126,27 @@ DisplayBlock {
     {
       timezone: "Europe/Amsterdam",
       local_time: "10:30",
-      cities: ["Amsterdam"]
+      cities: []
     },
     {
       timezone: "Asia/Yerevan",
       local_time: "13:30",
-      cities: ["Yerevan"]
+      cities: []
     }
   ],
-  ordering: "SOURCE_THEN_CHANNEL_DEFAULT_THEN_OFFSET_ASC",
+  ordering: "SOURCE_FIRST",
   flags: { ambiguous: false, partial: false }
 }
 ```
+
+Core always returns `cities: []`; adapter populates cities from `cities.json` during formatting (Step 6).
 
 ---
 
 ## Step 6 — Adapter Output (Telegram)
 
 **Input:** `DisplayBlock`  
-**Output:** Telegram text reply
+**Output:** Telegram text reply (adapter fills cities from `cities.json` when formatting)
 
 ```
 10:30 Europe/Amsterdam (Amsterdam)

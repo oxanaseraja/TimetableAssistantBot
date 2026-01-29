@@ -9,12 +9,14 @@
 # =============================================================================
 
 core:
-  default_timezone: "UTC"      # string, IANA timezone ID, optional, default="UTC"
-  max_time_mentions: 3         # int, range=[1, 10], optional, default=3
+  # Can use environment variables: ${VAR_NAME} or ${VAR_NAME:default_value}
+  default_timezone: "${CORE_DEFAULT_TIMEZONE:null}"       # string|null|"UTC", IANA timezone ID, optional, default=null
+  max_time_mentions: "${CORE_MAX_TIME_MENTIONS:3}"       # int, range=[1, 10], optional, default=3
 
 output:
-  max_timezones: 5             # int, range=[1, 10], optional, default=5
-  ordering: "SOURCE_THEN_OFFSET_ASC"  # enum, optional
+  # Can use environment variables: ${VAR_NAME} or ${VAR_NAME:default_value}
+  max_timezones: "${OUTPUT_MAX_TIMEZONES:5}"             # int, range=[1, 10], optional, default=5
+  ordering: "${OUTPUT_ORDERING:SOURCE_FIRST}"           # enum: "SOURCE_FIRST" | "OFFSET_ASC" | "ALPHABETICAL", optional, default="SOURCE_FIRST"
 
 logging:
   level: "INFO"                # enum: DEBUG|INFO|WARNING|ERROR, optional, default="INFO"
@@ -25,21 +27,24 @@ logging:
 
 telegram:
   # REQUIRED fields (adapter will not start without these)
-  token: "${TELEGRAM_TOKEN}"   # string, required, non-empty, from environment
-  chat_id: "-1001234567890"    # string, required, can be negative for groups
+  # Can use environment variables: ${VAR_NAME} or ${VAR_NAME:default_value}
+  token: "${TELEGRAM_TOKEN}"              # string, required, from environment
+  chat_id: "${TELEGRAM_CHAT_ID}"          # string, required, from environment (or set directly)
 
   # OPTIONAL fields (have defaults)
-  max_lines: 5                 # int, range=[1, 10], optional, default=5
-  retry_attempts: 3            # int, range=[1, 10], optional, default=3
-  persistence_path: null       # string|null, optional, default=null
+  # Can use environment variables: ${VAR_NAME} or ${VAR_NAME:default_value}
+  max_lines: "${TELEGRAM_MAX_LINES:5}"                 # int, range=[1, 10], optional, default=5
+  retry_attempts: "${TELEGRAM_RETRY_ATTEMPTS:3}"      # int, range=[1, 10], optional, default=3
+  persistence_path: "${TELEGRAM_PERSISTENCE_PATH:null}"  # string|null, optional, default=null
 
 # =============================================================================
 # DATA FILES
 # =============================================================================
 
 data:
-  cities_path: "data/cities.json"    # string, required, path to cities whitelist
-  users_path: "data/users.json"      # string, required, path to user profiles
+  # Paths can use environment variables: ${VAR_NAME} or ${VAR_NAME:default_value}
+  cities_path: "${DATA_CITIES_PATH:data/cities.json}"    # string, required, path to cities whitelist
+  users_path: "${DATA_USERS_PATH:data/users.json}"       # string, required, path to user profiles
 
 # =============================================================================
 # VALIDATION RULES

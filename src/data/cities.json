@@ -60,6 +60,18 @@
     "aliases": ["Beograd"]
   },
   {
+    "city": "St. Petersburg",
+    "country": "RU",
+    "timezone": "Europe/Moscow",
+    "aliases": ["Saint-Petersburg", "St Petersburg", "SPb"]
+  },
+  {
+    "city": "Moscow",
+    "country": "RU",
+    "timezone": "Europe/Moscow",
+    "aliases": []
+  },
+  {
     "city": "Nicosia",
     "country": "CY",
     "timezone": "Europe/Nicosia",

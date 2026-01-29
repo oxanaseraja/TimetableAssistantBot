@@ -51,19 +51,53 @@ No fuzzy matching, no inference, no guessing.
 
 ## 3. Timezone Resolution Precedence
 
-Priority order:
-1. `EXPLICIT_HINT` — Explicit offset in text (UTC+2, +0300)
-2. `EXPLICIT_HINT` — Explicit timezone name or city (from text)
-3. `USER_PROFILE` — User profile timezone
-4. `CHANNEL_DEFAULT` — Channel default timezone
-5. `ACTIVE_TZ_SINGLE` — If exactly one active timezone → use it
-6. `SYSTEM_DEFAULT` — Fallback to UTC (if configured) or ambiguity
+Priority order (aligned with SPEC_FREEZE §2.4):
+1. `EXPLICIT_HINT` — Explicit offset in text (e.g. UTC+2, +03:00; compact +0300 not supported, see SPEC_FREEZE D-001)
+2. `EXPLICIT_HINT` — Explicit IANA timezone ID in text (Europe/Amsterdam)
+3. `EXPLICIT_HINT` — City name from text (via cities.json lookup)
+4. `USER_PROFILE` — User profile timezone
+5. `CHANNEL_DEFAULT` — Channel default timezone
+6. `ACTIVE_TZ_SINGLE` — If exactly one active timezone → use it
+7. `SYSTEM_DEFAULT` — Fallback to UTC (if configured) or ambiguity
+
+**Note:** Priorities 1-3 are all `EXPLICIT_HINT` resolution sources but differ in extraction priority. See `TIMEZONE_EXTRACTION_RULES.md` §1 for extraction algorithm.
 
 **SYSTEM_DEFAULT behavior:**
 - Used only when all other sources exhausted
 - If `config.default_timezone` is set → use it
 - If `config.default_timezone` is null → use UTC
 - ResolutionSource is set to `SYSTEM_DEFAULT` in this case
+
+**System Default Timezone Resolution:**
+- `config.default_timezone = null` means system UTC (per `CONTRACTS.md`)
+- Resolver MUST interpret `null` as `"UTC"` when producing `ResolvedTimeContext.base_timezone`
+- Internal representation (`CoreConfig.default_timezone`) MAY use `null`, but resolved context (`ResolvedTimeContext.base_timezone`) MUST always contain a concrete timezone string (IANA ID or offset)
+- The interpretation of `null → "UTC"` happens in the resolver layer, which is the single source of truth for fallback timezone resolution
+
+**Note:** Both `null` and the string `"UTC"` in configuration are treated equivalently as system UTC fallback (see `CONTRACTS.md` §CoreConfig for details).
+
+**Examples:**
+
+Example 1: default_timezone = null
+```
+config.default_timezone = null
+No explicit hint, no user/channel timezone
+Resolver returns: base_timezone = "UTC", resolution_source = "SYSTEM_DEFAULT"
+```
+
+Example 2: default_timezone = "UTC" (equivalent to null)
+```
+config.default_timezone = "UTC"  # Treated as null during config loading
+No explicit hint, no user/channel timezone
+Resolver returns: base_timezone = "UTC", resolution_source = "SYSTEM_DEFAULT"
+```
+
+Example 3: default_timezone = explicit IANA ID
+```
+config.default_timezone = "Europe/Amsterdam"
+No explicit hint, no user/channel timezone
+Resolver returns: base_timezone = "Europe/Amsterdam", resolution_source = "SYSTEM_DEFAULT"
+```
 
 ---
 
@@ -99,6 +133,27 @@ Rules:
 
 This makes the system predictable and formally bounded.
 
+### DST Fold/Gap Handling
+
+**DST handling is delegated entirely to Python's `zoneinfo` module.**
+
+- No explicit fold/gap handling code in core
+- Behavior follows `zoneinfo` defaults
+- No ambiguity reporting for DST in MVP
+
+**Default `zoneinfo` behavior:**
+
+- **Gap (spring forward):** Invalid local times are interpreted as the first valid
+  time after the gap (e.g., 2:30 AM → 3:00 AM when clocks jump from 2:00 to 3:00)
+
+- **Fold (fall back):** Ambiguous local times are interpreted as the first occurrence
+  (pre-transition time, `fold=0`)
+
+**Rationale:**
+- Python's `zoneinfo` provides robust, well-tested DST handling
+- Custom DST handling would add complexity without clear benefit in MVP
+- This behavior is consistent and predictable for users
+
 ---
 
 ## 5. Active Timezones Policy
@@ -112,7 +167,15 @@ Activity tracking and decay are out of scope for MVP.
 **Timezone acquisition (MVP):**
 - `UserProfile.timezone` is pre-populated by adapter from `users.json`
 - User-facing timezone setup is out of scope
-- See `USER_PROFILE_MODEL.md` for details
+- See `../USER_PROFILE_MODEL.md` for details
+
+**Empty active_timezones behavior:**
+- If `active_timezones = []` (empty list):
+  - No active timezones are included in `target_timezones`
+  - Only `source_timezone` and `channel_default_timezone` (if different) are included
+  - If no explicit hint, user timezone, or channel default → resolver falls back to `SYSTEM_DEFAULT` (UTC)
+  - This is a valid system state and does not cause ambiguity
+  - System gracefully handles channels with no known member timezones
 
 ---
 
@@ -120,9 +183,14 @@ Activity tracking and decay are out of scope for MVP.
 
 **Constraints:**
 - Max timezones shown: 5
-- Max time mentions processed: 3
+- Up to 3 time mentions are processed per message
 - One line per timezone with city list
-- Stable ordering for tests
+- Deterministic ordering for tests
+
+**Time mentions limit:**
+- Messages with exactly 3 times: processed (first time used in MVP)
+- Messages with more than 3 times (4+): processed with truncation (first time used in MVP)
+- `partial` is reserved for timezone truncation only (see `SPEC_FREEZE.md` §3.1)
 
 **Ordering:**
 1. Source timezone
@@ -131,9 +199,8 @@ Activity tracking and decay are out of scope for MVP.
 
 **Spam suppression:**
 - One bot reply per user message
-- Ignore messages with > 3 time mentions
 
-**Output format:** See `ADAPTER_CONTRACTS.md` §6.
+**Output format:** See `../ADAPTER_CONTRACTS.md` §6.
 
 ---
 
@@ -175,7 +242,7 @@ Rules:
 - Edit removing time → delete previous reply (if exists)
 - Edit changing time → recompute and update
 
-Implementation: See `ADAPTER_CONTRACTS.md` §4 (reply_mapping).
+Implementation: See `../ADAPTER_CONTRACTS.md` §4 (reply_mapping).
 
 ---
 
@@ -203,6 +270,6 @@ These rules are adapter-specific and do not affect core logic.
 
 - `TIME_PARSING_RULES.md` — time grammar (input contract)
 - `TIMEZONE_EXTRACTION_RULES.md` — timezone extraction rules
-- `USER_PROFILE_MODEL.md` — user data source
-- `ADAPTER_CONTRACTS.md` — adapter runtime contract
+- `../USER_PROFILE_MODEL.md` — user data source
+- `../ADAPTER_CONTRACTS.md` — adapter runtime contract
 - `ARCHITECTURAL_INVARIANTS.md` — system invariants

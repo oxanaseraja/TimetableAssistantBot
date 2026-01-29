@@ -1,17 +1,18 @@
 # TESTING_STRATEGY.md — MVP Tests
 
-Scope is minimal and deterministic.
+Scope is minimal and deterministic. All tests are deterministic (fixed time, no network); see `IMPLEMENTATION_CONSTRAINTS.md` § Verification.
 
 ---
 
 ## 1. Core Unit Tests
-- Time detection rules (POLICIES.md)
+- Time detection rules (`spec/POLICIES.md`)
 - Timezone precedence rules
 - Ambiguity (safe-only)
 
 ## 2. Policy Golden Cases
-- Canonical examples aligned to POLICIES.md
+- Canonical examples aligned to `spec/POLICIES.md`
 - Each case: input → expected DisplayBlock or None
+- See `END_TO_END_FLOW.md` for step-by-step example used in processor tests
 
 ## 3. Adapter Contract Tests
 - CoreMessageEvent mapping
