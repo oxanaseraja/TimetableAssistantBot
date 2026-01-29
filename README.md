@@ -61,16 +61,16 @@ The MVP specification is formally frozen in `docs/spec/SPEC_FREEZE.md`.
 All behavioral contracts, invariants, limits and scope boundaries are fixed there.
 Further changes require a new spec version.
 
+## How to Use
 
+**For LLM code generator:**
+- Read `docs/DOC_INDEX.md` for document reading order
+- Start with `docs/spec/ARCHITECTURAL_INVARIANTS.md`
+- Implement code in `src/` according to the specification
 
+**For developers:**
+- Read `docs/README.md`
+- Implement modules in `src/core/` and `src/adapters/`
+- Run `src/run.sh`
 
-Как использовать
-Для LLM-кодогенератора:
-Прочитать docs/DOC_INDEX.md — порядок чтения документов
-Начать с docs/spec/ARCHITECTURAL_INVARIANTS.md
-Реализовать код в src/ по спецификации
-Для разработчика:
-Прочитать docs/README.md
-Реализовать модули в src/core/ и src/adapters/
-Запустить src/run.sh
-Документация полностью отделена от кода. LLM читает docs/, пишет в src/.
+Documentation is fully separate from code. LLM reads `docs/`, writes to `src/`.
