@@ -68,7 +68,6 @@ Design rationale: see `guides/ONBOARDING.md` (Why these constraints)
 ### Quality & Process
 - `TESTING_STRATEGY.md` — test architecture
 - `ARCH_CHECKLIST.md` — completeness checklist
-- `ARCH_DIAGRAM.md` — architecture diagram
 - `guides/DEVELOPER_GUIDE.md` — practical guidelines for developers
 
 ### Execution Protocol
@@ -77,13 +76,9 @@ Design rationale: see `guides/ONBOARDING.md` (Why these constraints)
 - `HANDOVER.md` — specification gap handling and AI verification notes
 
 ### Project Management
-- `TASK.md` — task definition
 - `FUTURE_WORK.md` — planned future enhancements
-- `limitationsOfReality.md` — known limitations and constraints
-- `PROJECT_ANALYSIS.md` — project analysis
 
 ### Meta
 - `DOC_INDEX.md` — this file
-- `LLM_SPEC_ANALYSIS.md` — specification readiness analysis
 - `journal/PROGRESS.md` — implementation journal
 - `journal/01_spec_architecture.md` — architecture specification journal entry

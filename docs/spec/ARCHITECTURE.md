@@ -89,8 +89,10 @@ project/
 │   ├── main.py
 │   └── data/           # cities.json, users.json (paths from config)
 ├── docs/
+│   ├── spec/           # Frozen specification (contracts, grammar, policies)
+│   ├── guides/         # Onboarding, local testing, developer guide
 │   ├── journal/        # Implementation specs
-│   └── [architecture documents]
+│   └── [other docs]    # DOC_INDEX, adapters, data models, etc.
 └── tests/
 
 
