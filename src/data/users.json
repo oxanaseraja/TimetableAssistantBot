@@ -1,13 +1,13 @@
 {
   "_comment": "Example users.json - copy to users.json and fill with real data",
   
-  "telegram:373239937": {
+  "telegram:123456789": {
     "timezone": "Europe/Amsterdam"
   },
-  "channel:-4759909904": {
+  "channel:-1234567890": {
     "default_timezone": "Europe/Amsterdam",
     "members": [
-      "telegram:373239937"
+      "telegram:123456789"
     ]
   }
 }
